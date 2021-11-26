@@ -78,7 +78,7 @@ struct startTransferArgs {
 
 static int openOutFile(struct disk_config *disk_config)
 {
-    int outFile=-1;
+    int outFile=1;
     if(disk_config->fileName != NULL) {
 	int oflags = O_CREAT | O_WRONLY;
 	if((disk_config->flags & FLAG_SYNC)) {
