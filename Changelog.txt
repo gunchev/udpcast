@@ -1,3 +1,8 @@
+v20060312
+	* Added usage message for --nosync option
+v20060309
+	* Fix global_client_config handling in udpr-negotiate.c
+	* more intuitive/consistent names for various options
 v20060208
 	* Fix compilation issue (variable declaration after code)
 	* Avoid sending connect request twice

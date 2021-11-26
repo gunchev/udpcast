@@ -105,11 +105,11 @@ static int checkClientWait(participantsDb_t db,
      * If we have a max_client_wait, start the transfer after first client
      * connected + maxSendWait
      */
-    if(net_config->max_client_wait &&
-       (now >= *firstConnected + net_config->max_client_wait)) {
+    if(net_config->max_receivers_wait &&
+       (now >= *firstConnected + net_config->max_receivers_wait)) {
 #ifdef USE_SYSLOG
 	    syslog(LOG_INFO, "max wait[%d] passed: starting", 
-			    net_config->max_client_wait );
+			    net_config->max_receivers_wait );
 #endif
 	return 1; /* send-wait passed: start */
     }
@@ -118,17 +118,17 @@ static int checkClientWait(participantsDb_t db,
      * Otherwise check to see if the minimum of clients
      *  have checked in.
      */
-    else if (nrParticipants(db) >= net_config->min_clients &&
+    else if (nrParticipants(db) >= net_config->min_receivers &&
 	/*
 	 *  If there are enough clients and there's a min wait time, we'll
 	 *  wait around anyway until then.
 	 *  Otherwise, we always transfer
 	 */
-	(!net_config->min_client_wait || 
-	 now >= *firstConnected + net_config->min_client_wait)) {
+	(!net_config->min_receivers_wait || 
+	 now >= *firstConnected + net_config->min_receivers_wait)) {
 #ifdef USE_SYSLOG
-	    syslog(LOG_INFO, "min clients[%d] reached: starting", 
-			    net_config->min_clients );
+	    syslog(LOG_INFO, "min receivers[%d] reached: starting", 
+			    net_config->min_receivers );
 #endif
 	    return 1;
     } else
@@ -177,8 +177,8 @@ static int mainDispatcher(int *fd, int nr,
 #ifdef USE_SYSLOG
         syslog(LOG_INFO,
 	 "first connection: min wait[%d] secs - max wait[%d] - min clients[%d]",
-	  net_config->min_client_wait, net_config->max_client_wait, 
-	  net_config->min_clients );
+	  net_config->min_receivers_wait, net_config->max_receivers_wait, 
+	  net_config->min_receivers );
 #endif
     }
 
@@ -325,7 +325,7 @@ int startSender(struct disk_config *disk_config,
 #endif
 
     net_config->controlMcastAddr.sin_addr.s_addr =0;
-    if(net_config->ttl == 1 && net_config->mcastAll == NULL) {
+    if(net_config->ttl == 1 && net_config->mcastRdv == NULL) {
 	getBroadCastAddress(net_config->net_if,
 			    &net_config->controlMcastAddr,
 			    RECEIVER_PORT(net_config->portBase));
@@ -334,7 +334,7 @@ int startSender(struct disk_config *disk_config,
 
     if(net_config->controlMcastAddr.sin_addr.s_addr == 0) {
 	getMcastAllAddress(&net_config->controlMcastAddr,
-			   net_config->mcastAll,
+			   net_config->mcastRdv,
 			   RECEIVER_PORT(net_config->portBase));
 	/* Only do the following if controlMcastAddr is indeed an
 	   mcast address ... */
@@ -383,8 +383,8 @@ int startSender(struct disk_config *disk_config,
     if(!(net_config->flags & FLAG_NOKBD))
 	console = prepareConsole((disk_config->fileName != NULL) ? 0 : -1);
 
-    if(net_config->min_clients || net_config->min_client_wait ||
-       net_config->max_client_wait)
+    if(net_config->min_receivers || net_config->min_receivers_wait ||
+       net_config->max_receivers_wait)
 	firstConnectedP = &firstConnected;
     else
 	firstConnectedP = NULL;	

@@ -28,8 +28,12 @@ static struct option options[] = {
     { "portbase", 1, NULL, 'P' },
     { "interface", 1, NULL, 'i' },
     { "ttl", 1, NULL, 0x0401 },
-    { "mcast_all_addr", 1, NULL, 'M' },
-    { "mcast-all-addr", 1, NULL, 'M' },
+    { "mcast_all_address", 1, NULL, 'M' }, /* Obsolete name */
+    { "mcast-all-address", 1, NULL, 'M' }, /* Obsolete name */
+
+    { "mcast_rdv_address", 1, NULL, 'M' },
+    { "mcast-rdv-address", 1, NULL, 'M' },
+
 
 #ifdef LOSSTEST
     /* simulating packet loss */
@@ -48,7 +52,8 @@ static struct option options[] = {
 
     { "nokbd", 0, NULL, 0xb04 },
 
-    { "exitWait", 1, NULL, 0xd01 },
+    { "exitWait", 1, NULL, 0xd01 }, /* Obsolete name */
+    { "exit-wait", 1, NULL, 0xd01 },
 
 #ifdef BB_FEATURE_UDPCAST_FEC
     { "license", 0, NULL, 'L' },
@@ -63,7 +68,7 @@ static void intHandler(int nr) {
 
 #ifdef NO_BB
 static void usage(char *progname) {
-    fprintf(stderr, "%s [--file file] [--pipe pipe] [--portbase portbase] [--interface net-interface] [--log file] [--ttl time-to-live] [--mcast-all-addr mcast-all-address] [--rcvbuf buf] [--nokbd] [--exitWait milliseconds] [--license]\n", 
+    fprintf(stderr, "%s [--file file] [--pipe pipe] [--portbase portbase] [--interface net-interface] [--log file] [--ttl time-to-live] [--mcast-rdv-addr mcast-rdv-address] [--rcvbuf buf] [--nokbd] [--exit-wait milliseconds] [--nosync] [--license]\n", 
 	    progname);
     exit(1);
 }
@@ -95,7 +100,7 @@ int main(int argc, char **argv)
     net_config.rateLimit = NULL;
     net_config.ttl = 1;
     net_config.flags = 0;
-    net_config.mcastAll = NULL;
+    net_config.mcastRdv = NULL;
     net_config.exitWait = 500;
 
 #ifdef WINDOWS
@@ -139,7 +144,7 @@ int main(int argc, char **argv)
 		net_config.ttl = atoi(optarg);
 		break;
 	    case 'M':
-		net_config.mcastAll = strdup(optarg);
+		net_config.mcastRdv = strdup(optarg);
 		break;
 
 #ifdef BB_FEATURE_UDPCAST_FEC

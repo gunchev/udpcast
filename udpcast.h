@@ -48,7 +48,7 @@ struct net_config {
     int sliceSize;
     struct sockaddr_in controlMcastAddr;
     struct sockaddr_in dataMcastAddr;
-    char *mcastAll;
+    char *mcastRdv;
     int ttl;
     struct rate_limit *rateLimit;
     /*int async;*/
@@ -81,9 +81,9 @@ struct net_config {
     int requestedBufSize; /* requested receiver buffer */
 
     /* sender-specific parameters */
-    int min_clients;
-    int max_client_wait;
-    int min_client_wait;
+    int min_receivers;
+    int max_receivers_wait;
+    int min_receivers_wait;
 
     int retriesUntilDrop;
 

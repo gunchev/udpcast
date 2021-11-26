@@ -45,14 +45,16 @@ int sendGo(struct client_config *client_config) {
     return SSEND(go);
 }
 
-struct client_config *global_client_config;
+struct client_config *global_client_config=NULL;
 
 static void fixConsole(void) {
-    restoreConsole(&global_client_config->console,0);
+    if(global_client_config)
+	restoreConsole(&global_client_config->console,0);
 }
 
 static void sendDisconnectWrapper(void) {
-    sendDisconnect(0, global_client_config);
+    if(global_client_config)
+	sendDisconnect(0, global_client_config);
 }
 
 void sendDisconnect(int exitStatus,
@@ -119,14 +121,14 @@ int startReceiver(int doWarn,
 				       net_config->net_if,
 				       0, RECEIVER_PORT(net_config->portBase));
 
-    if(net_config->ttl == 1 && net_config->mcastAll == NULL) {
+    if(net_config->ttl == 1 && net_config->mcastRdv == NULL) {
 	getBroadCastAddress(net_config->net_if,
 			    &net_config->controlMcastAddr,
 			    SENDER_PORT(net_config->portBase));
 	setSocketToBroadcast(client_config.S_UCAST);
     } else {
 	getMcastAllAddress(&net_config->controlMcastAddr,
-			   net_config->mcastAll,
+			   net_config->mcastRdv,
 			   SENDER_PORT(net_config->portBase));
 	if(isMcastAddress(&net_config->controlMcastAddr)) {
 	    setMcastDestination(client_config.S_UCAST, net_config->net_if,
@@ -294,5 +296,8 @@ int startReceiver(int doWarn,
 	displayReceiverStats(stats);
 
     }
+    fixConsole();
+    sendDisconnectWrapper();
+    global_client_config= NULL;
     return 0;
 }

@@ -29,10 +29,14 @@ static struct option options[] = {
     { "portbase", 1, NULL, 'P' },
     { "blocksize", 1, NULL, 'b' },
     { "interface", 1, NULL, 'i' },
-    { "mcast_addr", 1, NULL, 'm' },
-    { "mcast-addr", 1, NULL, 'm' },
-    { "mcast_all_addr", 1, NULL, 'M' },
-    { "mcast-all-addr", 1, NULL, 'M' },
+    { "mcast_address", 1, NULL, 'm' }, /* Obsolete name */
+    { "mcast-address", 1, NULL, 'm' }, /* Obsolete name */
+    { "mcast_data_address", 1, NULL, 'm' },
+    { "mcast-data-address", 1, NULL, 'm' },
+    { "mcast_all_address", 1, NULL, 'M' }, /* Obsolete name */
+    { "mcast-all-address", 1, NULL, 'M' }, /* Obsolete name */
+    { "mcast_rdv_address", 1, NULL, 'M' },
+    { "mcast-rdv-address", 1, NULL, 'M' },
     { "max_bitrate", 1, NULL, 'r' },
     { "max-bitrate", 1, NULL, 'r' },
     { "point-to-point", 0, NULL, '1' },
@@ -74,18 +78,19 @@ static struct option options[] = {
 
     { "sendbuf", 1, NULL, 0x0a01 },
 
-    { "min-clients", 1, NULL, 0xb01 },
+    { "min-clients", 1, NULL, 0xb01 }, /* Obsolete name */
+    { "min-receivers", 1, NULL, 0xb01 },
     { "max-wait", 1, NULL, 0xb02 },
     { "min-wait", 1, NULL, 0xb03 },
     { "nokbd", 0, NULL, 0xb04 },
 
-    { "retriesUntilDrop", 1, NULL, 0xc01 },
-
+    { "retriesUntilDrop", 1, NULL, 0xc01 }, /* Obsolete name */
+    { "retries-until-drop", 1, NULL, 0xc01 },
 };
 
 #ifdef NO_BB
 static void usage(char *progname) {
-    fprintf(stderr, "%s [--file file] [--full-duplex] [--pipe pipe] [--portbase portbase] [--blocksize size] [--interface net-interface] [--mcast-addr data-mcast-address] [--mcast-all-addr mcast-all-address] [--max-bitrate bitrate] [--pointopoint] [--async] [--log file] [--min-slice-size min] [--max-slice-size max] [--slice-size] [--ttl time-to-live] [--fec <stripes>x<redundancy>/<stripesize>] [--print-seed] [--rexmit-hello-interval interval] [--autostart autostart] [--broadcast] [--min-clients clients] [--min-wait sec] [--max-wait sec] [--retriesUntilDrop n] [--nokbd] [--license]\n", progname); /* FIXME: copy new options to busybox */
+    fprintf(stderr, "%s [--file file] [--full-duplex] [--pipe pipe] [--portbase portbase] [--blocksize size] [--interface net-interface] [--mcast-data-addr data-mcast-address] [--mcast-rdv-addr mcast-rdv-address] [--max-bitrate bitrate] [--pointopoint] [--async] [--log file] [--min-slice-size min] [--max-slice-size max] [--slice-size] [--ttl time-to-live] [--fec <stripes>x<redundancy>/<stripesize>] [--print-seed] [--rexmit-hello-interval interval] [--autostart autostart] [--broadcast] [--min-receivers receivers] [--min-wait sec] [--max-wait sec] [--retries-until-drop n] [--nokbd] [--license]\n", progname); /* FIXME: copy new options to busybox */
     exit(1);
 }
 #else
@@ -117,7 +122,7 @@ int main(int argc, char **argv)
     disk_config.flags = 0;
 
     clearIp(&net_config.dataMcastAddr);
-    net_config.mcastAll = NULL;
+    net_config.mcastRdv = NULL;
     net_config.blockSize = 1456;
     net_config.sliceSize = 16;
     net_config.portBase = 9000;
@@ -132,9 +137,9 @@ int main(int argc, char **argv)
     net_config.autostart = 0;
     net_config.requestedBufSize = 0;
 
-    net_config.min_clients=0;
-    net_config.max_client_wait=0;
-    net_config.min_client_wait=0;
+    net_config.min_receivers=0;
+    net_config.max_receivers_wait=0;
+    net_config.min_receivers_wait=0;
 
     net_config.retriesUntilDrop = 200;
 
@@ -206,7 +211,7 @@ int main(int argc, char **argv)
 		    ipIsZero(&net_config.dataMcastAddr);
 		    break;
 		case 'M':
-		    net_config.mcastAll = strdup(optarg);
+		    net_config.mcastRdv = strdup(optarg);
 		    break;
 		case 'r':
 		    net_config.rateLimit=allocRateLimit(parseSpeed(optarg));
@@ -303,13 +308,13 @@ int main(int argc, char **argv)
 		    net_config.requestedBufSize=parseSize(optarg);
 		    break;		    
 		case 0xb01:
-		    net_config.min_clients = atoi(optarg);
+		    net_config.min_receivers = atoi(optarg);
 		    break;
 		case 0xb02:
-		    net_config.max_client_wait = atoi(optarg);
+		    net_config.max_receivers_wait = atoi(optarg);
 		    break;
 		case 0xb03:
-		    net_config.min_client_wait = atoi(optarg);
+		    net_config.min_receivers_wait = atoi(optarg);
 		    break;
 		case 0xb04:
 		    net_config.flags |= FLAG_NOKBD;
