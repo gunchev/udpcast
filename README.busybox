@@ -1,0 +1,37 @@
+1. Add the following to Config.h, in the list of modules (respect
+alphabetic order, i.e. it should go between BB_TTY and BB_UNIX2DOS)
+
+#define BB_UDPRECEIVER
+#define BB_UDPSENDER
+
+2. Add the following to the *end* of Config.h:
+
+#if defined BB_UDPRECEIVER || defined BB_UDPSENDER
+#define BB_LOG
+#define BB_FEC
+#define BB_FIFO
+#define BB_PRODUCONSUM
+#define BB_SOCKLIB
+#define BB_SENDER_DISKIO
+#define BB_RECEIVER_DISKIO
+#define BB_RECEIVEDATA
+#define BB_SENDDATA
+#define BB_RATE_LIMIT
+#define BB_UDPR_NEGOTIATE
+#define BB_UDPS_NEGOTIATE
+#define BB_VERSION
+#define BB_UDPCAST
+#define BB_STATISTICS
+#define BB_PARTICIPANTS
+#endif
+
+
+3. Add the following to applets.h (again, respect alphabetical order,
+i.e. this should go between TTY and UNIX2DOS):
+
+#ifdef BB_UDPRECEIVER
+	APPLET(udpreceiver, udpreceiver_main, _BB_DIR_BIN)
+#endif
+#ifdef BB_UDPSENDER
+	APPLET(udpsender, udpsender_main, _BB_DIR_BIN)
+#endif

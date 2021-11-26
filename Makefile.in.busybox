@@ -1,0 +1,54 @@
+# Makefile for busybox
+#
+# Copyright (C) 2004 by Alain Knaff <alain.knaff@lll.lu>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+#
+
+UDPCAST_AR:=udpcast.a
+ifndef $(UDPCAST_DIR)
+UDPCAST_DIR:=$(top_builddir)/udpcast/
+endif
+srcdir:=$(top_srcdir)/udpcast/
+
+UDPCAST-y:=
+UDPCAST-$(CONFIG_UDPSENDER) += \
+	udp-sender.o socklib.o udpcast.o rate-limit.o \
+	sender-diskio.o senddata.o udps-negotiate.o \
+	fifo.o produconsum.o participants.o log.o statistics.o \
+	fec.o udpc_version.o console.o process.o
+UDPCAST-$(CONFIG_UDPRECEIVER) += \
+	udp-receiver.o socklib.o udpcast.o \
+	receiver-diskio.o receivedata.o udpr-negotiate.o produconsum.o \
+	fifo.o log.o statistics.o fec.o udpc_version.o console.o process.o
+
+UDPCAST_SRC:= $(UDPCAST-y)
+UDPCAST_OBJ:= $(patsubst %.c,$(UDPCAST_DIR)%.o, $(UDPCAST_SRC))
+
+libraries-y+=$(UDPCAST_DIR)$(UDPCAST_AR)
+
+needlibpthreads-y:=
+needlibpthreads-$(CONFIG_UDPSENDER) := y
+needlibpthreads-$(CONFIG_UDPRECEIVER) := y
+
+ifeq ($(needlibpthreads-y),y)
+  LIBRARIES += -lpthread
+endif
+
+$(UDPCAST_DIR)$(UDPCAST_AR): $(patsubst %,$(UDPCAST_DIR)%, $(UDPCAST-y))
+	$(AR) -ro $@ $(patsubst %,$(UDPCAST_DIR)%, $(UDPCAST-y))
+
+$(UDPCAST_DIR)%.o: $(srcdir)/%.c
+	$(CC) $(CFLAGS) $(EXTRA_CFLAGS) -c -o $@ $<

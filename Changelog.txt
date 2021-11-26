@@ -1,0 +1,78 @@
+v20051223
+	* Phase out of most of the way old endianness backwards
+	compatibility hacks
+	* Mingw compatibility
+	* Commands to do more easier unicast
+	* Fix Case where Control-C is pressed on receiver right when
+	it waits for the "start" keypress
+v20051204
+	* Suppress excessive timeout messages (only print message
+	after 5 timeouts have expired...)
+	* use #ifdef i386 instead of ARCH_X86, fix assembler #ifdefs
+	in fec.c
+	* Fix Makefile to use $(CC) everywhere, rather than hardcoding
+	compiler
+	* Fix terminal handling (missing optional_action parameter)
+v20050226
+	* Fixed signed/unsigned bug
+v20050217
+	* Fixed uninitialized console variable
+v20050206
+	* Refactoring in console.c: do away with dedicated keyboard
+	listener thread in udp-receiver
+	* Fixed race condition which may happen at end of FEC
+	transmission
+	* Fixed a couple of typoes (it is sender, not server...)
+	* Refactoring to allow alias interfaces eth0:0
+	* CYGWIN compatibility
+	* Log key messages (receiver join, etc.) to syslog
+v20040417
+	Removed explicit reference to busybox version from
+	Makefile: from now on, we establish a symbolic link
+v20040222
+	Minor fixes to v20040221
+v20040221
+	Adapt for busybox 1.00pre7
+v20030831
+	Fix bad assertion in FEC mode
+v20030706
+	Applied patch renaming USE_ASSEMBLER into ARCH_X86
+	Applied DESTDIR patch
+v20030701
+	Added exitWait config option to make receiver hang
+	around for a while at end, in order to protect against
+	lost final ACK
+	Make retriesUntilDrop configurable
+v20030615
+	Make sender exit if there are no receivers left during
+	transfer
+v20030611
+	Added --nokbd support to udp-receiver
+v20030609
+	Added COPYING file to source tree detailing the
+	license of fec.c
+v20030605b
+	Fixed license in udpcast.spec
+	Included license printing in udpcast
+v20030605
+	Added missing libbb_udpcast.h file to CVS
+v20030601
+	Fix keyboard mode (udp-receiver left terminal in raw
+	state if started from another participant)
+v20030524
+	If we send our connectreq as a response to a server's
+	hello message, then send it directly to the server,
+	rather than to the broadcast address
+v20030518
+	Robustness against bad packets.
+	Completed Danish language file.
+	Released as 20030517 on web site.
+	Updated doc for new --min-clients type flags
+v20030517
+	Merged patches contributed by various users
+v20030511
+	Busybox support (make sure all symbols are unique,
+	script to move .c/.h files to busybox, applet
+	templates, usage templates, FEC support optional)
+v20030502
+	CVS merge after disk crash of last spring
