@@ -4,17 +4,13 @@
 #ifdef __MINGW32__
 
 #include "socklib.h"
+#include <errno.h>
 #include <winsock2.h>
 #include <winbase.h>
 #include <sys/time.h>
 typedef HANDLE pthread_t;
 typedef CRITICAL_SECTION pthread_mutex_t;
 typedef HANDLE pthread_cond_t;
-
-struct timespec {
-  unsigned long tv_sec;
-  unsigned long tv_nsec;
-};
 
 static inline int pthread_create(pthread_t *thread, void *dummy1,
 				 LPTHREAD_START_ROUTINE start_routine, 
@@ -78,7 +74,6 @@ static inline void pthread_cancel(pthread_t *thread)
   TerminateThread(thread, 0);
 }
 
-#define ETIMEDOUT -2
 #define MILLION    1000000
 #define BILLION 1000000000
 

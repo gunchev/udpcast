@@ -1,14 +1,18 @@
-#ifndef _LARGEFILE64_SOURCE
-#define _LARGEFILE64_SOURCE
-#endif
-
 #ifndef UDPCAST_CONFIG_H
 # define UDPCAST_CONFIG_H
 #include "config.h"
 #endif
 
-#ifndef HAVE_LOFF_T
-typedef unsigned long long loff_t;
+#if SIZEOF_OFF_T < 8
+# ifdef HAVE_LSEEK64
+#  define NEED_LSEEK64 1
+# endif
+#endif
+
+#ifdef NEED_LSEEK64
+#  ifndef _LARGEFILE64_SOURCE
+#   define _LARGEFILE64_SOURCE
+#  endif
 #endif
 
 #include <sys/time.h>
@@ -117,14 +121,18 @@ static void printFilePosition(int fd)
 	    fprintf(stderr, "%s --> %s\n", fn, strerror(errno));
 	}
 #else
-#ifdef HAVE_LSEEK64
-	loff_t offset = lseek64(fd, 0, SEEK_CUR);
+#ifdef NEED_LSEEK64
+	long long offset = lseek64(fd, 0, SEEK_CUR);
 	if(offset != -1)
 	    printLongNum(offset);
 #else
 	off_t offset = lseek(fd, 0, SEEK_CUR);
 	if(offset != -1)
+#ifdef __MINGW32__
+	    fprintf(stderr, "%10I64d", offset);
+#else
 	    fprintf(stderr, "%10d", offset);
+#endif
 #endif
 #endif
     }
@@ -139,8 +147,8 @@ int udpc_shouldPrintUncompressedPos(int deflt, int fd, int ref)
 	return 0; /* No pipe used => printing "uncompressed" statistics would be
 		     redundant */
     {
-#ifdef HAVE_LSEEK64
-	loff_t offset = lseek64(fd, 0, SEEK_CUR);
+#ifdef NEED_LSEEK64
+	long long offset = lseek64(fd, 0, SEEK_CUR);
 #else
 	off_t offset = lseek(fd, 0, SEEK_CUR);
 #endif
@@ -231,8 +239,13 @@ void senderStatsAddBytes(sender_stats_t ss, long bytes) {
 void senderStatsAddRetransmissions(sender_stats_t ss, int retransmissions) {
     if(ss != NULL) {
 	ss->retransmissions += retransmissions;
+#ifdef __MINGW32__
+	logprintf(ss->log, "RETX %9I64d %4d\n", ss->retransmissions, 
+		  retransmissions);
+#else
 	logprintf(ss->log, "RETX %9lld %4d\n", ss->retransmissions, 
 		  retransmissions);
+#endif
     }
 }
 
@@ -257,8 +270,13 @@ void displaySenderStats(sender_stats_t ss, int blockSize, int sliceSize,
     
     fprintf(stderr, "bytes=");
     printLongNum(ss->totalBytes);
+#ifdef __MINGW32__
+    fprintf(stderr, " re-xmits=%07I64u (%3u.%01u%%) slice=%04d ",
+	    ss->retransmissions, percent / 10, percent % 10, sliceSize);
+#else
     fprintf(stderr, " re-xmits=%07llu (%3u.%01u%%) slice=%04d ",
 	    ss->retransmissions, percent / 10, percent % 10, sliceSize);
+#endif
     if(ss->s.printUncompressedPos)
 	printFilePosition(ss->s.fd);
     fprintf(stderr, "- %3d\r", ss->clNo);

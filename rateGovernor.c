@@ -70,7 +70,7 @@ void rgParseRateGovernor(struct net_config *net_config, char *rg)
 
     data = rgInitGovernor(net_config, gov);
 
-    if(net_config->rateGovernorData == NULL) {
+    if(data == NULL) {
 	fprintf(stderr, "Rate governor initialization error\n");
 	exit(1);
     }

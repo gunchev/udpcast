@@ -342,6 +342,7 @@ slow_addmul1(gf *dst1, gf *src1, gf c, int sz)
 static void
 addmul1(gf *dst1, gf *src1, gf c, int sz)
 {
+    gf *dummy0, *dummy1;
     USE_GF_MULC ;
 
     GF_MULC0(c) ;
@@ -353,7 +354,7 @@ addmul1(gf *dst1, gf *src1, gf c, int sz)
 	return;
     }
 
-    asm volatile("xorl %%eax,%%eax;\n"
+    asm volatile("	xorl %%eax,%%eax;\n"
 		 "	xorl %%edx,%%edx;\n"
 		 ".align 32;\n"
 		 "1:"
@@ -390,13 +391,16 @@ addmul1(gf *dst1, gf *src1, gf c, int sz)
 		 
 		 "	cmpl  %%ecx, %%esi;\n"
 		 "	jb 1b;"
-		 : : 
-		 
+		 :
+
+		 "=D" (dummy0),
+		 "=S" (dummy1) :
+
 		 "b" (__gf_mulc_),
 		 "D" (dst1-8),
 		 "S" (src1),
 		 "c" (sz+src1) :
-		 "memory", "eax", "edx"
+		 "memory", "eax", "edx", "cc"
 	);
 }
 #else
@@ -465,6 +469,7 @@ slow_mul1(gf *dst1, gf *src1, gf c, int sz)
 static void
 mul1(gf *dst1, gf *src1, gf c, int sz)
 {
+    gf *dummy0, *dummy1;
     USE_GF_MULC ;
 
     GF_MULC0(c) ;
@@ -476,9 +481,7 @@ mul1(gf *dst1, gf *src1, gf c, int sz)
 	return;
     }
 
-    asm volatile("pushl %%eax;\n"
-		 "pushl %%edx;\n"
-		 "xorl %%eax,%%eax;\n"
+    asm volatile("	xorl %%eax,%%eax;\n"
 		 "	xorl %%edx,%%edx;\n"
 		 "1:"
 		 "	addl  $8, %%edi;\n"
@@ -514,15 +517,16 @@ mul1(gf *dst1, gf *src1, gf c, int sz)
 		 
 		 "	cmpl  %%ecx, %%esi;\n"
 		 "	jb 1b;\n"
-		 "	popl %%edx;\n"
-		 "	popl %%eax;"
-		 : : 
-		 
+		 :
+
+		 "=D" (dummy0),
+		 "=S" (dummy1) :
+
 		 "b" (__gf_mulc_),
 		 "D" (dst1-8),
 		 "S" (src1),
 		 "c" (sz+src1) :
-		 "memory", "eax", "edx"
+ 		 "memory", "eax", "edx", "cc"
 	);
 }
 #else

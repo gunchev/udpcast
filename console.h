@@ -1,6 +1,12 @@
 #ifndef CONSOLE_H
 #define CONSOLE_H
 
+#include "config.h"
+
+#if HAVE_SYS_SELECT_H
+#include <sys/select.h>
+#endif
+
 #ifdef __MINGW32__
 #include <winsock2.h>
 #include <winbase.h>

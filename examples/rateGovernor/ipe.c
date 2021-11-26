@@ -71,6 +71,9 @@ struct ipe {
 
   struct route *lastMatchedRoute; /* pointer to last matched route
 				     (performance optimization) */
+
+  int havePort; /* has the port been specified? */
+  int haveIp; /* has the IP been specified? */
 };
 
 /**
@@ -138,6 +141,7 @@ static void *run(void *p)
     pthread_cond_signal(&me->cond);
     pthread_mutex_unlock(&me->mutex); 
   }
+  return NULL;
 }
 
 /**
@@ -175,12 +179,19 @@ static void ipe_setProp(void *p, const char *key, const char *value)
 {
   struct ipe *me = (struct ipe *) p;
   if(!strcmp("ip", key)) {
-    inet_aton(value, &me->recv.sin_addr);
+    if(inet_aton(value, &me->recv.sin_addr) == 0) {
+      fprintf(stderr, "Bad ip address %s\n", value);
+      return;
+    }
+    me->haveIp=1;
   } else if(!strcmp("port", key)) {
     char *eptr;
     me->recv.sin_port = htons(strtoul(value,&eptr, 0));
-    if(*eptr)
+    if(*eptr) {
       fprintf(stderr, "Bad port %s\n", value);
+      return;
+    }
+    me->havePort=1;
   } else if(!strcmp("if", key)) {
     me->interface = strdup(value);
   } else if(!strcmp("maxFillLevel", key)) {
@@ -209,12 +220,23 @@ static void ipe_endConfig(void *data)
   struct ip_mreqn mreq; /* used for subscribing to multicast */
   int r; /* generic return value */
 
+  if(!me->havePort) {
+    fprintf(stderr, "Missing port\n");
+    return;
+  }
+
+  if(!me->haveIp) {
+    fprintf(stderr, "Missing IP\n");
+    return;
+  }
+
   sock = socket(PF_INET, SOCK_DGRAM, 0);
   if(socket < 0) {
     perror("socket");
     return;
   }
 
+  me->recv.sin_family = AF_INET;
   if(bind(sock, (struct sockaddr*) &me->recv, sizeof(struct sockaddr_in)) < 0) {
     perror("bind");
     return;

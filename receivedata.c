@@ -359,7 +359,7 @@ static struct slice *findSlice(struct clientState *clst, int sliceNo)
 
     if((clst->net_config->flags & FLAG_STREAMING) &&
        sliceNo != clst->currentSliceNo) {
-	assert(clst->currentSlice = &clst->slices[0]);
+	assert(clst->currentSlice == &clst->slices[0]);
 	return initSlice(clst, clst->currentSlice, sliceNo);	    
     }
 

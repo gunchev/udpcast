@@ -1,3 +1,7 @@
+v20200328
+	* Return a non-zero exit status if timeout expires at start
+	* Fix compiler warnings and various typoes
+	* Fixes for Mingw
 v20120424
 	* In receiver, return correct status if pipe fails
 	* By default, use nosync, even on device files

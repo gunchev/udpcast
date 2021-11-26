@@ -50,7 +50,7 @@ int sendGo(struct client_config *client_config) {
     return SSEND(go);
 }
 
-struct client_config *global_client_config=NULL;
+static struct client_config *global_client_config=NULL;
 
 static void fixConsole(void) {
     if(global_client_config)

@@ -68,7 +68,7 @@ int flprintf(const char *fmt, ...) {
     }
 }
 
-volatile int quitting = 0;
+static volatile int quitting = 0;
 
 /**
  * Print message to stdout, adding a newline "if needed"

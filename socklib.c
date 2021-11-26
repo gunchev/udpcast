@@ -62,10 +62,6 @@ typedef unsigned char u8;
     #define IFREQ_SIZE(a) _SIZEOF_ADDR_IFREQ(a)
 #endif
 
-#ifndef DEBUG
-# define DEBUG 0
-#endif
-
 #ifdef LOSSTEST
 /**
  * Packet loss/swap testing...
@@ -559,6 +555,7 @@ net_if_t *getNetIf(const char *wanted) {
 	struct ifreq *ifrp, *ifend, *chosen;
 	struct ifconf ifc;
 	int s;
+	int wantedLen=0;
 #else /* __MINGW32__ */
 	int i;
 
@@ -574,13 +571,11 @@ net_if_t *getNetIf(const char *wanted) {
 	WSADATA wsaData; /* Winsock implementation details */
 	ULONG a;
 
-	int r;
 #endif /* __MINGW32__ */
 
 	int lastGoodness=0;
 	struct in_addr wantedAddress;
 	int isAddress=0;
-	int wantedLen=0;
 	net_if_t *net_if;
 
 	if(wanted == NULL) {
@@ -592,8 +587,10 @@ net_if_t *getNetIf(const char *wanted) {
 	else
 	    wantedAddress.s_addr=0;
 
+#ifndef __MINGW32__
 	if(wanted)
 	    wantedLen=strlen(wanted);
+#endif /* __MINGW32__ */
 
 	net_if = MALLOC(net_if_t);
 	if(net_if == NULL)
@@ -760,14 +757,14 @@ net_if_t *getNetIf(const char *wanted) {
 
 
 	a=0;
-	r=GetIpAddrTable(iptab, &a, TRUE);
+	GetIpAddrTable(iptab, &a, TRUE);
 	iptab=malloc(a);
-	r=GetIpAddrTable(iptab, &a, TRUE);
+	GetIpAddrTable(iptab, &a, TRUE);
 
 	a=0;
-	r=GetIfTable(iftab, &a, TRUE);
+	GetIfTable(iftab, &a, TRUE);
 	iftab=malloc(a);
-	r=GetIfTable(iftab, &a, TRUE);
+	GetIfTable(iftab, &a, TRUE);
 
 	if(wanted && !strncmp(wanted, "eth", 3) && wanted[3]) {
 	    char *ptr;

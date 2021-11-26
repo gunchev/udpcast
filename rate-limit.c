@@ -14,8 +14,7 @@ struct rate_limit {
     int queueSize;
 };
 
-#define MILLION 1000000
-#define LLMILLION ((long long)1000000)
+#define LLMILLION 1000000LL
 
 static unsigned long parseSpeed(const char *speedString) {
     char *eptr;

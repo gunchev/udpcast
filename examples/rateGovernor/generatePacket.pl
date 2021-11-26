@@ -15,6 +15,8 @@
 use strict;
 use Socket;
 
+binmode(STDOUT);
+
 my $l = @ARGV;
 my $buf = pack("NN", $l, $l*16);
 

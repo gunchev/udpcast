@@ -2,6 +2,50 @@
 #define _GNU_SOURCE
 #endif
 
+/*
+//config:config UDPSENDER
+//config:	bool "UDPSENDER"
+//config:	default y
+//config:	help
+//config:	  Udpcast sender
+
+//kbuild:lib-$(CONFIG_UDPSENDER)         += udp-sender.o
+//kbuild:lib-$(CONFIG_UDPSENDER)         += socklib.o
+//kbuild:lib-$(CONFIG_UDPSENDER)         += udpcast.o
+//kbuild:lib-$(CONFIG_UDPSENDER)         += auto-rate.o
+//kbuild:lib-$(CONFIG_UDPSENDER)         += rate-limit.o
+//kbuild:lib-$(CONFIG_UDPSENDER)         += rateGovernor.o
+//kbuild:lib-$(CONFIG_UDPSENDER)         += sender-diskio.o
+//kbuild:lib-$(CONFIG_UDPSENDER)         += senddata.o
+//kbuild:lib-$(CONFIG_UDPSENDER)         += udps-negotiate.o
+//kbuild:lib-$(CONFIG_UDPSENDER)         += fifo.o
+//kbuild:lib-$(CONFIG_UDPSENDER)         += produconsum.o
+//kbuild:lib-$(CONFIG_UDPSENDER)         += participants.o
+//kbuild:lib-$(CONFIG_UDPSENDER)         += log.o
+//kbuild:lib-$(CONFIG_UDPSENDER)         += statistics.o
+//kbuild:lib-$(CONFIG_UDPSENDER)         += fec.o
+//kbuild:lib-$(CONFIG_UDPSENDER)         += udpc_version.o
+//kbuild:lib-$(CONFIG_UDPSENDER)         += console.o
+//kbuild:lib-$(CONFIG_UDPSENDER)         += process.o
+
+//applet:IF_UDPSENDER(APPLET_ODDNAME(udp-sender, udp_sender, BB_DIR_USR_SBIN, BB_SUID_DROP, udp_receiver))
+
+//usage:#define udp_receiver_trivial_usage
+//usage:      "[--file file] [--pipe pipe] [--portbase portbase] [--interface net-interface] [--log file] [--ttl time-to-live] [--mcast-all-addr mcast-all-address] [--rcvbuf buf]"
+//usage:#define udp_receiver_full_usage
+//usage:      "Receives a file via UDP multicast\n\n"
+//usage:      "Options:\n"
+//usage:      "\t--file\tfile where to store received data\n"
+//usage:      "\t--pipe\tprogram through which to pipe the data (for example, for uncompressing)\n"
+//usage:      "\t--portbase\tUDP ports to use\n"
+//usage:      "\t--interface\tnetwork interface to use (eth0, eth1, ...)\n"
+//usage:      "\t--log\tlogfile\n"
+//usage:      "\t--ttl\tIP \"time to live\". Only needed when attempting to udpcast accross routers\n"
+//usage:      "\t--mcast-all-addr\tmulticast address\n"
+//usage:      "\t--rcvbuf\tsize of receive buffer\n"
+
+*/
+
 #include <sys/types.h>
 #include <string.h>
 #include <errno.h>
@@ -193,8 +237,10 @@ int main(int argc, char **argv)
 #endif
 
     int daemon_mode = 0;
+#ifdef HAVE_KILL
     int doKill = 0;
-
+#endif
+    
     int r;
     struct net_config net_config;
     struct disk_config disk_config;
@@ -450,9 +496,11 @@ int main(int argc, char **argv)
 	        case 'D': /* daemon-mode */
 		    daemon_mode++;
 		    break;
-		case 'K':
+#ifdef HAVE_KILL
+	    	case 'K':
 		    doKill = 1;
 		    break;
+#endif
 		case 0x901:
 		    pidfile = optarg;
 		    break;
@@ -547,11 +595,11 @@ int main(int argc, char **argv)
 	srandomTime(printSeed);
 #endif
     if(net_config.flags &  FLAG_ASYNC) {
-	if(net_config.rateGovernor == 0) {
+	if(net_config.nrGovernors == 0) {
 	    fprintf(stderr, 
 		    "Async mode chosen but no rate governor ==> unsafe\n");
 	    fprintf(stderr, 
-		    "Transmission would fail due to buffer overrung\n");
+		    "Transmission would fail due to buffer overrun\n");
 	    fprintf(stderr, 
 		    "Add \"--max-bitrate 9500k\" to commandline (for example)\n");
 	    exit(1);

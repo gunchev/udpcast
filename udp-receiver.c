@@ -1,3 +1,54 @@
+/*
+//config:config UDPRECEIVER
+//config:	bool "UDPRECEIVER"
+//config:	default y
+//config:	help
+//config:	  Udpcast receiver
+
+//applet:IF_UDPRECEIVER(APPLET_ODDNAME(udp-receiver, udp_receiver, BB_DIR_USR_SBIN, BB_SUID_DROP, udp_receiver))
+
+//kbuild:lib-$(CONFIG_UDPRECEIVER)       += udp-receiver.o
+//kbuild:lib-$(CONFIG_UDPRECEIVER)       += socklib.o
+//kbuild:lib-$(CONFIG_UDPRECEIVER)       += udpcast.o
+//kbuild:lib-$(CONFIG_UDPRECEIVER)       += receiver-diskio.o
+//kbuild:lib-$(CONFIG_UDPRECEIVER)       += receivedata.o
+//kbuild:lib-$(CONFIG_UDPRECEIVER)       += udpr-negotiate.o
+//kbuild:lib-$(CONFIG_UDPRECEIVER)       += produconsum.o
+//kbuild:lib-$(CONFIG_UDPRECEIVER)       += fifo.o
+//kbuild:lib-$(CONFIG_UDPRECEIVER)       += log.o
+//kbuild:lib-$(CONFIG_UDPRECEIVER)       += statistics.o 
+//kbuild:lib-$(CONFIG_UDPRECEIVER)       += fec.o
+//kbuild:lib-$(CONFIG_UDPRECEIVER)       += udpc_version.o
+//kbuild:lib-$(CONFIG_UDPRECEIVER)       += console.o
+//kbuild:lib-$(CONFIG_UDPRECEIVER)       += process.o
+
+//usage:#define udp_sender_trivial_usage \
+//usage:      "[--file file] [--full-duplex] [--pipe pipe] [--portbase portbase] [--blocksize size] [--interface net-interface] [--mcast-addr data-mcast-address] [--mcast-all-addr mcast-all-address] [--max-bitrate bitrate] [--pointopoint] [--async] [--log file] [--min-slice-size min] [--max-slice-size max] [--slice-size] [--ttl time-to-live] [--print-seed] [--rexmit-hello-interval interval] [--autostart autostart] [--broadcast]"
+//usage:#define udp_sender_full_usage
+//usage:      "Sends a file via UDP multicast\n\n"
+//usage:      "\t--file\tfile to be transmitted\n"
+//usage:      "\t--full-duplex\toptimize for full duplex network (equipped with a switch, rather than a hub)\n"
+//usage:      "\t--pipe\tprogram through which to pipe the data before sending (for instance, a compressor)\n"
+//usage:      "\t--portbase\tUDP ports to use\n"
+//usage:      "\t--blocksize\tpacket size\n"
+//usage:      "\t--interface\tnetwork interface to use (eth0, eth1, ...)\n"
+//usage:      "\t--mcast-addr\taddress on which to multicast the data\n"
+//usage:      "\t--mcast-all-addr\taddress on which to multicast the control information\n"
+//usage:      "\t--max-bitrate\tmaximal bitrate with which to send the data\n"
+//usage:      "\t--pointopoint\tpointopoint (unicast) mode, suitable for a single receiver\n"
+//usage:      "\t--async\taynchronous mode (do not expect confirmation messages from receivers)\n"
+//usage:      "\t--log\tlog file\n"
+//usage:      "\t--min-slice-size\tminimal size of a \"slice\"\n"
+//usage:      "\t--max-slice-size\tmaximal size of a \"slice\"\n"
+//usage:      "\t--slice-size\tinitial slice size\n"
+//usage:      "\t--ttl\tIP \"time to live\". Only needed when attempting to udpcast accross routers\n"
+//usage:      "\t--print-seed\t\n"
+//usage:      "\t--rexmit-hello-interval\thow often to retransmit \"hello\" packets\n"
+//usage:      "\t--autostart\tafter how much hello packets to autostart\n"
+//usage:      "\t--broadcast\tuse broadcast rather than multicast\n"
+
+*/
+
 #include <sys/types.h>
 #include <string.h>
 #include <stdlib.h>
@@ -20,8 +71,6 @@
 #ifdef BB_FEATURE_UDPCAST_FEC
 #include "fec.h"
 #endif
-
-#define MAXBLOCK 1024
 
 #ifdef HAVE_GETOPT_LONG
 static struct option options[] = {

@@ -163,8 +163,6 @@ static void initFastTable(void) {
 
 
 
-static unsigned char dst2[SIZE] __attribute__ ((aligned (4096)));
-
 static void mmx_addmul1(gf *dst1, gf *src1, gf c, int sz)
 {
     /* Register allocation:
@@ -303,10 +301,10 @@ int main(int argc, char **argv) {
 	exit(1);
     }
 
-    begin = rdtsc(0);
-    init_fec();
+    begin = rdtsc();
+    fec_init();
     initFastTable();
-    end = rdtsc(1);
+    end = rdtsc();
     fprintf(stderr, "%d cycles to create FEC buffer\n",
 	    (unsigned int) (end-begin));
     for(i=0, j=0; i<size; i+=blocksize, j++) {
@@ -400,7 +398,7 @@ int main(int argc, char **argv) {
 
 
 
-
+static unsigned char dst2[SIZE] __attribute__ ((aligned (4096)));
 
 #define TDIFF(a,b) \
     (((a).tv_sec - (b).tv_sec)*1000000+(a).tv_usec-(b).tv_usec)
@@ -446,7 +444,7 @@ int main(int argc, char **argv) {
     exit(0);
     */
 
-    init_fec();
+    fec_init();
     initFastTable();
 
     for(i=0; i<SIZE*5; i++) {

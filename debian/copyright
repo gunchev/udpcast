@@ -4,7 +4,7 @@ Maintainer: Alain Knaff <alain@knaff.lu>
 Source: http://udpcast.linux.lu/
 
 Files: *
-Copyright: © 2001–2012 Alain Knaff <alain@knaff.lu>
+Copyright: © 2001–2020 Alain Knaff <alain@knaff.lu>
 License: GPL-2
  This program is free software; you can redistribute it and/or modify it
  under the terms of the GNU General Public License, version two, as
@@ -46,7 +46,7 @@ License: BSD
 Files: debian/*
 Copyright: © 2001–2010 Tomas Pospisek <tpo_deb@sourcepole.ch>
            © 2010 Michael Schutte <michi@uiae.at>
-           © 2011-2012 Alain Knaff <alain@knaff.lu>
+           © 2011-2020 Alain Knaff <alain@knaff.lu>
 License: GPL-2+
  This program is free software; you can redistribute it and/or modify it
  under the terms of the GNU General Public License as published by the

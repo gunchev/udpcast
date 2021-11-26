@@ -317,7 +317,7 @@ int startSender(struct disk_config *disk_config,
 #ifdef SIG_BLOCK
     /* signal sets */
     sigset_t sig, oldsig;
-    int shouldRestoreSig;
+    int shouldRestoreSig=0;
 #endif
 
     sock[nr++] = mainSock;
@@ -425,14 +425,18 @@ int startSender(struct disk_config *disk_config,
 	if((net_config->flags & FLAG_ASYNC) ||
 	   udpc_nrParticipants(db) > 0)
 	  doTransfer(sock[0], db, disk_config, net_config, stat_config);
-	else
+	else {
 	  fprintf(stderr, "No participants... exiting\n");
+	  r=-1;
+	}
     }
     free(db);
 #ifdef SIG_BLOCK
     if(shouldRestoreSig)
       sigprocmask(SIG_SETMASK, &oldsig, NULL);
 #endif
+    if(r < 0)
+	    return 1;
     return 0;
 }
 

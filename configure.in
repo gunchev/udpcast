@@ -39,39 +39,25 @@ AC_CHECK_TYPES(in_addr_t,[],[],[#ifdef HAVE_ARPA_INET_H
 #include <arpa/inet.h>
 #endif])
 
+AC_SYS_LARGEFILE
+AC_TYPE_INT8_T
+AC_TYPE_INT16_T
+AC_TYPE_INT32_T
+AC_TYPE_UINT8_T
+AC_TYPE_UINT16_T
+AC_TYPE_UINT32_T
+AC_TYPE_SSIZE_T
+AC_TYPE_SIZE_T
+AC_TYPE_OFF_T
+AC_TYPE_SIGNAL
+AC_TYPE_UID_T
 
-dnl
-dnl Check to see if llseek() is declared in unistd.h.  On some libc's 
-dnl it is, and on others it isn't..... Thank you glibc developers....
-dnl
-dnl Warning!  Use of --enable-gcc-wall may throw off this test.
-dnl
-dnl
-AC_MSG_CHECKING(whether llseek declared in unistd.h)
-AC_CACHE_VAL(mtools_cv_have_llseek_prototype,
-        AC_TRY_COMPILE(
-[#include <unistd.h>], [extern int llseek(int);],
-        [mtools_cv_have_llseek_prototype=no],
-        [mtools_cv_have_llseek_prototype=yes]))
-AC_MSG_RESULT($mtools_cv_have_llseek_prototype)
-if test "$mtools_cv_have_llseek_prototype" = yes; then
-   AC_DEFINE([HAVE_LLSEEK_PROTOTYPE],1,[Define when you have an LLSEEK prototype])
-fi
-
-AC_MSG_CHECKING(whether lseek64 declared in unistd.h)
-AC_CACHE_VAL(mtools_cv_have_lseek64_prototype,
-        AC_TRY_COMPILE(
-[
-#include "sysincludes.h"
-#include <unistd.h>
-], [extern int lseek64(int);],
-        [mtools_cv_have_lseek64_prototype=no],
-        [mtools_cv_have_lseek64_prototype=yes]))
-AC_MSG_RESULT($mtools_cv_have_lseek64_prototype)
-if test "$mtools_cv_have_lseek64_prototype" = yes; then
-   AC_DEFINE([HAVE_LSEEK64_PROTOTYPE],1,[Define when you have an LSEEK64 prototype])
-fi
-
+AC_CHECK_TYPES(caddr_t)
+AC_CHECK_SIZEOF(size_t)
+AC_CHECK_SIZEOF(time_t)
+AC_CHECK_SIZEOF(long)
+AC_CHECK_SIZEOF(long long)
+AC_CHECK_SIZEOF(off_t)
 
 AC_CHECK_FUNCS(htons kill daemon)
 
@@ -86,90 +72,6 @@ AC_STRUCT_TM
 dnl Checks for library functions.
 AC_TYPE_SIGNAL
 AC_CHECK_FUNCS(atexit on_exit tcsetattr lseek64 snprintf inet_pton inet_aton getopt_long dlsym)
-
-dnl
-dnl Check for 64-bit off_t
-dnl
-AC_DEFUN(SFS_CHECK_OFF_T_64,
-[AC_CACHE_CHECK(for 64-bit off_t, sfs_cv_off_t_64,
-AC_TRY_COMPILE([
-#include <unistd.h>
-#include <sys/types.h>
-],[
-switch (0) case 0: case (sizeof (off_t) <= 4):;
-], sfs_cv_off_t_64=no, sfs_cv_off_t_64=yes))
-if test $sfs_cv_off_t_64 = yes; then
-        AC_DEFINE([HAVE_OFF_T_64],1,[Define when the system has a 64 bit off_t type])
-fi])
-
-
-dnl ICE_CC_LOFF_T
-dnl -------------
-dnl
-dnl If the CC compiler supports `loff_t' type,  define `HAVE_LOFF_T'.
-dnl
-AC_DEFUN(ICE_CC_LOFF_T,
-[
-AC_MSG_CHECKING(whether ${CC} supports loff_t type)
-AC_CACHE_VAL(ice_cv_have_loff_t,
-[
-AC_TRY_COMPILE([#include <sys/types.h>],[loff_t a;],
-ice_cv_have_loff_t=yes,
-ice_cv_have_loff_t=no)
-])
-AC_MSG_RESULT($ice_cv_have_loff_t)
-if test "$ice_cv_have_loff_t" = yes; then
-AC_DEFINE([HAVE_LOFF_T],1,[Define when the compiler supports LOFF_T type])
-fi
-])dnl
-
-
-dnl ICE_CC_OFFSET_T
-dnl -------------
-dnl
-dnl If the CC compiler supports `offset_t' type,  define `HAVE_OFFSET_T'.
-dnl
-AC_DEFUN(ICE_CC_OFFSET_T,
-[
-AC_MSG_CHECKING(whether ${CC} supports offset_t type)
-AC_CACHE_VAL(ice_cv_have_offset_t,
-[
-AC_TRY_COMPILE([#include <sys/types.h>],[offset_t a;],
-ice_cv_have_offset_t=yes,
-ice_cv_have_offset_t=no)
-])
-AC_MSG_RESULT($ice_cv_have_offset_t)
-if test "$ice_cv_have_offset_t" = yes; then
-AC_DEFINE([HAVE_OFFSET_T],1,[Define when the compiler supports OFFSET_T type])
-fi
-])dnl
-
-dnl ICE_CC_LONG_LONG
-dnl -------------
-dnl
-dnl If the CC compiler supports `long long' type,  define `HAVE_LONG_LONG'.
-dnl
-AC_DEFUN(ICE_CC_LONG_LONG,
-[
-AC_MSG_CHECKING(whether ${CC} supports long long type)
-AC_CACHE_VAL(ice_cv_have_long_long,
-[
-AC_TRY_COMPILE(,[long long a;],
-ice_cv_have_long_long=yes,
-ice_cv_have_long_long=no)
-])
-AC_MSG_RESULT($ice_cv_have_long_long)
-if test "$ice_cv_have_long_long" = yes; then
-AC_DEFINE([HAVE_LONG_LONG],1,[Define when the compiler supports LONG_LONG type])
-fi
-])dnl
-
-
-SFS_CHECK_OFF_T_64
-ICE_CC_LOFF_T
-ICE_CC_OFFSET_T
-ICE_CC_LONG_LONG
-
 
 [
 host_os0=`echo $host_os | sed 's/-/_/g'`

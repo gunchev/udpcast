@@ -1,3 +1,11 @@
+udpcast (20200328) stable; urgency=low
+
+  * Return a non-zero exit status if timeout expires at start
+  * Fix compiler warnings and various typoes
+  * Fixes for Mingw
+  * Fix issues in assembly in fec.c
+
+ -- Alain Knaff <alain@knaff.lu>  Sat, 28 Mar 2020 23:22:12 +0100
 udpcast (20120424) stable; urgency=low
 
   * In receiver, return correct status if pipe fails

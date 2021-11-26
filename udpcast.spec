@@ -1,9 +1,11 @@
 %define _binary_payload w9.gzdio
 %global _binary_filedigest_algorithm 1
 %global _source_filedigest_algorithm 1
+%global debug_package %{nil}
+
 Name:           udpcast
 Summary:        UDP broadcast file distribution and installation
-Version:        20120424
+Version:        20200328
 Release:        1
 License:        GPLv2+ and BSD
 Group:          Applications/System
@@ -55,6 +57,11 @@ make install
 
 
 %changelog
+* Sun Apr 05 2020 Alain Knaff <alain@knaff.lu>
+- Fix issues in assembly in fec.c
+- Return a non-zero exit status if timeout expires at start
+- Fix compiler warnings and various typoes
+- Fixes for Mingw
 * Tue Apr 24 2012 Alain Knaff <alain@knaff.lu>
 - In receiver, return correct status if pipe fails
 - By default, use nosync, even on device files

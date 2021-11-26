@@ -11,7 +11,6 @@
 #ifndef __MINGW32__
 
 #include <termios.h>
-#include <sys/select.h>
 
 struct console_t {
     int fd; /* Filedescriptor for console, or -1 if disabled */
@@ -81,14 +80,13 @@ int selectWithConsole(console_t *con, int maxFd,
 void restoreConsole(console_t **cp, int doConsume) {
     console_t *c=*cp;
     int ch='\0';
-    int r UNUSED;
 
     if(c == NULL)
       return;
 
     /* If key pressed, consume it. If letter is q, quit */
     if(doConsume) {
-      r = read(c->fd, &ch, 1);
+      read(c->fd, &ch, 1);
     }
 
     if(c->needRestore && tcsetattr(c->fd, TCSAFLUSH, &c->oldtio) < 0) {
