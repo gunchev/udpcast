@@ -65,4 +65,9 @@ int startReceiver(int doWarn,
  */
 #define FLAG_NOKBD 0x0080
 
+/**
+ * Do write file synchronously
+ */
+#define FLAG_SYNC 0x0100
+
 #endif

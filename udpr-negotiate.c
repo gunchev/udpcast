@@ -1,6 +1,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <errno.h>
+#include <sys/stat.h>
 
 #include "log.h"
 #include "socklib.h"
@@ -94,8 +95,15 @@ int startReceiver(int doWarn,
     client_config.sender_is_newgen = 0;
     if(disk_config->fileName != NULL) {
 	int oflags = O_CREAT | O_WRONLY;
-	if(!(disk_config->flags & FLAG_NOSYNC)) {
+	if((disk_config->flags & FLAG_SYNC)) {
 	    oflags |= O_SYNC;
+	} else if( !(disk_config->flags & FLAG_NOSYNC)) {
+	    struct stat buf;
+	    if(stat(disk_config->fileName, &buf) == 0) {
+		/* If target is device, open it synchronously */
+		if(S_ISCHR(buf.st_mode) || S_ISBLK(buf.st_mode))
+			oflags |= O_SYNC;
+	    }
 	}
 	outFile = open(disk_config->fileName, oflags | O_BINARY, 0644);
 	if(outFile < 0) {
@@ -237,7 +245,10 @@ int startReceiver(int doWarn,
     getMyAddress(net_config->net_if, &myIp);
 
     if(!ipIsZero(&net_config->dataMcastAddr)  &&
-       !ipIsEqual(&net_config->dataMcastAddr, &myIp)) {
+       !ipIsEqual(&net_config->dataMcastAddr, &myIp) &&
+       (ipIsZero(&net_config->controlMcastAddr) ||
+       !ipIsEqual(&net_config->dataMcastAddr, &net_config->controlMcastAddr)
+	)) {
 	udpc_flprintf("Listening to multicast on %s\n",
 		      getIpString(&net_config->dataMcastAddr, ipBuffer));
 	client_config.S_MCAST_DATA = 

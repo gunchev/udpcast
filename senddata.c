@@ -192,7 +192,7 @@ static struct slice *makeSlice(sender_state_t sendst, int sliceNo) {
 static int sendRawData(int sock,
 		       struct net_config *config, 
 		       char *header, int headerSize, 
-		       char *data, int dataSize)
+		       unsigned char *data, int dataSize)
 {
     struct iovec iov[2];
     struct msghdr hdr;
@@ -544,7 +544,7 @@ static int handleOk(sender_state_t sendst,
 
 static int handleRetransmit(sender_state_t sendst,
 			    struct slice *slice,
-			    int clNo, char *map, int rxmit)
+			    int clNo, unsigned char *map, int rxmit)
 {
     unsigned int i;
 
@@ -974,7 +974,7 @@ static void fec_encode_all_stripes(sender_state_t sendst,
     unsigned char *data_blocks[128];
 
     if(leftOver) {
-	char *lastBlock = ADR(nrBlocks - 1, config->blockSize);
+	unsigned char *lastBlock = ADR(nrBlocks - 1, config->blockSize);
 	memset(lastBlock+leftOver, 0, config->blockSize-leftOver);
     }
 

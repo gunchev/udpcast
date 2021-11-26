@@ -25,8 +25,8 @@ void fec_decode(int blockSize,
 		unsigned char **data_blocks,
 		int nr_data_blocks,
 		unsigned char **fec_blocks,
-		int *fec_block_nos,
-		int *erased_blocks,
+		unsigned int *fec_block_nos,
+		unsigned int *erased_blocks,
 		short nr_fec_blocks  /* how many blocks per stripe */);
 
 void fec_print(fec_code_t code, int width);

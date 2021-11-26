@@ -811,8 +811,8 @@ static inline void reduce(int blockSize,
 			  unsigned char **data_blocks,
 			  int nr_data_blocks,
 			  unsigned char **fec_blocks,
-			  int *fec_block_nos,
-			  int *erased_blocks,
+			  unsigned int *fec_block_nos,
+			  unsigned int *erased_blocks,
 			  short nr_fec_blocks)
 {
     int erasedIdx=0;
@@ -824,7 +824,7 @@ static inline void reduce(int blockSize,
 	if(erasedIdx < nr_fec_blocks && erased_blocks[erasedIdx] == col) {
 	    erasedIdx++;
 	} else {
-	    char *src = data_blocks[col];
+	    unsigned char *src = data_blocks[col];
 	    int j;
 	    for(j=0; j < nr_fec_blocks; j++) {
 		int blno = fec_block_nos[j];
@@ -857,8 +857,8 @@ static inline void resolve(int blockSize,
 			   unsigned char **data_blocks,
 			   int nr_data_blocks,
 			   unsigned char **fec_blocks,
-			   int *fec_block_nos,
-			   int *erased_blocks,
+			   unsigned int *fec_block_nos,
+			   unsigned int *erased_blocks,
 			   short nr_fec_blocks)
 {
 #ifdef PROFILE
@@ -909,7 +909,7 @@ static inline void resolve(int blockSize,
     /* do the multiplication with the reduced code vector */
     for(row = 0, ptr=0; row < nr_fec_blocks; row++) {
 	int col;
-	char *target = data_blocks[erased_blocks[row]];
+	unsigned char *target = data_blocks[erased_blocks[row]];
 	mul(target,fec_blocks[0],matrix[ptr++],blockSize);
 	for(col = 1; col < nr_fec_blocks;  col++,ptr++) {
 	    addmul(target,fec_blocks[col],matrix[ptr],blockSize);
@@ -922,8 +922,8 @@ void fec_decode(int blockSize,
 		unsigned char **data_blocks,
 		int nr_data_blocks,
 		unsigned char **fec_blocks,
-		int *fec_block_nos,
-		int *erased_blocks,
+		unsigned int *fec_block_nos,
+		unsigned int *erased_blocks,
 		short nr_fec_blocks)
 {
 #ifdef PROFILE

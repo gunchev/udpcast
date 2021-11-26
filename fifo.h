@@ -5,7 +5,7 @@
 #include "produconsum.h"
 
 typedef struct fifo { 
-    char *dataBuffer;
+    unsigned char *dataBuffer;
     unsigned int dataBufSize;
 
     produconsum_t freeMemQueue; /* queue for free memory */

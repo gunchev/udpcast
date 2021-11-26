@@ -339,8 +339,10 @@ file, which is used for an informational progress display. The
 <dd>Logs some stuff into <i>file</i>.</dd>
 
 <dt>--nosync</dt>
-<dd>Do not open target in synchronous mode. Useful when dumping to an
-image file on a mounted filesystem, rather than to a raw partition.</dd>
+<dd>Do not open target in synchronous mode. This is the default when writing to a file or a pipe.</dd>
+
+<dt>--sync</dt>
+<dd>Write to target in synchronous mode. This is the default when writing to a device (character or block)</dd>
 
 <dt>--nokbd</dt>
 <dd>Do not read start signal from keyboard, and do not display any

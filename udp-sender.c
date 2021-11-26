@@ -205,9 +205,6 @@ int main(int argc, char **argv)
 		    break;
 		case 'm':
 		    setIpFromString(&net_config.dataMcastAddr, optarg);
-		    fprintf(stderr, "MC=x %p %p\n", 
-			    &net_config,
-			    &net_config.dataMcastAddr);
 		    ipIsZero(&net_config.dataMcastAddr);
 		    break;
 		case 'M':

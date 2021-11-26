@@ -311,7 +311,7 @@ int doReceive(int s, void *message, size_t len,
 
 int getSendBuf(int sock) {
     int bufsize;
-    int len=sizeof(int);
+    size_t len=sizeof(int);
     if(getsockopt(sock, SOL_SOCKET, SO_SNDBUF, (char*)&bufsize, &len) < 0)
 	return -1;
     return bufsize;
@@ -324,7 +324,7 @@ void setSendBuf(int sock, unsigned int bufsize) {
 
 unsigned int getRcvBuf(int sock) {
     unsigned int bufsize;
-    int len=sizeof(int);
+    size_t len=sizeof(int);
     if(getsockopt(sock, SOL_SOCKET, SO_RCVBUF, (char *)&bufsize, &len) < 0)
 	return -1;
     return bufsize;

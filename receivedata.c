@@ -97,14 +97,15 @@ struct clientState {
 
     /* A reservoir of free blocks for FEC */
     produconsum_t freeBlocks_pc;
-    char **blockAddresses; /* adresses of blocks in local queue */
+    unsigned char **blockAddresses; /* adresses of blocks in local queue */
 
-    char **localBlockAddresses; /* local blocks: freed FEC blocks after we
+    unsigned char **localBlockAddresses;
+				/* local blocks: freed FEC blocks after we
 				 * have received the corresponding data */
     int localPos;
 
-    char *blockData;
-    char *nextBlock;
+    unsigned char *blockData;
+    unsigned char *nextBlock;
 
     int endReached; /* end of transmission reached:
 		       0: transmission in progress
@@ -203,7 +204,7 @@ static int sendRetransmit(struct clientState *clst,
 }
 
 
-static char *getBlockSpace(struct clientState *clst)
+static unsigned char *getBlockSpace(struct clientState *clst)
 {
     int pos;
 
@@ -219,7 +220,7 @@ static char *getBlockSpace(struct clientState *clst)
 }
 
 #ifdef BB_FEATURE_UDPCAST_FEC
-static void freeBlockSpace(struct clientState *clst, char *block)
+static void freeBlockSpace(struct clientState *clst, unsigned char *block)
 {
     int pos = pc_getProducerPosition(clst->freeBlocks_pc);
     assert(block != 0);
@@ -459,7 +460,7 @@ static void fec_decode_one_stripe(struct clientState *clst,
 				  struct fec_desc *fec_descs) {
     struct fifo *fifo = clst->fifo;
     struct net_config *config = clst->net_config;
-    char *map = slice->retransmit.map;
+    unsigned char *map = slice->retransmit.map;
 
 //    int nrBlocks = (bytes + data->blockSize - 1) / data->blockSize;
     int nrBlocks = getSliceBlocks(slice, config);
@@ -494,7 +495,7 @@ static void fec_decode_one_stripe(struct clientState *clst,
     }
 
     if(leftOver) {
-	char *lastBlock = ADR(nrBlocks - 1, config->blockSize);
+	unsigned char *lastBlock = ADR(nrBlocks - 1, config->blockSize);
 	memset(lastBlock+leftOver, 0, config->blockSize-leftOver);
     }
 
@@ -611,7 +612,7 @@ static int processFecBlock(struct clientState *clst,
 			   int bytes)
 {
     struct slice *slice = findSlice(clst, sliceNo);
-    char *shouldAddress, *isAddress;
+    unsigned char *shouldAddress, *isAddress;
     int stripe;
     struct fec_desc *desc;
     int adr;
@@ -693,7 +694,7 @@ static int processDataBlock(struct clientState *clst,
 {
     struct fifo *fifo = clst->fifo;
     struct slice *slice = findSlice(clst, sliceNo);
-    char *shouldAddress, *isAddress;
+    unsigned char *shouldAddress, *isAddress;
 
     assert(slice == NULL || slice->magic == SLICEMAGIC);
 

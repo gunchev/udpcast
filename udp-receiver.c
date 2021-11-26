@@ -47,6 +47,7 @@ static struct option options[] = {
     { "passive", 0, NULL, 0x0801 },
 
     { "nosync", 0, NULL, 0x0901 },
+    { "sync", 0, NULL, 0x0902 },
 
     { "rcvbuf", 1, NULL, 0x0a01 },
 
@@ -176,6 +177,9 @@ int main(int argc, char **argv)
 		break;
 	    case 0x901:
 		disk_config.flags|=FLAG_NOSYNC;
+		break;
+	    case 0x902:
+		disk_config.flags|=FLAG_SYNC;
 		break;
 	    case 0xa01:
 		net_config.requestedBufSize=parseSize(optarg);

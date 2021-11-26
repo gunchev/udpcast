@@ -1,3 +1,13 @@
+v20060325
+	* Fix packaging, so that we now can build an clean rpm with
+	just the command-line programs. The mkimage script for the
+	embedded system is now within another RPM (udpcast-mkimage)
+	which, for the moment, is still constructed the old kludgy
+	way.
+v20060320
+	* Fixed signed-ness issues (revealed by gcc4)
+	* By default write files in unsynchronized mode, for better performance
+	* Fix case where data address is the same as rendez-vous address.
 v20060312
 	* Added usage message for --nosync option
 v20060309
