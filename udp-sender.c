@@ -1,25 +1,43 @@
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE
+#endif
+
 #include <sys/types.h>
 #include <string.h>
 #include <errno.h>
 #include <stdlib.h>
-#include <getopt.h>
 #include <unistd.h>
 
 #include "log.h"
 #include "socklib.h"
 #include "udpcast.h"
 #include "udp-sender.h"
-#include "rate-limit.h"
 #include "udpc_version.h"
+#include "rateGovernor.h"
+#include "rate-limit.h"
+#include "auto-rate.h"
+
+#ifdef HAVE_GETOPT_H
+#include <getopt.h>
+#endif
 
 #ifdef USE_SYSLOG
 #include <syslog.h>
+#endif
+
+#ifdef HAVE_STRING_H
+#include <string.h>
 #endif
 
 #ifdef BB_FEATURE_UDPCAST_FEC
 #include "fec.h"
 #endif
 
+#if defined HAVE_DLSYM && defined NO_BB
+#define DL_RATE_GOVERNOR
+#endif
+
+#ifdef HAVE_GETOPT_LONG
 static struct option options[] = {
     { "file", 1, NULL, 'f' },
     { "half-duplex", 0, NULL, 'c' },
@@ -48,7 +66,9 @@ static struct option options[] = {
     { "nopointopoint", 0, NULL, '2' },
 
     { "async", 0, NULL, 'a' },
+#ifdef FLAG_AUTORATE
     { "autorate", 0, NULL, 'A' },
+#endif
     { "log", 1, NULL, 'l' },
 
     /* slice size configuration */
@@ -57,9 +77,9 @@ static struct option options[] = {
     { "slice-size", 1, NULL, 0x0102 },
     { "max-slice-size", 1, NULL, 0x0103 },
 
-    { "ttl", 1, NULL, 0x0401 },
+    { "ttl", 1, NULL, 't' },
 #ifdef BB_FEATURE_UDPCAST_FEC
-    { "fec", 1, NULL, 0x0502 },
+    { "fec", 1, NULL, 'F' },
     { "license", 0, NULL, 'L' },
 #endif
 
@@ -71,35 +91,63 @@ static struct option options[] = {
     { "print-seed", 0, NULL, 0x604 },
 #endif
 
-    { "rexmit-hello-interval", 1, NULL, 0x701 },
-    { "autostart", 1, NULL, 0x702 },
+    { "rexmit-hello-interval", 1, NULL, 'H' },
+    { "autostart", 1, NULL, 'S' },
 
-    { "broadcast", 0, NULL, 0x801 },
+    { "broadcast", 0, NULL, 'B' },
 
-    { "sendbuf", 1, NULL, 0x0a01 },
+    { "sendbuf", 1, NULL, 's' },
 
-    { "min-clients", 1, NULL, 0xb01 }, /* Obsolete name */
-    { "min-receivers", 1, NULL, 0xb01 },
-    { "max-wait", 1, NULL, 0xb02 },
-    { "min-wait", 1, NULL, 0xb03 },
-    { "nokbd", 0, NULL, 0xb04 },
+    { "min-clients", 1, NULL, 'C' }, /* Obsolete name */
+    { "min-receivers", 1, NULL, 'C' },
+    { "max-wait", 1, NULL, 'W' },
+    { "min-wait", 1, NULL, 'w' },
+    { "nokbd", 0, NULL, 'k' },
 
-    { "retriesUntilDrop", 1, NULL, 0xc01 }, /* Obsolete name */
-    { "retries-until-drop", 1, NULL, 0xc01 },
+    { "retriesUntilDrop", 1, NULL, 'R' }, /* Obsolete name */
+    { "retries-until-drop", 1, NULL, 'R' },
 
-    { "daemon-mode", 0, NULL, 0xd01},
+    { "daemon-mode", 0, NULL, 'D'},
 
-    { "bw-period", 1, NULL, 0xe01},
+    { "bw-period", 1, NULL, 'I'},
+
+#ifdef DL_RATE_GOVERNOR
+    { "rate-governor", 1, NULL, 'g'},
+#endif
     { NULL, 0, NULL, 0}
 };
 
+# define getopt_l(c,v,o) getopt_long(c, v, o, options, NULL)
+#else /* HAVE_GETOPT_LONG */
+# define getopt_l(c,v,o) getopt(c, v, o)
+#endif /* HAVE_GETOPT_LONG */
+
 #ifdef NO_BB
 static void usage(char *progname) {
-    fprintf(stderr, "%s [--file file] [--full-duplex] [--pipe pipe] [--portbase portbase] [--blocksize size] [--interface net-interface] [--mcast-data-address data-mcast-address] [--mcast-rdv-address mcast-rdv-address] [--max-bitrate bitrate] [--pointopoint] [--async] [--log file] [--min-slice-size min] [--max-slice-size max] [--slice-size] [--ttl time-to-live] [--fec <stripes>x<redundancy>/<stripesize>] [--print-seed] [--rexmit-hello-interval interval] [--autostart autostart] [--broadcast] [--min-receivers receivers] [--min-wait sec] [--max-wait sec] [--retries-until-drop n] [--nokbd] [--bw-period n] [--license]\n", progname); /* FIXME: copy new options to busybox */
+#ifdef HAVE_GETOPT_LONG
+    fprintf(stderr, "%s [--file file] [--full-duplex] [--pipe pipe] [--portbase portbase] [--blocksize size] [--interface net-interface] [--mcast-data-address data-mcast-address] [--mcast-rdv-address mcast-rdv-address] [--max-bitrate bitrate] [--pointopoint] [--async] [--log file] [--min-slice-size min] [--max-slice-size max] [--slice-size] [--ttl time-to-live] [--fec <stripes>x<redundancy>/<stripesize>] [--print-seed] [--rexmit-hello-interval interval] [--autostart autostart] [--broadcast] [--min-receivers receivers] [--min-wait sec] [--max-wait sec] [--retries-until-drop n] [--nokbd] [--bw-period n]"
+#ifdef DL_RATE_GOVERNOR
+	    " [--rate-governor module:parameters]" 
+#endif
+#ifdef FLAG_AUTORATE
+	    " [--autorate]"
+#endif
+	    "[--license]\n", progname); /* FIXME: copy new options to busybox */
+#else /* HAVE_GETOPT_LONG */
+    fprintf(stderr, "%s [-f file] [-d] [-p pipe] [-P portbase] [-b size] [-i net-interface] [-m data-mcast-address] [-M mcast-rdv-address] [-r bitrate] [-1] [-a] [-l logfile] [-t time-to-live] [-F <stripes>x<redundancy>/<stripesize>][-H hello-retransmit-interval] [-S autostart] [-B] [-C min-receivers] [-w min-wait-sec] [-w max-wait-sec] [-R n] [-k] [-I n]"
+#ifdef DL_RATE_GOVERNOR
+	    " [-g rate-governor:parameters ]" 
+#endif
+#ifdef FLAG_AUTORATE
+	    " [-A]"
+#endif
+	    " [-L]\n", progname); /* FIXME: copy new options to busybox */
+#endif /* HAVE_GETOPT_LONG */
     exit(1);
 }
 #else
 static inline void usage(char *progname) {
+    (void) progname; /* shut up warning while compiling busybox... */
     bb_show_usage();
 }
 #endif
@@ -135,7 +183,7 @@ int main(int argc, char **argv)
     net_config.blockSize = 1456;
     net_config.sliceSize = 16;
     net_config.portBase = 9000;
-    net_config.rateLimit = NULL;
+    net_config.nrGovernors = 0;
     net_config.flags = 0;
     net_config.capabilities = 0;
     net_config.min_slice_size = 16;
@@ -166,9 +214,17 @@ int main(int argc, char **argv)
 	disk_config.pipeName = strdup("/bin/gzip -c");
 	disk_config.fileName = "/dev/hda";
     } else {
-	while( (c=getopt_long(argc, argv, 
-			      "f:p:P:b:i:m:l:r:a1AcdM:L",
-			      options, NULL)) != EOF ) {
+        while( (c=getopt_l(argc, argv, 
+			   "b:C:f:F:"
+#ifdef DL_RATE_GOVERNOR
+			   "g:"
+#endif
+			   "H:i:I:l:m:M:p:P:r:R:s:S:t:w:W:12a"
+#ifdef FLAG_AUTORATE
+			   "A"
+#endif
+			   "BcdDkL")) 
+	       != EOF ) {
 	    switch(c) {
 		case 'a':
 		    net_config.flags |= FLAG_ASYNC|FLAG_SN;
@@ -223,11 +279,14 @@ int main(int argc, char **argv)
 		    net_config.mcastRdv = strdup(optarg);
 		    break;
 		case 'r':
-		    net_config.rateLimit=allocRateLimit(parseSpeed(optarg));
+		    {
+			void *gov = rgInitGovernor(&net_config, &maxBitrate);
+			maxBitrate.rgSetProp(gov, MAX_BITRATE, optarg);
+		    }
 		    break;
 		case 'A':
 #ifdef FLAG_AUTORATE
-		    net_config.flags |= FLAG_AUTORATE;
+		    rgInitGovernor(&net_config, &autoRate);
 #else
 		    fatal(1, 
 			  "Auto rate limit not supported on this platform\n");
@@ -246,11 +305,11 @@ int main(int argc, char **argv)
 		    if(net_config.max_slice_size > MAX_SLICE_SIZE)
 			fatal(1, "max slice size too big\n");
 		    break;
-		case 0x0401:
+	        case 't': /* ttl */
 		    net_config.ttl = atoi(optarg);
 		    break;
 #ifdef BB_FEATURE_UDPCAST_FEC
-		case 0x502:
+	        case 'F': /* fec */
 		    net_config.flags |= FLAG_FEC;
 		    {
 			char *eptr;
@@ -304,42 +363,48 @@ int main(int argc, char **argv)
 		    printSeed=1;
 		    break;
 #endif
-		case 0x701:
+	        case 'H': /* rexmit-hello-interval */
 		    net_config.rexmit_hello_interval = atoi(optarg);
 		    break;
-		case 0x702:
+	        case 'S': /* autostart */
 		    net_config.autostart = atoi(optarg);
 		    break;
-		case 0x801:
+	        case 'B': /* broadcast */
 		    net_config.flags |= FLAG_BCAST;
 		    break;		    
-		case 0xa01:
+	        case 's': /* sendbuf */
 		    net_config.requestedBufSize=parseSize(optarg);
 		    break;		    
-		case 0xb01:
+	        case 'C': /* min-clients */
 		    net_config.min_receivers = atoi(optarg);
 		    break;
-		case 0xb02:
+	        case 'W': /* max-wait */
 		    net_config.max_receivers_wait = atoi(optarg);
 		    break;
-		case 0xb03:
+	        case 'w': /* min-wait */
 		    net_config.min_receivers_wait = atoi(optarg);
 		    break;
-		case 0xb04:
+	        case 'k': /* nokbd */
 		    net_config.flags |= FLAG_NOKBD;
 		    break;
 
-		case 0xc01:
+	        case 'R': /* retries-until-drop */
 		    net_config.retriesUntilDrop = atoi(optarg);
 		    break;
 
-		case 0xd01:
+	        case 'D': /* daemon-mode */
 		    daemon_mode = 1;
 		    break;
 
-		case 0xe01:
+	        case 'I': /* bw-period */
 		    stat_config.bwPeriod = atol(optarg);
 		    break;
+#ifdef DL_RATE_GOVERNOR
+	        case 'g': /* rate governor */
+		    rgParseRateGovernor(&net_config, optarg);
+		    break;
+#endif
+	        default:
 		case '?':
 		    usage(argv[0]);
 	    }
@@ -368,9 +433,9 @@ int main(int argc, char **argv)
 	srandomTime(printSeed);
 #endif
     if(net_config.flags &  FLAG_ASYNC) {
-	if(net_config.rateLimit == 0) {
+	if(net_config.rateGovernor == 0) {
 	    fprintf(stderr, 
-		    "Async mode chosen but no rate-limit ==> unsafe\n");
+		    "Async mode chosen but no rate governor ==> unsafe\n");
 	    fprintf(stderr, 
 		    "Transmission would fail due to buffer overrung\n");
 	    fprintf(stderr, 
@@ -416,5 +481,7 @@ int main(int argc, char **argv)
     do {
 	r= startSender(&disk_config, &net_config, &stat_config, ifName);
     } while(daemon_mode);
+
+    rgShutdownAll(&net_config);
     return r;
 }

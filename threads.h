@@ -6,6 +6,7 @@
 #include "socklib.h"
 #include <winsock2.h>
 #include <winbase.h>
+#include <sys/time.h>
 typedef HANDLE pthread_t;
 typedef CRITICAL_SECTION pthread_mutex_t;
 typedef HANDLE pthread_cond_t;
@@ -70,6 +71,11 @@ static inline int pthread_cond_wait(pthread_cond_t  *cond,
   r= WaitForSingleObject(*cond, INFINITE) == WAIT_OBJECT_0 ? 0 : -1;
   EnterCriticalSection(mutex);
   return r;
+}
+
+static inline void pthread_cancel(pthread_t *thread)
+{
+  TerminateThread(thread, 0);
 }
 
 #define ETIMEDOUT -2

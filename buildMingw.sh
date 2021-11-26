@@ -12,5 +12,5 @@
 #  mingw-w32api
 
 dir=`dirname $0`
-$dir/configure --srcdir $dir  --host i386-mingw32
+$dir/configure --srcdir $dir  --host i586-mingw32msvc
 make

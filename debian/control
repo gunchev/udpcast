@@ -1,0 +1,18 @@
+Source: udpcast
+Build-Depends-Indep: fakeroot, devscripts, debhelper
+Section: utils
+Priority: optional
+Maintainer: Alain Knaff <alain@knaff.lu>
+
+Package: udpcast
+Section: otherosfs
+Priority: optional
+Architecture: any
+Depends: libc6 (>= 2.4-1)
+Essential: no
+Provides: udpcast
+Description: Broadcast data to multiple destination
+ Command-line client for UDP sender and receiver. Udpcast is an
+ application for multicasting data to multiple targets.
+ .
+ Homepage: http://www.udpcast.linux.lu/

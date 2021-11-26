@@ -71,7 +71,6 @@
 #define setMcastDestination udpc_setMcastDestination
 #define isFullDuplex udpc_isFullDuplex
 #define getNetIf udpc_getNetIf
-#define getCurrentQueueLength udpc_getCurrentQueueLength
 #define getSendBuf udpc_getSendBuf
 #define setSendBuf udpc_setSendBuf
 #define getRcvBuf udpc_getRcvBuf
@@ -89,7 +88,6 @@
 #define copyFromMessage udpc_copyFromMessage
 #define isAddressEqual udpc_isAddressEqual
 #define parseSize udpc_parseSize
-#define parseSpeed udpc_parseSpeed
 
 
 #define zeroSockArray udpc_zeroSockArray
@@ -138,7 +136,7 @@ int doSend(int s, void *message, size_t len, struct sockaddr_in *to);
 int doReceive(int s, void *message, size_t len,
 	      struct sockaddr_in *from, int portBase);
 
-void printMyIp(net_if_t *net_if, int s);
+void printMyIp(net_if_t *net_if);
 
 
 int makeSocket(addr_type_t addr_type, net_if_t *net_if, 
@@ -151,7 +149,6 @@ int setMcastDestination(int,net_if_t *,struct sockaddr_in *);
 int isFullDuplex(int sock, const char *ifName);
 net_if_t *getNetIf(const char *ifName);
 
-int getCurrentQueueLength(int sock);
 int getSendBuf(int sock);
 void setSendBuf(int sock, unsigned int bufsize);
 unsigned int getRcvBuf(int sock);
@@ -186,7 +183,6 @@ void copyFromMessage(struct sockaddr_in *dst, unsigned char *src);
 int isAddressEqual(struct sockaddr_in *a, struct sockaddr_in *b);
 
 unsigned long parseSize(char *sizeString);
-unsigned long parseSpeed(char *speedString);
 
 void zeroSockArray(int *socks, int nr);
 int selectSock(int *socks, int nr, int startTimeout);
@@ -214,7 +210,6 @@ struct msghdr {
 
 ssize_t sendmsg(int s, const struct msghdr *msg, int flags);
 ssize_t recvmsg (int fd, struct msghdr *msg, int flags);
-void gettimeofday(struct timeval* p, void* tz /* IGNORED */);
 
 #define usleep(x) Sleep((x)/1000)
 #define sleep(x) Sleep(1000L*(x))
@@ -227,5 +222,14 @@ static inline void initMsgHdr(struct msghdr *hdr) {
     hdr->msg_flags = 0;
 #endif
 }
+
+#ifndef __MINGW32__
+#undef closesocket
+#define closesocket(x) close(x)
+#endif
+
+#ifndef HAVE_IN_ADDR_T
+typedef unsigned long in_addr_t;
+#endif
 
 #endif

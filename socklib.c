@@ -170,25 +170,6 @@ void srandomTime(int printSeed) {
 }
 #endif
 
-/**
- * If queue gets almost full, slow down things
- */
-void doAutoRateLimit(int sock, int dir, int qsize, int size)
-{
-    while(1) {
-	int r = udpc_getCurrentQueueLength(sock);
-	if(dir)
-	    r = qsize - r;
-	if(r < qsize / 2 - size)
-	    return;
-#if DEBUG
-	flprintf("Queue full %d/%d... Waiting\n", r, qsize);
-#endif
-	usleep(2500);
-    }
-}
-
-
 /* makes a socket address */
 int makeSockAddr(char *hostname, short port, struct sockaddr_in *addr)
 {
@@ -214,16 +195,16 @@ int makeSockAddr(char *hostname, short port, struct sockaddr_in *addr)
     return 0;
 }
 
-#ifndef HAVE_IN_ADDR_T
-typedef unsigned long in_addr_t;
-#endif
-
 #ifdef HAVE_PTON
 # define INET_ATON(a,i) inet_pton(AF_INET,a,i)
 #else
 # ifdef HAVE_ATON
 #  define INET_ATON(a,i) inet_aton(a,i)
 # else
+
+#ifndef INADDR_NONE
+#define INADDR_NONE ((in_addr_t)-1)
+#endif
 
 static inline int INET_ATON(const char *a, struct in_addr *i) {
 	i->s_addr=inet_addr(a);
@@ -339,7 +320,7 @@ int doReceive(int s, void *message, size_t len,
 
 int getSendBuf(int sock) {
     int bufsize;
-    size_t len=sizeof(int);
+    socklen_t len=sizeof(int);
     if(getsockopt(sock, SOL_SOCKET, SO_SNDBUF, (char*)&bufsize, &len) < 0)
 	return -1;
     return bufsize;
@@ -352,7 +333,7 @@ void setSendBuf(int sock, unsigned int bufsize) {
 
 unsigned int getRcvBuf(int sock) {
     unsigned int bufsize;
-    size_t len=sizeof(int);
+    socklen_t len=sizeof(int);
     if(getsockopt(sock, SOL_SOCKET, SO_RCVBUF, (char *)&bufsize, &len) < 0)
 	return -1;
     return bufsize;
@@ -363,18 +344,6 @@ void setRcvBuf(int sock, unsigned int bufsize) {
 		  (char*) &bufsize, sizeof(bufsize))< 0)
 	perror("Set receiver buffer");
 }
-
-int getCurrentQueueLength(int sock) {
-#ifdef TIOCOUTQ
-    int length;
-    if(ioctl(sock, TIOCOUTQ, &length) < 0)
-	return -1;
-    return length;
-#else
-    return -1;
-#endif
-}
-
 
 int setSocketToBroadcast(int sock) {
     /* set the socket to broadcast */
@@ -399,7 +368,7 @@ int setTtl(int sock, int ttl) {
 /**
  * Fill in the mreq structure with the given interface and address
  */
-static int fillMreq(int sock, net_if_t *net_if, struct in_addr addr,
+static int fillMreq(net_if_t *net_if, struct in_addr addr,
 		    struct IP_MREQN *mreq) {
 #ifdef HAVE_STRUCT_IP_MREQN_IMR_IFINDEX
     mreq->imr_ifindex = net_if->index;
@@ -420,7 +389,7 @@ static int mcastOp(int sock, net_if_t *net_if, struct in_addr addr,
     struct IP_MREQN mreq;
     int r;
     
-    fillMreq(sock, net_if, addr, &mreq);
+    fillMreq(net_if, addr, &mreq);
     r = setsockopt(sock, SOL_IP, code, (char*)&mreq, sizeof(mreq));
     if(r < 0) {
 	perror(message);
@@ -495,7 +464,7 @@ static char *fmtName(MIB_IFROW *ifrow) {
     out = malloc(ifrow->dwDescrLen+l+1);
     if(!out)
 	return NULL;
-    strncpy(out, ifrow->bDescr, ifrow->dwDescrLen);
+    memcpy(out, ifrow->bDescr, ifrow->dwDescrLen);
     out[ifrow->dwDescrLen]='\0';
 
     if(ifrow->dwPhysAddrLen) {
@@ -950,7 +919,7 @@ int makeSocket(addr_type_t addr_type,
 		   addr_type, net_if->name);
     if(addr_type == ADDR_TYPE_BCAST && myaddr.sin_addr.s_addr == 0) {
       /* Attempting to bind to broadcast address on not-broadcast media ... */
-      close(s);
+      closesocket(s);
       return -1;
     }
     ret = bind(s, (struct sockaddr *) &myaddr, sizeof(myaddr));
@@ -970,7 +939,7 @@ int makeSocket(addr_type_t addr_type,
     return s;
 }
 
-void printMyIp(net_if_t *net_if, int s)
+void printMyIp(net_if_t *net_if)
 {
     char buffer[16];
     struct sockaddr_in myaddr;
@@ -1064,29 +1033,6 @@ unsigned long parseSize(char *sizeString) {
     return size;
 }
 
-
-unsigned long parseSpeed(char *speedString) {
-    char *eptr;
-    unsigned long speed = strtoul(speedString, &eptr, 10);
-    if(eptr && *eptr) {
-	switch(*eptr) {
-	    case 'm':
-	    case 'M':
-		speed *= 1000000;
-		break;
-	    case 'k':
-	    case 'K':
-		speed *= 1000;
-		break;
-	    case '\0':
-		break;
-	    default:
-		udpc_fatal(1, "Unit %c unsupported\n", *eptr);
-	}
-    }
-    return speed;
-}
-
 void zeroSockArray(int *socks, int nr) {
     int i;
 
@@ -1149,7 +1095,7 @@ void closeSock(int *socks, int nr, int target) {
     for(i=0; i<nr; i++)
 	if(socks[i] == sock)
 	    return;
-    close(sock);
+    closesocket(sock);
 }
 
 int isMcastAddress(struct sockaddr_in *addr) {
@@ -1220,17 +1166,5 @@ ssize_t sendmsg (int fd, const struct msghdr *msg, int flags) {
     return n;
 }
 
-/* Gettimeofday function copied from http://www.daen.dk/archives/000384.html */
-void gettimeofday(struct timeval* p, void* tz /* IGNORED */) {
-     union {
-       long long ns100; /*time since 1 Jan 1601 in 100ns units */
-       FILETIME ft;
-     } _now;
-
-     GetSystemTimeAsFileTime( &(_now.ft) );
-     p->tv_usec=(long)((_now.ns100 / 10LL) % 1000000LL );
-     p->tv_sec= (long)((_now.ns100-(116444736000000000LL))/10000000LL);
-     return;
-   }
 
 #endif /* __MINGW32__ */

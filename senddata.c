@@ -14,7 +14,6 @@
 #include "udpcast.h"
 #include "udp-sender.h"
 #include "udpc-protoc.h"
-#include "rate-limit.h"
 #include "statistics.h"
 
 #ifdef USE_SYSLOG
@@ -81,7 +80,6 @@ struct returnChannel {
     } q[QUEUE_SIZE];
     struct net_config *config;
     participantsDb_t participantsDb;
-    int stopIt; /* if set, return channel should stop */
 };
 
 #define NR_SLICES 2
@@ -212,11 +210,7 @@ static int sendRawData(int sock,
     initMsgHdr(&hdr);
 
     packetSize = dataSize + headerSize;
-    doRateLimit(config->rateLimit, packetSize);
-#ifdef FLAG_AUTORATE
-    if(config->flags & FLAG_AUTORATE)
-	doAutoRateLimit(sock, config->dir, config->sendbuf, packetSize);
-#endif
+    rgWaitAll(config, sock, config->dataMcastAddr.sin_addr.s_addr, packetSize);
     ret = sendmsg(sock, &hdr, 0);
     if (ret < 0) {
 	char ipBuffer[16];
@@ -467,12 +461,9 @@ static int sendReqack(struct slice *slice, struct net_config *net_config,
     memset(slice->isXmittedMap, 0, sizeof(slice->isXmittedMap));
     slice->sl_reqack.ra.rxmit = htonl(slice->rxmitId);
     
-    doRateLimit(net_config->rateLimit, sizeof(slice->sl_reqack));
-#ifdef FLAG_AUTORATE
-    if(net_config->flags & FLAG_AUTORATE)
-	doAutoRateLimit(sock, net_config->dir, net_config->sendbuf,
-			sizeof(slice->sl_reqack));
-#endif
+    rgWaitAll(net_config, sock,
+	      net_config->dataMcastAddr.sin_addr.s_addr,
+	      sizeof(slice->sl_reqack));
 #if DEBUG
     flprintf("sending reqack for slice %d\n", slice->sliceNo);
 #endif
@@ -578,9 +569,7 @@ static int handleRetransmit(sender_state_t sendst,
     return 0;
 }
 
-static int handleDisconnect1(participantsDb_t db,
-			     struct slice *slice,
-			     int clNo)
+static int handleDisconnect1(struct slice *slice, int clNo)
 {    
     if(slice != NULL) {
 	if (BIT_ISSET(clNo, slice->sl_reqack.readySet)) {
@@ -601,11 +590,9 @@ static int handleDisconnect(participantsDb_t db,
 			    struct slice *slice2,
 			    int clNo)
 {
-    handleDisconnect1(db, slice1, clNo);
-    handleDisconnect1(db, slice2, clNo);
+    handleDisconnect1(slice1, clNo);
+    handleDisconnect1(slice2, clNo);
     udpc_removeParticipant(db, clNo);
-    if(udpc_nrParticipants(db) == 0)
-	exit(0);
     return 0;
 }
 
@@ -667,25 +654,12 @@ static int handleNextMessage(sender_state_t sendst,
 
 static THREAD_RETURN returnChannelMain(void *args) {
     struct returnChannel *returnChannel = (struct returnChannel *) args;
-    fd_set read_set;
-    int r=0;
-    FD_ZERO(&read_set);
 
     while(1) {
 	struct sockaddr_in from;
 	int clNo;
 	int pos = pc_getConsumerPosition(returnChannel->freeSpace);
 	pc_consumeAny(returnChannel->freeSpace);
-	do {
-	    struct timeval tv;
-	    if(returnChannel->stopIt)
-		return 0;
-	    FD_SET(returnChannel->rcvSock,&read_set);
-	    tv.tv_sec=0;
-	    tv.tv_usec=100;
-	    r = select(returnChannel->rcvSock+1,
-		       &read_set, NULL, NULL, &tv);
-	} while(r==0);
 
 	RECV(returnChannel->rcvSock, 
 	     returnChannel->q[pos].msg, from,
@@ -699,6 +673,7 @@ static THREAD_RETURN returnChannelMain(void *args) {
 	pc_consumed(returnChannel->freeSpace, 1);
 	pc_produce(returnChannel->incoming, 1);
     }
+    return 0;
 }
 
 
@@ -706,7 +681,6 @@ static void initReturnChannel(struct returnChannel *returnChannel,
 			      struct net_config *config,
 			      int sock) {
     returnChannel->config = config;
-    returnChannel->stopIt = 0;
     returnChannel->rcvSock = sock;
     returnChannel->freeSpace = pc_makeProduconsum(QUEUE_SIZE,"msg:free-queue");
     pc_produce(returnChannel->freeSpace, QUEUE_SIZE);
@@ -718,7 +692,11 @@ static void initReturnChannel(struct returnChannel *returnChannel,
 }
 
 static void cancelReturnChannel(struct returnChannel *returnChannel) {
-    returnChannel->stopIt = 1;
+    /* No need to worry about the pthread_cond_wait in produconsum, because
+     * at the point where we enter here (to cancel the thread), we are sure
+     * that nobody else uses that produconsum any more
+     */
+    pthread_cancel(returnChannel->thread);
     pthread_join(returnChannel->thread, NULL);
 }
 
@@ -945,7 +923,7 @@ static THREAD_RETURN netSenderMain(void	*args0)
 #endif
                     udpc_removeParticipant(sendst->rc.participantsDb, i);
                     if(nrParticipants(sendst->rc.participantsDb) == 0)
-			exit(0);
+			goto exit_main_loop;
                 }
             }
 	    continue;
@@ -955,7 +933,9 @@ static THREAD_RETURN netSenderMain(void	*args0)
 		   sendst->socket);
     } while(udpc_nrParticipants(sendst->rc.participantsDb)||
 	    (config->flags & FLAG_ASYNC));
+ exit_main_loop:
     cancelReturnChannel(&sendst->rc);
+    pc_produceEnd(sendst->fifo->freeMemQueue);
     return 0;
 }
 

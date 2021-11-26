@@ -10,7 +10,6 @@
 #include "udpcast.h"
 #include "udpc-protoc.h"
 #include "udp-sender.h"
-#include "rate-limit.h"
 #include "participants.h"
 #include "statistics.h"
 #include "console.h"
@@ -72,7 +71,7 @@ static int sendConnectionReply(participantsDb_t db,
     reply.capabilities = ntohl(config->capabilities);
     copyToMessage(reply.mcastAddr,&config->dataMcastAddr);
     /*reply.mcastAddress = mcastAddress;*/
-    doRateLimit(config->rateLimit, sizeof(reply));
+    rgWaitAll(config, sock, client->sin_addr.s_addr, sizeof(reply));
     if(SEND(sock, reply, *client) < 0) {
 	perror("reply add new client");
 	return -1;
@@ -88,7 +87,8 @@ static void sendHello(struct net_config *net_config, int sock) {
     hello.capabilities = htonl(net_config->capabilities);
     copyToMessage(hello.mcastAddr,&net_config->dataMcastAddr);
     hello.blockSize = htons(net_config->blockSize);
-    doRateLimit(net_config->rateLimit, sizeof(hello));
+    rgWaitAll(net_config, sock, net_config->controlMcastAddr.sin_addr.s_addr,
+	      sizeof(hello));
     BCAST_CONTROL(sock, hello);
 }
 
@@ -151,7 +151,6 @@ static int checkClientWait(participantsDb_t db,
  */
 static int mainDispatcher(int *fd, int nr,
 			  participantsDb_t db,
-			  struct disk_config *disk_config,
 			  struct net_config *net_config,
 			  console_t **console, int *tries,
 			  time_t *firstConnected)
@@ -217,7 +216,7 @@ static int mainDispatcher(int *fd, int nr,
 	    if(net_config->autostart != 0 && *tries > net_config->autostart)
 		startNow=1;
 	}
-		  
+
 	if(firstConnected)
 	    startNow = 
 		startNow || checkClientWait(db, net_config, firstConnected);
@@ -314,19 +313,6 @@ int startSender(struct disk_config *disk_config,
     if(net_config->requestedBufSize)
 	setSendBuf(sock[0], net_config->requestedBufSize);
 
-#ifdef FLAG_AUTORATE
-    if(net_config->flags & FLAG_AUTORATE) {
-	int q = getCurrentQueueLength(sock[0]);
-	if(q == 0) {
-	    net_config->dir = 0;
-	    net_config->sendbuf = getSendBuf(sock[0]);
-	} else {
-	    net_config->dir = 1;
-	    net_config->sendbuf = q;
-	}
-    }
-#endif
-
     net_config->controlMcastAddr.sin_addr.s_addr =0;
     if(net_config->ttl == 1 && net_config->mcastRdv == NULL) {
 	getBroadCastAddress(net_config->net_if,
@@ -370,7 +356,7 @@ int startSender(struct disk_config *disk_config,
 		  disk_config->pipeName == NULL ? "" : "Compressed ",
 		  disk_config->fileName == NULL ? "(stdin)" :
 		  disk_config->fileName);
-    printMyIp(net_config->net_if, sock[0]);
+    printMyIp(net_config->net_if);
     udpc_flprintf(" on %s \n", net_config->net_if->name);
     udpc_flprintf("Broadcasting control to %s\n",
 		  getIpString(&net_config->controlMcastAddr, ipBuffer));
@@ -392,21 +378,25 @@ int startSender(struct disk_config *disk_config,
     else
 	firstConnectedP = NULL;	
 
-    while(!(r=mainDispatcher(sock, nr, db, disk_config, net_config,
+    while(!(r=mainDispatcher(sock, nr, db, net_config,
 			     &console,&tries,firstConnectedP))){}
     for(j=1; j<nr; j++)
       if(sock[j] != sock[0])
-	close(sock[j]);
+	closesocket(sock[j]);
 
     restoreConsole(&console,0);
     if(r == 1) {
 	int i;
 	for(i=1; i<nr; i++)
 	    udpc_closeSock(sock, nr, i);
-	doTransfer(sock[0], db, disk_config, net_config, stat_config);
+	if((net_config->flags & FLAG_ASYNC) ||
+	   udpc_nrParticipants(db) > 0)
+	  doTransfer(sock[0], db, disk_config, net_config, stat_config);
+	else
+	  fprintf(stderr, "No participants... exiting\n");
     }
     free(db);
-    close(sock[0]);
+    closesocket(sock[0]);
     return 0;
 }
 
@@ -480,7 +470,11 @@ static int doTransfer(int sock,
     in = openPipe(disk_config, origIn, &pid);
     udpc_initFifo(&fifo, net_config->blockSize);
     ret = spawnNetSender(&fifo, sock, net_config, db, stats);
-    localReader(disk_config, &fifo, in);
+    localReader(&fifo, in);
+
+    close(origIn);
+    if(in != origIn)
+      close(in);
 
     /* if we have a pipe, now wait for that too */
     if(pid) {
@@ -492,10 +486,6 @@ static int doTransfer(int sock,
 #ifdef USE_SYSLOG
     syslog(LOG_INFO, "Transfer complete.");
 #endif
-
-    close(origIn);
-    if(in != origIn)
-      close(in);
 
     /* remove all participants */
     for(i=0; i < MAX_CLIENTS; i++) {

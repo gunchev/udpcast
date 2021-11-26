@@ -3,6 +3,7 @@
 
 #include "socklib.h"
 #include <sys/time.h>
+#include <stdio.h>
 
 #define BITS_PER_INT (sizeof(int) * 8)
 #define BITS_PER_CHAR 8
@@ -32,6 +33,8 @@ struct disk_config {
     int flags;
 };
 
+#define MAX_GOVERNORS 10
+
 struct net_config {
     net_if_t *net_if; /* Network interface (eth0, isdn0, etc.) on which to
 		       * multicast */
@@ -42,12 +45,11 @@ struct net_config {
     struct sockaddr_in dataMcastAddr;
     const char *mcastRdv;
     int ttl;
-    struct rate_limit *rateLimit;
+    int nrGovernors;
+    struct rateGovernor_t *rateGovernor[MAX_GOVERNORS];
+    void *rateGovernorData[MAX_GOVERNORS];
     /*int async;*/
     /*int pointopoint;*/
-    int dir; /* 1 if TIOCOUTQ is remaining space, 
-	      * 0 if TIOCOUTQ is consumed space */
-    int sendbuf; /* sendbuf */
     struct timeval ref_tv;
 
     enum discovery {
@@ -96,6 +98,12 @@ struct stat_config {
     FILE *log; /* Log file for statistics */
     long bwPeriod; /* How often are bandwidth estimations logged? */
 };
+
+
+void *rgInitGovernor(struct net_config *cfg, struct rateGovernor_t *gov);
+void rgParseRateGovernor(struct net_config *net_config, char *rg);
+void rgWaitAll(struct net_config *cfg, int sock, in_addr_t ip, int size);
+void rgShutdownAll(struct net_config *cfg);
 
 #define MAX_SLICE_SIZE 1024
 

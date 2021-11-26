@@ -3,13 +3,15 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <fcntl.h>
-#include <getopt.h>
 #include <signal.h>
 #include "log.h"
 #include "udpcast.h"
 #include "udp-receiver.h"
 #include "socklib.h"
 #include "udpc_version.h"
+#ifdef HAVE_GETOPT_H
+#include <getopt.h>
+#endif
 
 #ifdef USE_SYSLOG
 #include <syslog.h>
@@ -21,13 +23,14 @@
 
 #define MAXBLOCK 1024
 
+#ifdef HAVE_GETOPT_LONG
 static struct option options[] = {
     { "file", 1, NULL, 'f' },
     { "pipe", 1, NULL, 'p' },
     { "port", 1, NULL, 'P' },
     { "portbase", 1, NULL, 'P' },
     { "interface", 1, NULL, 'i' },
-    { "ttl", 1, NULL, 0x0401 },
+    { "ttl", 1, NULL, 't' },
     { "mcast_all_address", 1, NULL, 'M' }, /* Obsolete name */
     { "mcast-all-address", 1, NULL, 'M' }, /* Obsolete name */
 
@@ -44,19 +47,19 @@ static struct option options[] = {
     { "read-swap", 1, NULL, 0x605 },
 #endif
 
-    { "passive", 0, NULL, 0x0801 },
+    { "passive", 0, NULL, 'd' },
 
-    { "nosync", 0, NULL, 0x0901 },
-    { "sync", 0, NULL, 0x0902 },
+    { "nosync", 0, NULL, 'n' },
+    { "sync", 0, NULL, 'y' },
 
-    { "rcvbuf", 1, NULL, 0x0a01 },
+    { "rcvbuf", 1, NULL, 'b' },
 
-    { "nokbd", 0, NULL, 0xb04 },
+    { "nokbd", 0, NULL, 'k' },
 
-    { "exitWait", 1, NULL, 0xd01 }, /* Obsolete name */
-    { "exit-wait", 1, NULL, 0xd01 },
+    { "exitWait", 1, NULL, 'w' }, /* Obsolete name */
+    { "exit-wait", 1, NULL, 'w' },
 
-    { "start-timeout", 1, NULL, 0xe01 },
+    { "start-timeout", 1, NULL, 's' },
 
 #ifdef BB_FEATURE_UDPCAST_FEC
     { "license", 0, NULL, 'L' },
@@ -67,14 +70,24 @@ static struct option options[] = {
     { NULL, 0, NULL, 0 }
 };
 
+# define getopt_l(c,v,o) getopt_long(c, v, o, options, NULL)
+#else /* HAVE_GETOPT_LONG */
+# define getopt_l(c,v,o) getopt(c, v, o)
+#endif /* HAVE_GETOPT_LONG */
+
 static void intHandler(int nr) {
-    udpc_fatal(1, "Cancelled by user\n");
+    udpc_fatal(1, "Signal %d: Cancelled by user\n", nr);
 }
 
 #ifdef NO_BB
 static void usage(char *progname) {
-    fprintf(stderr, "%s [--file file] [--pipe pipe] [--portbase portbase] [--interface net-interface] [--log file] [--ttl time-to-live] [--mcast-rdv-address mcast-rdv-address] [--rcvbuf buf] [--nokbd] [--exit-wait milliseconds] [--nosync] [--start-timeout sto] [--license]\n", 
+#ifdef HAVE_GETOPT_LONG
+    fprintf(stderr, "%s [--file file] [--pipe pipe] [--portbase portbase] [--interface net-interface] [--log file] [--ttl time-to-live] [--mcast-rdv-address mcast-rdv-address] [--rcvbuf buf] [--nokbd] [--exit-wait milliseconds] [--nosync] [--sync] [--start-timeout sto] [--license]\n", 
 	    progname);
+#else /* HAVE_GETOPT_LONG */
+    fprintf(stderr, "%s [--f file] [--p pipe] [-P portbase] [-i net-interface] [-l logfile] [-t time-to-live] [-M mcast-rdv-address] [-b rcvbuf] [-k] [-w exit-wait-milliseconds] [-n] [-y] [-s start-timeout] [-L]\n", 
+	    progname);
+#endif /* HAVE_GETOPT_LONG */
     exit(1);
 }
 #endif
@@ -104,7 +117,6 @@ int main(int argc, char **argv)
     disk_config.flags = 0;
 
     net_config.portBase = 9000;
-    net_config.rateLimit = NULL;
     net_config.ttl = 1;
     net_config.flags = 0;
     net_config.mcastRdv = NULL;
@@ -130,8 +142,7 @@ int main(int argc, char **argv)
 	disk_config.pipeName = strdup("/bin/gzip -dc");
 	disk_config.fileName = "/dev/hda";
     }
-    while( (c=getopt_long(argc, argv, "f:p:P:i:l:M:L",
-			  options, NULL)) != EOF ) {
+    while( (c=getopt_l(argc, argv, "b:f:p:P:i:l:M:s:t:w:dkLny")) != EOF ) {
 	switch(c) {
 	    case 'f':
 		disk_config.fileName=optarg;
@@ -148,7 +159,7 @@ int main(int argc, char **argv)
 	    case 'l':
 		udpc_log = fopen(optarg, "a");
 		break;
-	    case 0x0401:
+	    case 't': /* ttl */
 		net_config.ttl = atoi(optarg);
 		break;
 	    case 'M':
@@ -179,27 +190,27 @@ int main(int argc, char **argv)
 		setReadSwap(optarg);
 		break;
 #endif
-	    case 0x801:
+	    case 'd': /* passive */
 		net_config.flags|=FLAG_PASSIVE;
 		break;
-	    case 0x901:
+	    case 'n': /* nosync */
 		disk_config.flags|=FLAG_NOSYNC;
 		break;
-	    case 0x902:
+	    case 'y': /* sync */
 		disk_config.flags|=FLAG_SYNC;
 		break;
-	    case 0xa01:
+	    case 'b': /* rcvbuf */
 		net_config.requestedBufSize=parseSize(optarg);
 		break;
-	    case 0xb04:
+	    case 'k': /* nokbd */
 		net_config.flags |= FLAG_NOKBD;
 		break;
 
-	    case 0xd01:
+	    case 'w': /* exit-wait */
 		net_config.exitWait = atoi(optarg);
 		break;
 
-	    case 0xe01:
+	    case 's': /* start-timeout */
 		net_config.startTimeout = atoi(optarg);		
 		break;
 

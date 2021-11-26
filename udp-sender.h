@@ -20,7 +20,7 @@ struct fifo;
 
 int openFile(struct disk_config *config);
 int openPipe(struct disk_config *config, int in, int *pid);
-int localReader(struct disk_config *config, struct fifo *fifo, int in);
+int localReader(struct fifo *fifo, int in);
 
 int spawnNetSender(struct fifo *fifo,
 		   int sock,

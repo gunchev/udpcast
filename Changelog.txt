@@ -1,3 +1,15 @@
+v20080914
+	* Added distclean target to make Debian build easier
+	* Adapted to new name of mingw compiler, and other Mingw adaptations
+	* Removed obsolete m486 flag
+	* Fixed parameter types for getsockopt
+	* If there are no participants after autostart delay, do not
+	transmit but exit right away
+	* RpmLint fixes
+	* Adapt to Solaris 9 sparc
+	* Added a lot of short opts (for systems without getopt_long)
+	* pluggable rate governor
+	* Mingw fixes (socket closing)
 v20071228
 	* Removed -Wdeclaration-after-statement flag which only exists
 	on gcc4

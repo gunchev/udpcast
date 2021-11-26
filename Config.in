@@ -1,7 +1,5 @@
 menu "Udpcast"
 
-source udpcast/dialog/Config.in
-
 config UDPRECEIVER
 	bool "UDPRECEIVER"
 	default y

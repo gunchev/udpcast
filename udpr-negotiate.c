@@ -163,7 +163,7 @@ int startReceiver(int doWarn,
     udpc_flprintf("%sUDP receiver for %s at ", 
 		  disk_config->pipeName == NULL ? "" :  "Compressed ",
 		  disk_config->fileName == NULL ? "(stdout)":disk_config->fileName);
-    printMyIp(net_config->net_if, client_config.S_UCAST);
+    printMyIp(net_config->net_if);
     udpc_flprintf(" on %s\n", net_config->net_if->name);
 
     connectReqSent = 0;

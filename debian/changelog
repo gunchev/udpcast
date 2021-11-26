@@ -1,4 +1,16 @@
-udpcast (20071228) stable; urgency=low
+udpcast (20080914) stable; urgency=low
+
+  * Added distclean target to make Debian build easier
+  * Removed obsolete m486 flag
+  * Fixed parameter types for getsockopt
+  * If there are no participants after autostart delay, do not
+  transmit but exit right away
+  * Added a lot of short opts (for systems without getopt_long)
+  * pluggable rate governor
+  * Mingw fixes (socket closing)
+
+ -- Alain Knaff <alain@knaff.lu>  Sat, 20 Sep 2008 11:54:41 +0200
+udpcast (20071228)stable; urgency=low
 
   * first release of debian package
 

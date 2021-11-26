@@ -215,6 +215,15 @@ packets belong to different stripes. This way, we ensure that burst
 losses affect different stripes, rather than using all FEC packets of
 a single stripe. Example: <tt>--fec 8x8/128</tt></p></dd>
 
+<dt>--rate-governor <i>module.so:key1=value1,key2=value2</i></dt>
+<dd><p>Applies a dynamically loadable rate governor. <i>module.so</i> is
+the name of the preloadable module, which is followed by a number of
+property assignments (<i>key1=value1</i>). The rate governor controls
+the transmission rate according to various criteria, such as
+congestion information received from a routing or encapsulating
+device. See comments in <tt>/usr/include/udpcast/rateGovernor.h</tt>
+and example in <tt>examples/rateGovernor</tt> for more details</p></dd>
+
 <dt>--rexmit-hello-interval <i>timeout</i></dt>
 <dd><p>If set, rebroadcasts the HELLO packet used for initiating the
 casting each <i>timeout</i> milliseconds.</p>

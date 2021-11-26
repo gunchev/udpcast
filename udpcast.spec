@@ -1,77 +1,127 @@
-%define udpcast_version 20071228
-%define udpcast_release 1
+Name:           udpcast
+Summary:        UDP broadcast file distribution and installation
+Version:        20080914
+Release:        1
+License:        GPLv2+ and BSD
+Group:          Applications/System
+URL:            http://udpcast.linux.lu/
+Source:         http://udpcast.linux.lu/download/%{name}-%{version}.tar.gz
+Buildroot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
-Summary: UDP Broadcast Installation
-Name: udpcast
-Version: %{udpcast_version}
-Release: %{udpcast_release}
-License: GPL (for main code), BSD-like (for fec.c) 
-Group: Applications/System
-Source: http://udpcast.linux.lu/download/udpcast-%{udpcast_version}.tar.gz
-Buildroot: %{_tmppath}/%{name}-%{version}-buildroot
+BuildRequires:  m4
+BuildRequires:  perl
+
 
 %description
-Command-line client for UDP sender and receiver. Udpcast is an
+Command-line client for UDP sender and receiver.  Udpcast is an
 application for multicasting data to multiple targets.
+
 
 %prep
 %setup -q
-./configure --prefix=%{buildroot}%{_prefix} --mandir=%{buildroot}%{_mandir}
+
+# Don't pass -s (strip) option to ld
+sed -i -e '/override LDFLAGS +=-s/d' Makefile.in
+
+%configure \
+  --prefix=%{buildroot}%{_prefix} \
+  --mandir=%{buildroot}%{_mandir} \
+  --libdir=%{buildroot}%{_libdir} \
+
 
 %build
 make
 
+
 %clean
-[ X%{buildroot} != X ] && [ X%{buildroot} != X/ ] && rm -rf %{buildroot}
+echo rm -rf $RPM_BUILD_ROOT
+
 
 %install
 make install
 
+
 %files
 %defattr(-,root,root)
-/usr/sbin/udp-sender
-/usr/sbin/udp-receiver
+%{_sbindir}/udp-sender
+%{_sbindir}/udp-receiver
+%{_mandir}/man1/udp-sender.1.gz
+%{_mandir}/man1/udp-receiver.1.gz
+%{_includedir}/udpcast/rateGovernor.h
 %doc Changelog.txt cmd.html COPYING
-/usr/share/man/man1/udp-sender.1.gz
-/usr/share/man/man1/udp-receiver.1.gz
+
 
 %changelog
+* Thu Sep 11 2008 Alain Knaff <alain@knaff.lu>
+- Added distclean target to make Debian build easier
+- Adapted to new name of mingw compiler, and other Mingw adaptations
+- Removed obsolete m486 flag
+- Fixed parameter types for getsockopt
+- If there are no participants after autostart delay, do not
+ transmit but exit right away
+
+* Fri May  2 2008 Richard W.M. Jones <rjones@redhat.com> - 20071228-3
+- Remove '-s' flag from Makefile.
+- Remove unused udpcast_version macro.
+- Use configure macro.
+- Fix the license, GPLv2+ and BSD.
+- BuildRequires perl.
+
+* Mon Apr 21 2008 Richard W.M. Jones <rjones@redhat.com> - 20071228-2
+- BR m4.
+
+* Mon Apr 21 2008 Richard W.M. Jones <rjones@redhat.com> - 20071228-1
+- Initial packaging for Fedora.
+
 * Fri Jun  1 2007 Alain Knaff <alain@knaff.lu>
 - Patch to fix parallel make & make DESTDIR=/tmp/xxx install
 - Address gcc4 warnings
 - Remove some #define fn udpc_fn lines
+
 * Thu May 30 2007 Jan Oelschlaegel <joe77@web.de>
 - Adapt to Solaris 10 x86 (added includes and configure checks)
 - Tested on Linux and Solaris 10 (maybe some other OS are broken now...)
+
 * Fri Mar 23 2007 Alain Knaff <alain@knaff.lu>
 - Fixed typoes in socklib.c
+
 * Tue Mar 6 2007 Alain Knaff <alain@knaff.lu>
 - Fix issue with pipes and no destination file on receiver
+
 * Sun Feb 18 2007 Alain Knaff <alain@knaff.lu>
 - Documentation fix
+
 * Mon Feb 5 2007 Alain Knaff <alain@knaff.lu>
 - Adapt to busybox 1.4.1 (Config.in)
+
 * Wed Jan 31 2007 Alain Knaff <alain@knaff.lu>
 - Added #include <linux/types.h> to make it compile under (K)ubuntu
 - Fix uninitialized variable in udp-receiver
+
 * Mon Jan 29 2007 Alain Knaff <alain@knaff.lu>
 - Adapt to busybox 1.3.2
+
 * Wed Dec 20 2006 Alain Knaff <alain@knaff.lu>
 - Adapt to new busybox 1.3.0
+
 * Sat Dec 16 2006 Alain Knaff <alain@knaff.lu>
 - Added startTimeout flag: abort if sender does not start within specified
 time
 - Darwin build fixes patch
 - Refactoring to postpone file creation until sender is located
+
 * Fri Oct 20 2006 Alain Knaff <alain@knaff.lu>
 - Fix usage message to use full names for --mcast-data-address and
 mcast-rdv-address
+
 * Thu Sep 21 2006 Alain Knaff <alain@knaff.lu>
 - Include uio.h into socklib.h, needed with older include files for iovec
 - Avoid variable name "log", apparently, for older compilers, this shadows the
 name of a built-in
+
 * Wed Sep 20 2006 Alain Knaff <alain@knaff.lu>
 - Added missing format string to printMyIp
+
 * Sun Sep 17 2006 Alain Knaff <alain@knaff.lu>
 - If --rexmit-hello-interval set on sender, still only display prompt
 once on receiver
@@ -83,5 +133,6 @@ on other Unices
 - Reorganized cmd.html file to make it cleaner HTML (all the man stuff
 now in separate files)
 - Fix a buffer overrun on Windows
+
 * Sat Mar 25 2006 Alain Knaff <alain@knaff.lu>
 - Separate commandline spec file and mkimage spec file

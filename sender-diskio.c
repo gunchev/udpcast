@@ -75,7 +75,7 @@ int openPipe(struct disk_config *config, int in, int *pidp)
 /**
  * This file is reponsible for reading the data to be sent from disk
  */
-int localReader(struct disk_config *config, struct fifo *fifo, int in)
+int localReader(struct fifo *fifo, int in)
 {
     while(1) {
 	int pos = pc_getConsumerPosition(fifo->freeMemQueue);
@@ -83,6 +83,10 @@ int localReader(struct disk_config *config, struct fifo *fifo, int in)
 	    pc_consumeContiguousMinAmount(fifo->freeMemQueue, BLOCKSIZE);
 	if(bytes > (pos + bytes) % BLOCKSIZE)
 	    bytes -= (pos + bytes) % BLOCKSIZE;
+
+	if(bytes == 0)
+		/* net writer exited? */
+		break;
 
 	bytes = read(in, fifo->dataBuffer + pos, bytes);
 	if(bytes < 0) {
