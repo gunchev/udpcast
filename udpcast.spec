@@ -1,6 +1,6 @@
 Name:           udpcast
 Summary:        UDP broadcast file distribution and installation
-Version:        20090912
+Version:        20090920
 Release:        1
 License:        GPLv2+ and BSD
 Group:          Applications/System
@@ -52,6 +52,8 @@ make install
 
 
 %changelog
+* Sun Sep 20 2009 Alain Knaff <alain@knaff.lu>
+- Fixed slice management bug introduced with streaming
 * Sat Sep 12 2009 Alain Knaff <alain@knaff.lu>
 - Restored block alignment enforcement (needed when reading data from a pipe)
 - Fixed division-by-zero error on zero-sized transmissions

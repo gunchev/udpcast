@@ -366,6 +366,13 @@ static void setSliceBytes(struct slice *slice,
 	slice->bytes = bytes;
 	if(bytes == 0)
 	    clst->netEndReached=1;
+	if(! (clst->net_config->flags & FLAG_STREAMING) ) {
+	    /* In streaming mode, do not reserve space as soon as first
+	     * block of slice received, but only when slice complete.
+	     * For detailed discussion why, see comment in checkSliceComplete
+	     */
+	    pc_consumed(clst->fifo->freeMemQueue, bytes);
+	}
     }
 }
 
@@ -454,8 +461,21 @@ static void checkSliceComplete(struct clientState *clst,
     blocksInSlice = (slice->bytes + clst->net_config->blockSize - 1) / 
 	clst->net_config->blockSize;
     if(blocksInSlice == slice->blocksTransferred) {
-	pc_consumed(clst->fifo->freeMemQueue, slice->bytes);
-	clst->net_config->flags &= ~FLAG_STREAMING;
+	if(clst->net_config->flags & FLAG_STREAMING) {
+	    /* If we are in streaming mode, the storage space for the first
+	     * entire slice is only consumed once it is complete. This
+	     * is because it is only at comletion time that we know
+	     * for sure that it can be completed (before, we could
+	     * have missed the beginning).
+	     * After having completed one slice, revert back to normal
+	     * mode where we consumed the free space as soon as the
+	     * first block is received (not doing this would produce
+	     * errors if a new slice is started before a previous one
+	     * is complete, such as during retransmissions)
+	     */
+	    pc_consumed(clst->fifo->freeMemQueue, slice->bytes);
+	    clst->net_config->flags &= ~FLAG_STREAMING;
+	}
 	if(blocksInSlice == slice->dataBlocksTransferred)
 	    slice->state = SLICE_DONE;
 	else {

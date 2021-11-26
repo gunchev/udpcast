@@ -1,3 +1,5 @@
+v20090920
+	* Fixed slice management bug introduced with streaming
 v20090912
 	* Restored block alignment enforcement (needed when reading data from a pipe)
 	* Fixed division-by-zero error on zero-sized transmissions
