@@ -86,19 +86,6 @@ specified for both <tt>udp-sender</tt> and <tt>udp-receiver</tt>.</dd>
 <dt>--interface <i>interface</i></dt>
 <dd>Network interface used to send out the data. Default is <tt>eth0</tt></dd>
 
-<dt>--broadcast</dt>
-<dd><p>Use Ethernet broadcast, rather than multicast. Useful if you have
-Ethernet cards which don't support multicast.</p>
-
-<p>By default, <tt>udpcast</tt> uses multicast. This allows sending the
-data only to those receivers that requested it. Ethernet cards of
-machines which <i>don't</i> participate in the transmission
-automatically block out the packets at the hardware level. Moreover,
-network switches are able to selectively transmit the packets only to
-those network ports to which receivers are connected. Both features
-thus allow a much more efficient operation than broadcast. This option
-should only be supplied on the sender.</p></dd>
-
 <dt>--ttl <i>time to live</i></dt>
 <dd>Sets the <i>time-to-live</i> parameter for the multicast
 packets. Should theoretically allow to use UDPCast beyond the local
@@ -154,6 +141,19 @@ acknowledged.</p></dd>
 <dd>Use half duplex mode (needed for Hub based or T-base-2
 networks). This is the default behavior in this version of
 udpcast.</dd>
+
+<dt>--broadcast</dt>
+<dd><p>Use Ethernet broadcast, rather than multicast. Useful if you have
+Ethernet cards which don't support multicast.</p>
+
+<p>By default, <tt>udpcast</tt> uses multicast. This allows sending the
+data only to those receivers that requested it. Ethernet cards of
+machines which <i>don't</i> participate in the transmission
+automatically block out the packets at the hardware level. Moreover,
+network switches are able to selectively transmit the packets only to
+those network ports to which receivers are connected. Both features
+thus allow a much more efficient operation than broadcast. This option
+should only be supplied on the sender.</p></dd>
 
 <dt>-b <em>blocksize</em></dt>
 <dd>Choses the packet size. Default (and also maximum) is 1456.</dd>
@@ -287,8 +287,6 @@ receivers.</dd>
 
 </ul>
 
-
-
 <h2>Logging options</h2>
 
 The options instruct <tt>udp-sender</tt> to log some additional
@@ -356,6 +354,7 @@ message telling the user to press any key to start.</dd>
 <dd>receiver aborts at start if it doesn't see a sender within this many
 seconds. Furthermore, the sender needs to start transmission of data within
 this delay. Once transmission is started, the timeout no longer applies.</dd>
+
 </dl>
 
 

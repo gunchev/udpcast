@@ -1,3 +1,5 @@
+v20070218
+	* Doc fix
 v20070205
 	* Adapt to busybox 1.4.1 (Config.in)
 v20070131

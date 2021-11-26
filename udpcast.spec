@@ -1,4 +1,4 @@
-%define udpcast_version 20070205
+%define udpcast_version 20070218
 %define udpcast_release 1
 
 Summary: UDP Broadcast Installation
@@ -36,6 +36,8 @@ make install
 /usr/share/man/man1/udp-receiver.1.gz
 
 %changelog
+* Sun Feb 18 2007 Alain Knaff <alain@knaff.lu>
+- Documentation fix
 * Mon Feb 5 2007 Alain Knaff <alain@knaff.lu>
 - Adapt to busybox 1.4.1 (Config.in)
 * Wed Jan 31 2007 Alain Knaff <alain@knaff.lu>
