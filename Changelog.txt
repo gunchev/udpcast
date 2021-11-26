@@ -1,3 +1,5 @@
+v20060920
+	* Added missing format string to printMyIp
 v20060917
 	* If --rexmit-hello-interval set on sender, still only display prompt
 	once on receiver

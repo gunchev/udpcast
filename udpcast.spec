@@ -1,4 +1,4 @@
-%define udpcast_version 20060917
+%define udpcast_version 20060920
 %define udpcast_release 1
 
 Summary: UDP Broadcast Installation
@@ -36,6 +36,8 @@ make install
 /usr/share/man/man1/udp-receiver.1.gz
 
 %changelog
+* Sun Sep 20 2006 Alain Knaff <alain@knaff.lu>
+- Added missing format string to printMyIp
 * Sun Sep 17 2006 Alain Knaff <alain@knaff.lu>
 - If --rexmit-hello-interval set on sender, still only display prompt
 once on receiver

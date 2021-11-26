@@ -934,7 +934,7 @@ void printMyIp(net_if_t *net_if, int s)
     struct sockaddr_in myaddr;
 
     getMyAddress(net_if, &myaddr);
-    udpc_flprintf(udpc_getIpString(&myaddr,buffer));
+    udpc_flprintf("%s", udpc_getIpString(&myaddr,buffer));
 }
 
 char *udpc_getIpString(struct sockaddr_in *addr, char *buffer) {
