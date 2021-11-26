@@ -1,6 +1,6 @@
+#include "socklib.h"
 #include "log.h"
 #include "util.h"
-#include "socklib.h"
 #include "participants.h"
 #include "udpcast.h"
 #ifdef USE_SYSLOG

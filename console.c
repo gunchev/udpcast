@@ -84,7 +84,7 @@ void restoreConsole(console_t **cp, int doConsume) {
     
     if(c == NULL)
       return;
-    
+
     /* If key pressed, consume it. If letter is q, quit */
     if(doConsume) {
 	n = read(c->fd, &ch, 1);
@@ -203,7 +203,7 @@ int selectWithConsole(console_t *con, int maxFd,
 	CloseHandle(con->thread[0]);
 	CloseHandle(con->thread[1]);
 	FD_ZERO(read_set);
-	return 0;
+	return 1;
     case WAIT_OBJECT_0+1:
 	*keyPressed=0;
 	CloseHandle(con->thread[1]);

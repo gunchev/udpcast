@@ -1,4 +1,4 @@
-%define udpcast_version 20060929
+%define udpcast_version 20070131
 %define udpcast_release 1
 
 Summary: UDP Broadcast Installation
@@ -36,6 +36,18 @@ make install
 /usr/share/man/man1/udp-receiver.1.gz
 
 %changelog
+* Wed Jan 31 2007 Alain Knaff <alain@knaff.lu>
+- Added #include <linux/types.h> to make it compile under (K)ubuntu
+- Fix uninitialized variable in udp-receiver
+* Mon Jan 29 2007 Alain Knaff <alain@knaff.lu>
+- Adapt to busybox 1.3.2
+* Wed Dec 20 2006 Alain Knaff <alain@knaff.lu>
+- Adapt to new busybox 1.3.0
+* Sat Dec 16 2006 Alain Knaff <alain@knaff.lu>
+- Added startTimeout flag: abort if sender does not start within specified
+time
+- Darwin build fixes patch
+- Refactoring to postpone file creation until sender is located
 * Fri Oct 20 2006 Alain Knaff <alain@knaff.lu>
 - Fix usage message to use full names for --mcast-data-address and
 mcast-rdv-address

@@ -32,6 +32,9 @@
 #endif
 
 #ifdef __linux__
+
+#include <linux/types.h>
+
 typedef unsigned long long u64;
 typedef unsigned int u32;
 typedef unsigned short u16;
@@ -40,6 +43,15 @@ typedef unsigned char u8;
 #include <linux/ethtool.h>
 #include <linux/sockios.h>
 
+#endif
+
+// for Darwin
+#ifdef _SIZEOF_ADDR_IFREQ
+    #define IFREQ_SIZE(a) _SIZEOF_ADDR_IFREQ(a)
+#endif
+
+#ifndef DEBUG
+# define DEBUG 0
 #endif
 
 #ifdef LOSSTEST
@@ -630,10 +642,19 @@ net_if_t *getNetIf(const char *wanted) {
 	ifend = (struct ifreq *)((char *)ibuf + ifc.ifc_len);
 	chosen=NULL;
 
-	for (ifrp = ibuf ; ifrp < ifend; ifrp++) {
+	for (ifrp = ibuf ; ifrp < ifend;
+#ifdef IFREQ_SIZE
+	     ifrp = IFREQ_SIZE(*ifrp) + (char *)ifrp
+#else
+	     ifrp++
+#endif       
+	     ) {
 	    unsigned long iaddr = getSinAddr(&ifrp->ifr_addr).s_addr;
 	    int goodness;
 
+	    if(ifrp->ifr_addr.sa_family != PF_INET)
+		continue;
+	    
 	    if(wanted) {
 		if(isAddress && iaddr == wantedAddress.s_addr) {
 		    goodness=8;
@@ -655,13 +676,15 @@ net_if_t *getNetIf(const char *wanted) {
 		} else if(iaddr == htonl(0x7f000001)) {
 		    /* disregard localhost type devices */
 		    goodness = 2;
-		} else if(strcmp("eth0", ifrp->ifr_name) == 0) {
-		    /* prefer eth0 */
+		} else if(strcmp("eth0", ifrp->ifr_name) == 0 ||
+			  strcmp("en0",  ifrp->ifr_name) == 0) {
+		    /* prefer first ethernet interface */
 		    goodness = 6;
 		} else if(strncmp("eth0:", ifrp->ifr_name, 5) == 0) {
-		    /* second choice: any secondary interfaces on eth0 */
+		    /* second choice: any secondary addresses of first ethernet */
 		    goodness = 5;
-		} else if(strncmp("eth", ifrp->ifr_name, 3) == 0) {
+		} else if(strncmp("eth", ifrp->ifr_name, 3) == 0 ||
+			  strncmp("en",  ifrp->ifr_name, 2) == 0) {
 		    /* and, if not available, any other ethernet device */
 		    goodness = 4;
 		} else {
@@ -698,8 +721,18 @@ net_if_t *getNetIf(const char *wanted) {
 	    fprintf(stderr, "No suitable network interface found\n");
 	    fprintf(stderr, "The following interfaces are available:\n");
 
-	    for (ifrp = ibuf ; ifrp < ifend; ifrp++) {
+	    for (ifrp = ibuf ; ifrp < ifend;
+#ifdef IFREQ_SIZE
+		 ifrp = IFREQ_SIZE(*ifrp) + (char *)ifrp
+#lse
+		 ifrp++
+#endif
+		 ) {
 		char buffer[16];
+
+		if(ifrp->ifr_addr.sa_family != PF_INET)
+		    continue;
+
 		fprintf(stderr, "\t%s\t%s\n",
 			ifrp->ifr_name, 
 			udpc_getIpString((struct sockaddr_in *)&ifrp->ifr_addr, buffer));
@@ -938,12 +971,12 @@ void printMyIp(net_if_t *net_if, int s)
 }
 
 char *udpc_getIpString(struct sockaddr_in *addr, char *buffer) {
-    long iaddr = getSinAddr(addr).s_addr;
+    long iaddr = htonl(getSinAddr(addr).s_addr);
     sprintf(buffer,"%ld.%ld.%ld.%ld", 
-	    iaddr & 0xff,
-	    (iaddr >>  8) & 0xff,
+	    (iaddr >> 24) & 0xff,
 	    (iaddr >> 16) & 0xff,
-	    (iaddr >> 24) & 0xff);
+	    (iaddr >>  8) & 0xff,
+	    iaddr & 0xff);
     return buffer;
 }
 
@@ -1052,12 +1085,20 @@ void zeroSockArray(int *socks, int nr) {
 	socks[i] = -1;
 }
 
-int selectSock(int *socks, int nr) {
+int selectSock(int *socks, int nr, int startTimeout) {
     fd_set read_set;
     int r;
     int maxFd;
+    struct timeval tv, *tvp;
+    if(startTimeout) {
+	tv.tv_sec = startTimeout;
+	tv.tv_usec = 0;
+	tvp = &tv;
+    } else {
+	tvp = NULL;
+    }
     maxFd = prepareForSelect(socks, nr, &read_set);
-    r = select(maxFd+1, &read_set, NULL, NULL, NULL);
+    r = select(maxFd+1, &read_set, NULL, NULL, tvp);
     if(r < 0)
 	return r;
     return getSelectedSock(socks, nr, &read_set);

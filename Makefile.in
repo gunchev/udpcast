@@ -31,7 +31,7 @@ INSTALL_PROGRAM = @INSTALL_PROGRAM@
 
 #override CFLAGS += -O4 -Wall -DNDEBUG -DLOSSTEST
 override CFLAGS +=-Wall -Wshadow -DBB_FEATURE_UDPCAST_FEC -D_FILE_OFFSET_BITS=64 -DUSE_SYSLOG -DUSE_ASSEMBLER -O6
-override LDFLAGS +=-s -Wl,-warn-common
+override LDFLAGS +=-s
 LIBS +=@LIBS@
 
 BUSYBOX=../udp-busybox/busybox
@@ -104,17 +104,15 @@ bbcopy: $(BBTARGET) \
 	$(BBTARGET)/console.h $(BBTARGET)/console.c \
 	$(BBTARGET)/udpc_process.h $(BBTARGET)/process.c \
 	$(BBTARGET)/threads.h \
-	$(BBTARGET)/Config.in $(BBTARGET)/Makefile.in $(BBTARGET)/Makefile \
+	$(BBTARGET)/Config.in $(BBTARGET)/Kbuild \
 	$(BBTARGET)/config.h
 
 $(BBTARGET):
 	mkdir $(BBTARGET)
 
-$(BBTARGET)/Makefile: Makefile.busybox
-	cp -f $< $(BBTARGET)/Makefile
+$(BBTARGET)/Kbuild: Kbuild
+	cp -f $< $(BBTARGET)/
 
-$(BBTARGET)/Makefile.in: Makefile.in.busybox
-	cp -f $< $(BBTARGET)/Makefile.in
 
 $(BBTARGET)/%.c: %.c
 	cp -f $< $(BBTARGET)

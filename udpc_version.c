@@ -1,3 +1,3 @@
 #include "udpc_version.h"
 
-char *version="2006-09-21";
+char *version="2007-01-31";

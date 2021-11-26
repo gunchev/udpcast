@@ -1,3 +1,16 @@
+v20070131
+	* Added #include <linux/types.h> to make it compile under (K)ubuntu (to
+	be confirmed)
+	* Fix uninitialized variable in udp-receiver
+v20070129
+	* Adapt to busybox 1.3.2
+v20061220
+	* Adapt to busybox 1.3.0
+v20061216
+	* Darwin patch
+	* Timeout method on receiver
+	* Refactoring to postpone file creation until sender is located
+	* Added start-timeout flag
 v20060929
 	* Fix usage message to use full names for --mcast-data-address and
 	mcast-rdv-address

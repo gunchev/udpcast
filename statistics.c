@@ -1,7 +1,11 @@
 #ifndef _LARGEFILE64_SOURCE
 #define _LARGEFILE64_SOURCE
 #endif
+
+#ifndef UDPCAST_CONFIG_H
+# define UDPCAST_CONFIG_H
 #include "config.h"
+#endif
 
 #ifndef HAVE_LOFF_T
 typedef unsigned long long loff_t;

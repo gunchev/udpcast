@@ -39,6 +39,7 @@ int open2(int in, int out, char **arg, int closeFd) {
 
 #else /* __MINGW32__ */
 
+#include <errno.h>
 #include <stdio.h>
 #include <string.h>
 

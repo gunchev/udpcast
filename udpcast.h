@@ -90,6 +90,8 @@ struct net_config {
     /* receiver-specif parameters */
     int exitWait; /* How many milliseconds to wait on program exit */
 
+    int startTimeout; /* Timeout at start */
+
     /* FEC config */
 #ifdef BB_FEATURE_UDPCAST_FEC
     int fec_redundancy; /* how much fec blocks are added per group */
@@ -104,5 +106,9 @@ struct stat_config {
 };
 
 #define MAX_SLICE_SIZE 1024
+
+#ifndef DEBUG
+# define DEBUG 0
+#endif
 
 #endif

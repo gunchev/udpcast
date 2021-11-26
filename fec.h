@@ -3,6 +3,7 @@
 
 #ifdef BB_FEATURE_UDPCAST_FEC
 
+#undef HAVE_STDINT_H
 #include "libbb_udpcast.h"
 
 typedef struct fec_parms *fec_code_t;

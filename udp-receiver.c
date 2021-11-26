@@ -56,6 +56,8 @@ static struct option options[] = {
     { "exitWait", 1, NULL, 0xd01 }, /* Obsolete name */
     { "exit-wait", 1, NULL, 0xd01 },
 
+    { "start-timeout", 1, NULL, 0xe01 },
+
 #ifdef BB_FEATURE_UDPCAST_FEC
     { "license", 0, NULL, 'L' },
 #endif
@@ -71,7 +73,7 @@ static void intHandler(int nr) {
 
 #ifdef NO_BB
 static void usage(char *progname) {
-    fprintf(stderr, "%s [--file file] [--pipe pipe] [--portbase portbase] [--interface net-interface] [--log file] [--ttl time-to-live] [--mcast-rdv-addr mcast-rdv-address] [--rcvbuf buf] [--nokbd] [--exit-wait milliseconds] [--nosync] [--license]\n", 
+    fprintf(stderr, "%s [--file file] [--pipe pipe] [--portbase portbase] [--interface net-interface] [--log file] [--ttl time-to-live] [--mcast-rdv-address mcast-rdv-address] [--rcvbuf buf] [--nokbd] [--exit-wait milliseconds] [--nosync] [--start-timeout sto] [--license]\n", 
 	    progname);
     exit(1);
 }
@@ -83,6 +85,7 @@ int udpreceiver_main(int argc, char **argv)
 int main(int argc, char **argv)
 #endif
 {
+    int ret;
     char *ptr;
     struct net_config net_config;
     struct disk_config disk_config;
@@ -105,6 +108,7 @@ int main(int argc, char **argv)
     net_config.flags = 0;
     net_config.mcastRdv = NULL;
     net_config.exitWait = 500;
+    net_config.startTimeout = 0;
 
 #ifdef WINDOWS
     /* windows is basically unusable with its default buffer size of 8k...*/
@@ -194,6 +198,10 @@ int main(int argc, char **argv)
 		net_config.exitWait = atoi(optarg);
 		break;
 
+	    case 0xe01:
+		net_config.startTimeout = atoi(optarg);		
+		break;
+
 	    case '?':
 #ifndef NO_BB
 	        bb_show_usage();
@@ -215,5 +223,9 @@ int main(int argc, char **argv)
     openlog((const char *)"udpcast", LOG_NDELAY|LOG_PID, LOG_SYSLOG);
 #endif
     
-    return startReceiver(doWarn, &disk_config, &net_config, ifName);
+    ret= startReceiver(doWarn, &disk_config, &net_config, ifName);
+    if(ret < 0) {
+      fprintf(stderr, "Receiver error\n");
+    }
+    return ret;
 }

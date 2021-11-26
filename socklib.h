@@ -1,7 +1,10 @@
 #ifndef SOCKLIB_H
 #define SOCKLIB_H
 
-#include "config.h"
+#ifndef UDPCAST_CONFIG_H
+# define UDPCAST_CONFIG_H
+# include "config.h"
+#endif
 
 #include <sys/types.h>
 #include <string.h>
@@ -178,7 +181,7 @@ unsigned long parseSize(char *sizeString);
 unsigned long parseSpeed(char *speedString);
 
 void zeroSockArray(int *socks, int nr);
-int selectSock(int *socks, int nr);
+int selectSock(int *socks, int nr, int startTimeout);
 int prepareForSelect(int *socks, int nr, fd_set *read_set);
 int getSelectedSock(int *socks, int nr, fd_set *read_set);
 void closeSock(int *socks, int nr, int target);

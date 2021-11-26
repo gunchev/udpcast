@@ -2,6 +2,7 @@
 #define LOG_H
 
 #include <stdio.h>
+#undef HAVE_STDINT_H
 #include "libbb_udpcast.h"
 
 #define logprintf udpc_logprintf

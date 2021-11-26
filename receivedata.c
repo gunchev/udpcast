@@ -5,10 +5,10 @@
 #include <sys/time.h>
 #include <errno.h>
 
+#include "socklib.h"
 #include "threads.h"
 #include "log.h"
 #include "fifo.h"
-#include "socklib.h"
 #include "udpc-protoc.h"
 #include "udp-receiver.h"
 #include "util.h"
@@ -906,6 +906,7 @@ static int dispatchMessage(struct clientState *clst)
 	fd = clst->selectedFd;
 
     if(fd < 0) {
+	struct timeval tv, *tvp;
 	fd_set read_set;
 	int keyPressed = 0;
 	int maxFd = prepareForSelect(client_config->socks,
@@ -917,14 +918,31 @@ static int dispatchMessage(struct clientState *clst)
 	  udpc_flprintf("Press any key to start receiving data!\n");
 #endif /* __MINGW32__ */
 	clst->promptPrinted=1;
+
+	if(clst->net_config->startTimeout == 0) {
+	    tvp=NULL;
+	} else {
+	    tv.tv_sec = clst->net_config->startTimeout;
+	    tv.tv_usec = 0;
+	    tvp = &tv;
+	}
+
 	ret = selectWithConsole(client_config->console, maxFd+1, &read_set,
-				NULL, &keyPressed);
+				tvp, &keyPressed);
 	if(ret < 0) {
 	  perror("Select");
 	  return 0;
 	}
+	if(ret == 0) {
+		clst->endReached=3;
+		clst->netEndReached=3;
+		pc_produceEnd(clst->fifo->data);
+		return 1;
+	}
 	if(keyPressed) {
-	  /* Close our console... */
+	  /* Close our console and flush pending keystroke.
+	   * a restore console will be done later in closeAllExcept, but this
+	   * one is necessary to flush out buffered character */
 	  restoreConsole(&client_config->console, 1);
 
 	  /* ... and send go signal */

@@ -63,7 +63,7 @@ static struct option options[] = {
     { "license", 0, NULL, 'L' },
 #endif
 
-#if LOSSTEST
+#ifdef LOSSTEST
     /* simulating packet loss */
     { "write-loss", 1, NULL, 0x601 },
     { "read-loss", 1, NULL, 0x602 },
@@ -95,7 +95,7 @@ static struct option options[] = {
 
 #ifdef NO_BB
 static void usage(char *progname) {
-    fprintf(stderr, "%s [--file file] [--full-duplex] [--pipe pipe] [--portbase portbase] [--blocksize size] [--interface net-interface] [--mcast-data-addr data-mcast-address] [--mcast-rdv-addr mcast-rdv-address] [--max-bitrate bitrate] [--pointopoint] [--async] [--log file] [--min-slice-size min] [--max-slice-size max] [--slice-size] [--ttl time-to-live] [--fec <stripes>x<redundancy>/<stripesize>] [--print-seed] [--rexmit-hello-interval interval] [--autostart autostart] [--broadcast] [--min-receivers receivers] [--min-wait sec] [--max-wait sec] [--retries-until-drop n] [--nokbd] [--bw-period n] [--license]\n", progname); /* FIXME: copy new options to busybox */
+    fprintf(stderr, "%s [--file file] [--full-duplex] [--pipe pipe] [--portbase portbase] [--blocksize size] [--interface net-interface] [--mcast-data-address data-mcast-address] [--mcast-rdv-address mcast-rdv-address] [--max-bitrate bitrate] [--pointopoint] [--async] [--log file] [--min-slice-size min] [--max-slice-size max] [--slice-size] [--ttl time-to-live] [--fec <stripes>x<redundancy>/<stripesize>] [--print-seed] [--rexmit-hello-interval interval] [--autostart autostart] [--broadcast] [--min-receivers receivers] [--min-wait sec] [--max-wait sec] [--retries-until-drop n] [--nokbd] [--bw-period n] [--license]\n", progname); /* FIXME: copy new options to busybox */
     exit(1);
 }
 #else

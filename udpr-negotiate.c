@@ -76,23 +76,9 @@ struct startTransferArgs {
     int doWarn;
 };
 
-int startReceiver(int doWarn,
-		  struct disk_config *disk_config,
-		  struct net_config *net_config,
-		  const char *ifName)
+static int openOutFile(struct disk_config *disk_config)
 {
-    char ipBuffer[16];
-    union serverControlMsg Msg;
-    int connectReqSent=0;
-    struct client_config client_config;
-    int outFile=1;
-    int pipedOutFile;
-    struct sockaddr_in myIp;
-    int pipePid = 0;
-    int origOutFile;
-    int haveServerAddress;
-
-    client_config.sender_is_newgen = 0;
+    int outFile=-1;
     if(disk_config->fileName != NULL) {
 	int oflags = O_CREAT | O_WRONLY;
 	if((disk_config->flags & FLAG_SYNC)) {
@@ -118,6 +104,26 @@ int startReceiver(int doWarn,
 	_setmode(1, O_BINARY);
 #endif
     }
+    return outFile;
+}
+
+int startReceiver(int doWarn,
+		  struct disk_config *disk_config,
+		  struct net_config *net_config,
+		  const char *ifName)
+{
+    char ipBuffer[16];
+    union serverControlMsg Msg;
+    int connectReqSent=0;
+    struct client_config client_config;
+    int outFile=1;
+    int pipedOutFile;
+    struct sockaddr_in myIp;
+    int pipePid = 0;
+    int origOutFile;
+    int haveServerAddress;
+
+    client_config.sender_is_newgen = 0;
 
     net_config->net_if = getNetIf(ifName);
     zeroSockArray(client_config.socks, NR_CLIENT_SOCKS);
@@ -178,7 +184,11 @@ int startReceiver(int doWarn,
 
 	haveServerAddress=0;
 
-	sock = udpc_selectSock(client_config.socks, NR_CLIENT_SOCKS);
+	sock = udpc_selectSock(client_config.socks, NR_CLIENT_SOCKS,
+			       net_config->startTimeout);
+	if(sock < 0) {
+		return -1;
+	}
 
 	// len = sizeof(server);
 	msglen=RECV(sock, 
@@ -265,6 +275,7 @@ int startReceiver(int doWarn,
 	  setRcvBuf(client_config.socks[i],net_config->requestedBufSize);
     }
 
+    outFile=openOutFile(disk_config);
     origOutFile = outFile;
     pipedOutFile = openPipe(outFile, disk_config, &pipePid);
 
