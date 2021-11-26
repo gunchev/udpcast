@@ -1,7 +1,6 @@
 #ifndef UDP_SENDER_H
 #define UDP_SENDER_H
 
-#include "udp-sender.h"
 #include "udpcast.h"
 #include "participants.h"
 #include "statistics.h"
