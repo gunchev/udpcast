@@ -2,13 +2,13 @@ menu "Udpcast"
 
 source udpcast/dialog/Config.in
 
-config CONFIG_UDPRECEIVER
+config UDPRECEIVER
 	bool "UDPRECEIVER"
 	default y
 	help
 	  Udpcast receiver
 
-config CONFIG_UDPSENDER
+config UDPSENDER
 	bool "UDPSENDER"
 	default y
 	help

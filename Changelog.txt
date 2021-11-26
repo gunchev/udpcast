@@ -1,3 +1,5 @@
+v20070205
+	* Adapt to busybox 1.4.1 (Config.in)
 v20070131
 	* Added #include <linux/types.h> to make it compile under (K)ubuntu (to
 	be confirmed)
