@@ -11,6 +11,11 @@ __pycache__
 /config.h
 /config.log
 /config.status
+/cmd.html.man
+/udp-receiver
+/udp-receiver.1
+/udp-sender
+/udp-sender.1
 
 # Backup files #
 ################
