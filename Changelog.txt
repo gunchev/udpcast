@@ -1,3 +1,5 @@
+v20091031
+	* Support for start-timeout also on sender
 v20090920
 	* Fixed slice management bug introduced with streaming
 v20090912

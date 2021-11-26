@@ -1,6 +1,6 @@
 Name:           udpcast
 Summary:        UDP broadcast file distribution and installation
-Version:        20090920
+Version:        20091031
 Release:        1
 License:        GPLv2+ and BSD
 Group:          Applications/System
@@ -52,6 +52,8 @@ make install
 
 
 %changelog
+* Sat Oct 31 2009 Alain Knaff <alain@knaff.lu>
+- Support for start-timeout also on sender
 * Sun Sep 20 2009 Alain Knaff <alain@knaff.lu>
 - Fixed slice management bug introduced with streaming
 * Sat Sep 12 2009 Alain Knaff <alain@knaff.lu>

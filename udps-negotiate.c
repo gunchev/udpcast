@@ -167,6 +167,7 @@ static int mainDispatcher(int *fd, int nr,
     int startNow=0;
     int selected;
     int keyPressed=0;
+    long loopStart = time(0);
 
     if ((udpc_nrParticipants(db) || (net_config->flags &  FLAG_ASYNC)) &&
 	!(net_config->flags &  FLAG_NOKBD) && *console != NULL)
@@ -197,7 +198,8 @@ static int mainDispatcher(int *fd, int nr,
 	    tv.tv_usec = (net_config->rexmit_hello_interval % 1000)*1000;
 	    tv.tv_sec = net_config->rexmit_hello_interval / 1000;
 	    tvp = &tv;
-	} else if(firstConnected && nrParticipants(db)) {
+	} else if((firstConnected && nrParticipants(db)) ||
+		  net_config->startTimeout) {
 	    tv.tv_usec = 0;
 	    tv.tv_sec = 2;
 	    tvp = &tv;
@@ -224,6 +226,13 @@ static int mainDispatcher(int *fd, int nr,
 	if(firstConnected)
 	    startNow = 
 		startNow || checkClientWait(db, net_config, firstConnected);
+
+	if(!startNow &&
+	   net_config->startTimeout &&
+	   time(0) - loopStart >= net_config->startTimeout) {
+	  startNow = -1;
+	  break;
+	}
     }
 
     if(keyPressed) {

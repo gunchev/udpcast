@@ -103,6 +103,7 @@ static struct option options[] = {
     { "max-wait", 1, NULL, 'W' },
     { "min-wait", 1, NULL, 'w' },
     { "nokbd", 0, NULL, 'k' },
+    { "start-timeout", 1, NULL, 'T' },
 
     { "retriesUntilDrop", 1, NULL, 'R' }, /* Obsolete name */
     { "retries-until-drop", 1, NULL, 'R' },
@@ -133,7 +134,7 @@ static struct option options[] = {
 #ifdef NO_BB
 static void usage(char *progname) {
 #ifdef HAVE_GETOPT_LONG
-    fprintf(stderr, "%s [--file file] [--full-duplex] [--pipe pipe] [--portbase portbase] [--blocksize size] [--interface net-interface] [--mcast-data-address data-mcast-address] [--mcast-rdv-address mcast-rdv-address] [--max-bitrate bitrate] [--pointopoint] [--async] [--log file] [--min-slice-size min] [--max-slice-size max] [--slice-size] [--ttl time-to-live] [--fec <stripes>x<redundancy>/<stripesize>] [--print-seed] [--rexmit-hello-interval interval] [--autostart autostart] [--broadcast] [--min-receivers receivers] [--min-wait sec] [--max-wait sec] [--retries-until-drop n] [--nokbd] [--bw-period n] [--streaming] [--rehello-offset offs]"
+    fprintf(stderr, "%s [--file file] [--full-duplex] [--pipe pipe] [--portbase portbase] [--blocksize size] [--interface net-interface] [--mcast-data-address data-mcast-address] [--mcast-rdv-address mcast-rdv-address] [--max-bitrate bitrate] [--pointopoint] [--async] [--log file] [--min-slice-size min] [--max-slice-size max] [--slice-size] [--ttl time-to-live] [--fec <stripes>x<redundancy>/<stripesize>] [--print-seed] [--rexmit-hello-interval interval] [--autostart autostart] [--broadcast] [--min-receivers receivers] [--min-wait sec] [--max-wait sec] [--start-timeout n] [--retries-until-drop n] [--nokbd] [--bw-period n] [--streaming] [--rehello-offset offs]"
 #ifdef DL_RATE_GOVERNOR
 	    " [--rate-governor module:parameters]" 
 #endif
@@ -142,7 +143,7 @@ static void usage(char *progname) {
 #endif
 	    "[--license]\n", progname); /* FIXME: copy new options to busybox */
 #else /* HAVE_GETOPT_LONG */
-    fprintf(stderr, "%s [-f file] [-d] [-p pipe] [-P portbase] [-b size] [-i net-interface] [-m data-mcast-address] [-M mcast-rdv-address] [-r bitrate] [-1] [-a] [-l logfile] [-t time-to-live] [-F <stripes>x<redundancy>/<stripesize>][-H hello-retransmit-interval] [-S autostart] [-B] [-C min-receivers] [-w min-wait-sec] [-w max-wait-sec] [-R n] [-k] [-I n] [-x uncomprStatPrint] [-z statPeriod] [-Z] [-Y rehello-offset]"
+    fprintf(stderr, "%s [-f file] [-d] [-p pipe] [-P portbase] [-b size] [-i net-interface] [-m data-mcast-address] [-M mcast-rdv-address] [-r bitrate] [-1] [-a] [-l logfile] [-t time-to-live] [-F <stripes>x<redundancy>/<stripesize>][-H hello-retransmit-interval] [-S autostart] [-B] [-C min-receivers] [-w min-wait-sec] [-w max-wait-sec] [-T start-timeout] [-R n] [-k] [-I n] [-x uncomprStatPrint] [-z statPeriod] [-Z] [-Y rehello-offset]"
 #ifdef DL_RATE_GOVERNOR
 	    " [-g rate-governor:parameters ]" 
 #endif
@@ -207,6 +208,7 @@ int main(int argc, char **argv)
     net_config.min_receivers=0;
     net_config.max_receivers_wait=0;
     net_config.min_receivers_wait=0;
+    net_config.startTimeout=0;
 
     net_config.retriesUntilDrop = 200;
 
@@ -233,7 +235,7 @@ int main(int argc, char **argv)
 #ifdef DL_RATE_GOVERNOR
 	    "g:"
 #endif
-	    "H:i:I:l:m:M:p:P:r:R:s:S:t:w:W:x:z:12a"
+	    "H:i:I:l:m:M:p:P:r:R:s:S:t:T:w:W:x:z:12a"
 #ifdef FLAG_AUTORATE
 	    "A"
 #endif
@@ -405,6 +407,9 @@ int main(int argc, char **argv)
 		    break;
 	        case 'w': /* min-wait */
 		    net_config.min_receivers_wait = atoi(optarg);
+		    break;
+	        case 'T': /* start timeout */
+		    net_config.startTimeout = atoi(optarg);
 		    break;
 	        case 'k': /* nokbd */
 		    net_config.flags |= FLAG_NOKBD;

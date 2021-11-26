@@ -1,4 +1,9 @@
-udpcast (20090920) stable; urgency=low
+udpcast (20091031) stable; urgency=low
+
+  * Support for start-timeout also on sender
+
+ -- Alain Knaff <alain@knaff.lu>  Sat, 31 Oct 2009 15:37:55 +0100
+udpcast (20090920)stable; urgency=low
 
   * Fixed slice management bug introduced with streaming
 

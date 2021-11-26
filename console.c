@@ -79,18 +79,14 @@ int selectWithConsole(console_t *con, int maxFd,
 
 void restoreConsole(console_t **cp, int doConsume) {
     console_t *c=*cp;
-    int ch;
-    int n;
+    int ch='\0';
     
     if(c == NULL)
       return;
 
     /* If key pressed, consume it. If letter is q, quit */
     if(doConsume) {
-	n = read(c->fd, &ch, 1);
-	if (n == 1 && ch == 'q') {
-	    exit(1);
-	}
+	read(c->fd, &ch, 1);
     }
 
     if(c->needRestore && tcsetattr(c->fd, TCSAFLUSH, &c->oldtio) < 0) {
@@ -100,6 +96,8 @@ void restoreConsole(console_t **cp, int doConsume) {
     if(c->needClose)
 	close(c->fd);
     free(c);
+    if(ch == 'q')
+	exit(1);
 }
 
 #else /* __MINGW32__ */
