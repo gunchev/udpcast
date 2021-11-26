@@ -206,6 +206,8 @@ while(<>) {
 		s/\&lbr\;/\{/g;
 		s/\&rbr\;/\}/g;
 
+		s/<!--//g;
+
 		#printf(STDERR "section=%s add=%s", $tosect, $_);
 		$text{$tosect} .= $_;
 	}

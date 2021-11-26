@@ -1,4 +1,11 @@
-udpcast (20080914) stable; urgency=low
+udpcast (20081116) stable; urgency=low
+
+  * Settable statistics printout delay
+  * Print uncompressed size only when it makes sense (pipe used, and
+  seekable output)
+
+ -- Alain Knaff <alain@knaff.lu>  Sun, 16 Nov 2008 17:20:56 +0100
+udpcast (20080914)stable; urgency=low
 
   * Added distclean target to make Debian build easier
   * Removed obsolete m486 flag

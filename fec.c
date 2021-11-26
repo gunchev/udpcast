@@ -419,7 +419,7 @@ static void addmul(gf *dst, gf *src, gf c, int sz) {
  */
 #if 0
 #define mul(dst, src, c, sz) \
-    do { if (c != 0) mul1(dst, src, c, sz); else memset(dst, 0, c); } while(0)
+    do { if (c != 0) mul1(dst, src, c, sz); else memset(dst, 0, sz); } while(0)
 #endif
 
 #define UNROLL 16 /* 1, 4, 8, 16 */
@@ -531,7 +531,7 @@ mul1(gf *dst1, gf *src1, gf c, int sz)
 
 static inline void mul(gf *dst, gf *src, gf c, int sz) {
     /*fprintf(stderr, "%p = %02x * %p\n", dst, c, src);*/
-    if (c != 0) mul1(dst, src, c, sz); else memset(dst, 0, c);
+    if (c != 0) mul1(dst, src, c, sz); else memset(dst, 0, sz);
 }
 
 /*
@@ -744,7 +744,7 @@ void fec_init(void)
  *     When evaluating this for any x > 0x80, the following thing happens
  *     to the numerator: all (x-i) are different for i, and have high bit
  *     set. Thus, the set of top factors are all values from 0x80 to 0xff,
- *     and the numerator becomes independant from x (as long as x & 0x80
+ *     and the numerator becomes independant from x (as long as x & 0x80 = 0)
  *     Thus, P_col(x) = L / (x-col)
  *     In the systematic matrix value on [row,col] is P_col(row) = L/(row-col)
  *     To simplify we multiply each bottom row by 1/L (which is a simple

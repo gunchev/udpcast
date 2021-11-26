@@ -31,6 +31,8 @@ struct disk_config {
     const char *fileName;
     char *pipeName;
     int flags;
+
+    struct timeval stats_last_printed;
 };
 
 #define MAX_GOVERNORS 10
@@ -97,6 +99,9 @@ struct net_config {
 struct stat_config {
     FILE *log; /* Log file for statistics */
     long bwPeriod; /* How often are bandwidth estimations logged? */
+
+    int statPeriod;
+    int printUncompressedPos;
 };
 
 
@@ -105,7 +110,14 @@ void rgParseRateGovernor(struct net_config *net_config, char *rg);
 void rgWaitAll(struct net_config *cfg, int sock, in_addr_t ip, int size);
 void rgShutdownAll(struct net_config *cfg);
 
+/**
+ * Answers whether given fd is seekable
+ */
+int udpc_shouldPrintUncompressedPos(int deflt, int fd, int pipe);
+
 #define MAX_SLICE_SIZE 1024
+
+#define DEFLT_STAT_PERIOD 500000
 
 #ifndef DEBUG
 # define DEBUG 0

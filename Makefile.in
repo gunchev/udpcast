@@ -113,7 +113,7 @@ bbcopy: $(BBTARGET) \
 	$(BBTARGET)/console.h $(BBTARGET)/console.c \
 	$(BBTARGET)/udpc_process.h $(BBTARGET)/process.c \
 	$(BBTARGET)/threads.h \
-	$(BBTARGET)/Config.in $(BBTARGET)/Kbuild \
+	$(BBTARGET)/Config.in $(BBTARGET)/Kbuild $(BBTARGET)/Makefile.flags \
 	$(BBTARGET)/applets.h $(BBTARGET)/usage.h \
 	$(BBTARGET)/config.h
 
@@ -128,6 +128,9 @@ $(BBTARGET)/%.c: %.c
 	cp -f $< $(BBTARGET)
 
 $(BBTARGET)/%.h: %.h
+	cp -f $< $(BBTARGET)
+
+$(BBTARGET)/%.flags: %.flags
 	cp -f $< $(BBTARGET)
 
 $(BBTARGET)/Config.in: Config.in

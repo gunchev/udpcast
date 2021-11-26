@@ -379,7 +379,7 @@ static void cleanupSlices(struct clientState *clst, unsigned int doneState)
 	if(slice->state != doneState)
 	    break;
 	receiverStatsAddBytes(clst->stats, slice->bytes);
-	displayReceiverStats(clst->stats);
+	displayReceiverStats(clst->stats, 0);
 	bytes = slice->bytes;
 
 	/* signal data received */

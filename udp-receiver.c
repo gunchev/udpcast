@@ -67,6 +67,10 @@ static struct option options[] = {
 
     { "log", 1, NULL, 'l' },
 
+    { "print-uncompressed-position", 1, NULL, 'x' },
+    { "statistics-period", 1, NULL, 'z' },
+    { "stat-period", 1, NULL, 'z' },
+
     { NULL, 0, NULL, 0 }
 };
 
@@ -82,10 +86,10 @@ static void intHandler(int nr) {
 #ifdef NO_BB
 static void usage(char *progname) {
 #ifdef HAVE_GETOPT_LONG
-    fprintf(stderr, "%s [--file file] [--pipe pipe] [--portbase portbase] [--interface net-interface] [--log file] [--ttl time-to-live] [--mcast-rdv-address mcast-rdv-address] [--rcvbuf buf] [--nokbd] [--exit-wait milliseconds] [--nosync] [--sync] [--start-timeout sto] [--license]\n", 
+    fprintf(stderr, "%s [--file file] [--pipe pipe] [--portbase portbase] [--interface net-interface] [--log file] [--ttl time-to-live] [--mcast-rdv-address mcast-rdv-address] [--rcvbuf buf] [--nokbd] [--exit-wait milliseconds] [--nosync] [--sync] [--start-timeout sto] [--license] [-x uncomprStatPrint] [-z statPeriod] [--print-uncompressed-position flag] [--stat-period millis]\n", 
 	    progname);
 #else /* HAVE_GETOPT_LONG */
-    fprintf(stderr, "%s [--f file] [--p pipe] [-P portbase] [-i net-interface] [-l logfile] [-t time-to-live] [-M mcast-rdv-address] [-b rcvbuf] [-k] [-w exit-wait-milliseconds] [-n] [-y] [-s start-timeout] [-L]\n", 
+    fprintf(stderr, "%s [--f file] [--p pipe] [-P portbase] [-i net-interface] [-l logfile] [-t time-to-live] [-M mcast-rdv-address] [-b rcvbuf] [-k] [-w exit-wait-milliseconds] [-n] [-y] [-s start-timeout] [-L] [-x uncomprStatPrint] [-z statPeriod]\n", 
 	    progname);
 #endif /* HAVE_GETOPT_LONG */
     exit(1);
@@ -103,6 +107,7 @@ int main(int argc, char **argv)
     char *ptr;
     struct net_config net_config;
     struct disk_config disk_config;
+    struct stat_config stat_config;
     int c;
     int doWarn=0;
     char *ifName=NULL;
@@ -123,6 +128,9 @@ int main(int argc, char **argv)
     net_config.exitWait = 500;
     net_config.startTimeout = 0;
 
+    stat_config.statPeriod = DEFLT_STAT_PERIOD;
+    stat_config.printUncompressedPos = -1;
+
 #ifdef WINDOWS
     /* windows is basically unusable with its default buffer size of 8k...*/
     net_config.requestedBufSize = 1024*1024;
@@ -142,7 +150,7 @@ int main(int argc, char **argv)
 	disk_config.pipeName = strdup("/bin/gzip -dc");
 	disk_config.fileName = "/dev/hda";
     }
-    while( (c=getopt_l(argc, argv, "b:f:p:P:i:l:M:s:t:w:dkLny")) != EOF ) {
+    while( (c=getopt_l(argc, argv, "b:f:p:P:i:l:M:s:t:w:x:z:dkLny")) != EOF ) {
 	switch(c) {
 	    case 'f':
 		disk_config.fileName=optarg;
@@ -214,6 +222,13 @@ int main(int argc, char **argv)
 		net_config.startTimeout = atoi(optarg);		
 		break;
 
+	    case 'z':
+		stat_config.statPeriod = atoi(optarg) * 1000;
+		break;
+	    case 'x':
+		stat_config.printUncompressedPos = atoi(optarg);
+		break;
+
 	    case '?':
 #ifndef NO_BB
 	        bb_show_usage();
@@ -235,7 +250,7 @@ int main(int argc, char **argv)
     openlog((const char *)"udpcast", LOG_NDELAY|LOG_PID, LOG_SYSLOG);
 #endif
     
-    ret= startReceiver(doWarn, &disk_config, &net_config, ifName);
+    ret= startReceiver(doWarn, &disk_config, &net_config, &stat_config, ifName);
     if(ret < 0) {
       fprintf(stderr, "Receiver error\n");
     }

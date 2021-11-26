@@ -44,6 +44,7 @@ void sendDisconnect(int, struct client_config *);
 int startReceiver(int doWarn,
 		  struct disk_config *disk_config,
 		  struct net_config *net_config,
+		  struct stat_config *stat_config,
 		  const char *ifName);
 
 #define SSEND(x) SEND(client_config->S_UCAST, x, client_config->serverAddr)

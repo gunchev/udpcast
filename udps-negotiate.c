@@ -417,6 +417,7 @@ static int doTransfer(int sock,
     int origIn;
     int pid;
     int isPtP = isPointToPoint(db, net_config->flags);
+    int printUncompressedPos;
 
     if((net_config->flags & FLAG_POINTOPOINT) &&
        udpc_nrParticipants(db) != 1) {
@@ -466,15 +467,20 @@ static int doTransfer(int sock,
        net_config->dataMcastAddr = net_config->controlMcastAddr;
 
     origIn = openFile(disk_config);
-    stats = allocSenderStats(origIn, stat_config->log, stat_config->bwPeriod);
     in = openPipe(disk_config, origIn, &pid);
+
+    printUncompressedPos =
+      udpc_shouldPrintUncompressedPos(stat_config->printUncompressedPos,
+				      origIn, in);
+
+    stats = allocSenderStats(origIn, stat_config->log, stat_config->bwPeriod,
+			     stat_config->statPeriod,
+			     printUncompressedPos);
     udpc_initFifo(&fifo, net_config->blockSize);
     ret = spawnNetSender(&fifo, sock, net_config, db, stats);
     localReader(&fifo, in);
 
-    close(origIn);
-    if(in != origIn)
-      close(in);
+    close(in);
 
     /* if we have a pipe, now wait for that too */
     if(pid) {
@@ -482,6 +488,14 @@ static int doTransfer(int sock,
     }
 
     pthread_join(fifo.thread, NULL);    
+    displaySenderStats(stats, 
+		       net_config->blockSize, net_config->sliceSize,
+		       1);
+    /* This has to be done last, or else the final sender stats will not be
+       able to print uncompressed position */
+    if(in != origIn)
+      close(origIn);
+
     udpc_flprintf("Transfer complete.\007\n");
 #ifdef USE_SYSLOG
     syslog(LOG_INFO, "Transfer complete.");

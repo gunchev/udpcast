@@ -6,7 +6,7 @@ define(`UDPRECEIVER',`
 <!-- =text Alain Knaff -->
 <!-- =section udp-receiver SYNOPSIS -->
 <!-- =text
-./udp-receiver [--file <i>file</i>] [--pipe <i>pipe</i>] [--portbase <i>portbase</i>] [--interface <i>net-interface</i>] [--log <i>file</i>] [--ttl <i>time-to-live</i>] [--mcast-rdv-address <i>mcast-rdv-address</i>] [--nokbd] [--exitWait milliseconds]
+./udp-receiver [--file <i>file</i>] [--pipe <i>pipe</i>] [--portbase <i>portbase</i>] [--interface <i>net-interface</i>] [--log <i>file</i>] [--ttl <i>time-to-live</i>] [--mcast-rdv-address <i>mcast-rdv-address</i>] [--nokbd] [--exitWait milliseconds] [--stat-period <i>n</i>] [--print-uncompressed-position <i>flag</i>]
 <!-- =stop -->
 <!-- =cont -->
 

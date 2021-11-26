@@ -80,20 +80,33 @@ int fatal(int code, const char *fmt, ...) {
 int printLongNum(unsigned long long x) {
 /*    fprintf(stderr, "%03d ", (int) ( x / 1000000000000LL   ));*/
     long long divisor;
+    long long minDivisor;
     int nonzero;
+    char suffix=' ';
 
-    divisor = 1000000000LL;
+    if(x > 1000000000000LL) {
+	minDivisor = 1048576L;
+	suffix='M';	
+    } else if(x >= 1000000000) {
+	minDivisor = 1024L;
+	suffix='K';
+    } else {
+	minDivisor = 1;
+	suffix=' ';
+    }
+    divisor = minDivisor * 1000000LL;
+
     nonzero = 0;
 
-    while(divisor) {
+    while(divisor >= minDivisor) {
 	int digits;
 	const char *format;
 
 	digits = (int) ((x / divisor) % 1000);
 	if (nonzero) {
-	    format = "%03d ";
+	    format = "%03d";
 	} else {
-	    format = "%3d ";
+	    format = "%3d";
 	}
 	if (digits || nonzero)
 	    fprintf(stderr, format, digits);
@@ -104,6 +117,10 @@ int printLongNum(unsigned long long x) {
 	    nonzero = 1;
 	}
 	divisor = divisor / 1000;
+	if(divisor >= minDivisor)
+	    fprintf(stderr, " ");
+	else
+	    fprintf(stderr, "%c", suffix);
     }
     needNewline = 1;
     return 0;

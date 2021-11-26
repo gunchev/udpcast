@@ -114,6 +114,11 @@ static struct option options[] = {
 #ifdef DL_RATE_GOVERNOR
     { "rate-governor", 1, NULL, 'g'},
 #endif
+
+    { "print-uncompressed-position", 1, NULL, 'x' },
+    { "statistics-period", 1, NULL, 'z' },
+    { "stat-period", 1, NULL, 'z' },
+
     { NULL, 0, NULL, 0}
 };
 
@@ -134,7 +139,7 @@ static void usage(char *progname) {
 #endif
 	    "[--license]\n", progname); /* FIXME: copy new options to busybox */
 #else /* HAVE_GETOPT_LONG */
-    fprintf(stderr, "%s [-f file] [-d] [-p pipe] [-P portbase] [-b size] [-i net-interface] [-m data-mcast-address] [-M mcast-rdv-address] [-r bitrate] [-1] [-a] [-l logfile] [-t time-to-live] [-F <stripes>x<redundancy>/<stripesize>][-H hello-retransmit-interval] [-S autostart] [-B] [-C min-receivers] [-w min-wait-sec] [-w max-wait-sec] [-R n] [-k] [-I n]"
+    fprintf(stderr, "%s [-f file] [-d] [-p pipe] [-P portbase] [-b size] [-i net-interface] [-m data-mcast-address] [-M mcast-rdv-address] [-r bitrate] [-1] [-a] [-l logfile] [-t time-to-live] [-F <stripes>x<redundancy>/<stripesize>][-H hello-retransmit-interval] [-S autostart] [-B] [-C min-receivers] [-w min-wait-sec] [-w max-wait-sec] [-R n] [-k] [-I n] [-x uncomprStatPrint] [-z statPeriod]"
 #ifdef DL_RATE_GOVERNOR
 	    " [-g rate-governor:parameters ]" 
 #endif
@@ -202,6 +207,8 @@ int main(int argc, char **argv)
 
     stat_config.log = NULL;
     stat_config.bwPeriod = 0;
+    stat_config.printUncompressedPos = -1;
+    stat_config.statPeriod = DEFLT_STAT_PERIOD;
 
     ptr = strrchr(argv[0], '/');
     if(!ptr)
@@ -219,7 +226,7 @@ int main(int argc, char **argv)
 #ifdef DL_RATE_GOVERNOR
 			   "g:"
 #endif
-			   "H:i:I:l:m:M:p:P:r:R:s:S:t:w:W:12a"
+			   "H:i:I:l:m:M:p:P:r:R:s:S:t:w:W:x:z:12a"
 #ifdef FLAG_AUTORATE
 			   "A"
 #endif
@@ -343,6 +350,12 @@ int main(int argc, char **argv)
 				net_config.fec_redundancy,
 				net_config.fec_stripesize);
 		    }
+		    break;
+	    case 'z':
+		    stat_config.statPeriod = atoi(optarg) * 1000;
+		    break;
+	    case 'x':
+		    stat_config.printUncompressedPos = atoi(optarg);
 		    break;
 	    case 'L':
 		    fec_license();

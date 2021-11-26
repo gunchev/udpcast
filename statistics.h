@@ -10,10 +10,11 @@ typedef struct sender_stats *sender_stats_t;
 #define receiverStatsAddBytes udpc_receiverStatsAddBytes
 #define displayReceiverStats udpc_displayReceiverStats
 
-receiver_stats_t udpc_allocReadStats(int fd);
+receiver_stats_t udpc_allocReadStats(int fd, long statPeriod,
+				     int printUncompressedPos);
 void udpc_receiverStatsStartTimer(receiver_stats_t);
 void udpc_receiverStatsAddBytes(receiver_stats_t, long bytes);
-void udpc_displayReceiverStats(receiver_stats_t);
+void udpc_displayReceiverStats(receiver_stats_t, int isFinal);
 
 #define allocSenderStats udpc_allocSenderStats
 #define senderStatsAddBytes udpc_senderStatsAddBytes
@@ -21,11 +22,13 @@ void udpc_displayReceiverStats(receiver_stats_t);
 #define displaySenderStats udpc_displaySenderStats
 #define senderSetAnswered udpc_senderSetAnswered
 
-sender_stats_t udpc_allocSenderStats(int fd, FILE *logfile, long bwPeriod);
+sender_stats_t udpc_allocSenderStats(int fd, FILE *logfile, long bwPeriod,
+				     long statPeriod, int printUncompressedPos);
 void udpc_senderStatsAddBytes(sender_stats_t, long bytes);
 void udpc_senderStatsAddRetransmissions(sender_stats_t ss, 
 				int retransmissions);
-void udpc_displaySenderStats(sender_stats_t,int blockSize, int sliceSize);
+void udpc_displaySenderStats(sender_stats_t,int blockSize, int sliceSize,
+			     int isFinal);
 void udpc_senderSetAnswered(sender_stats_t ss, int clNo);
 
 

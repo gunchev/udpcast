@@ -112,6 +112,7 @@ static int openOutFile(struct disk_config *disk_config)
 int startReceiver(int doWarn,
 		  struct disk_config *disk_config,
 		  struct net_config *net_config,
+		  struct stat_config *stat_config,
 		  const char *ifName)
 {
     char ipBuffer[16];
@@ -285,7 +286,13 @@ int startReceiver(int doWarn,
     atexit(sendDisconnectWrapper);
     {
 	struct fifo fifo;
-	receiver_stats_t stats = allocReadStats(origOutFile);
+	int printUncompressedPos =
+	    udpc_shouldPrintUncompressedPos(stat_config->printUncompressedPos,
+					    origOutFile, pipedOutFile);
+
+	receiver_stats_t stats = allocReadStats(origOutFile,
+						stat_config->statPeriod,
+						printUncompressedPos);
 	
 	udpc_initFifo(&fifo, net_config->blockSize);
 
@@ -317,7 +324,7 @@ int startReceiver(int doWarn,
 #ifndef __MINGW32__
 	fsync(origOutFile);
 #endif /* __MINGW32__ */
-	displayReceiverStats(stats);
+	displayReceiverStats(stats, 1);
 
     }
     fixConsole();

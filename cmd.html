@@ -296,12 +296,37 @@ receivers.</dd>
 
 </ul>
 
-<h2>Logging options</h2>
+<h2>Logging and statistics options</h2>
 
 The options instruct <tt>udp-sender</tt> to log some additional
 statistics to a file:
 
 <dl>
+
+<dt>--stat-period <i>seconds</i></dt>
+
+<dd>Every so much milliseconds, print some statistics to stderr: how
+much bytes sent so far log, position in uncompressed file (if
+applicable), retransmit count... By default, this is printed every
+half second.</dd>
+
+<dt> --print-uncompressed-position <i>flag</i></dt>
+
+<dd>By default, udp-sender only prints the position in uncompressed
+file if the 2 following conditions are met:
+<ul>
+ <li>Input is piped via a compressor (<tt>-p </tt> option).</li>
+ <li>The primary input is seekable (file or device)</li>
+</ul>
+
+With the <tt>--print-uncompressed-position</tt>, options, you can
+change this behavior:
+<ul>
+ <li>If flag is 0, uncompressed position will <b>never</b> be printed,
+ even if above conditions are met</li>
+ <li>If flag is 1, uncompressed position will <b>always</b> be
+ printed, even if above conditions are <b>not</b> met</li>
+</ul></dd>
 
 <dt>--log <i>file</i></dt>
 <dd>Logs some stuff into <i>file</i>.</dd>
@@ -403,6 +428,38 @@ receiving the final REQACK. This is done in order to guard against
 loss of the final ACK. Is 500 milliseconds by default.</dd>
 
 </dl>
+
+<h2>Statistics options</h2>
+
+<dl>
+
+<dt>--stat-period <i>seconds</i></dt>
+
+<dd>Every so much milliseconds, print some statistics to stderr: how
+much bytes received so far log, position in uncompressed file (if
+applicable), overall bitrate... By default, this is printed every
+half second.</dd>
+
+<dt> --print-uncompressed-position <i>flag</i></dt>
+
+<dd>By default, udp-receiver only prints the position in uncompressed file
+if the 2 following conditions are met:
+<ul>
+ <li>Output is piped via a compressor (<tt>-p </tt> option).</li>
+ <li>The final output is seekable (file or device)</li>
+</ul>
+
+With the <tt>--print-uncompressed-position</tt>, options, you can
+change this behavior:
+<ul>
+ <li>If flag is 0, uncompressed position will <b>never</b> be printed,
+ even if above conditions are met</li>
+ <li>If flag is 1, uncompressed position will <b>always</b> be
+ printed, even if above conditions are <b>not</b> met</li>
+</ul></dd>
+
+</dl>
+
 
 <!-- =section udp-sender OPTIONS -->
 

@@ -1,6 +1,6 @@
 Name:           udpcast
 Summary:        UDP broadcast file distribution and installation
-Version:        20080914
+Version:        20081116
 Release:        1
 License:        GPLv2+ and BSD
 Group:          Applications/System
@@ -52,6 +52,9 @@ make install
 
 
 %changelog
+* Sun Nov 16 2008 Alain Knaff <alain@knaff.lu>
+- Configurable statistics printout period
+- Do not print uncompressed offset is pipe is in use, or offset not seekable
 * Thu Sep 11 2008 Alain Knaff <alain@knaff.lu>
 - Added distclean target to make Debian build easier
 - Adapted to new name of mingw compiler, and other Mingw adaptations

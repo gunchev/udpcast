@@ -393,7 +393,7 @@ static int ackSlice(struct slice *slice, struct net_config *net_config,
 
     if(slice->bytes) {
 	displaySenderStats(stats, 
-			   net_config->blockSize, net_config->sliceSize);
+			   net_config->blockSize, net_config->sliceSize, 0);
     }
     /* End Statistics */
 
