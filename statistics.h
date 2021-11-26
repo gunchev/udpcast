@@ -11,7 +11,8 @@ typedef struct sender_stats *sender_stats_t;
 #define displayReceiverStats udpc_displayReceiverStats
 
 receiver_stats_t udpc_allocReadStats(int fd, long statPeriod,
-				     int printUncompressedPos);
+				     int printUncompressedPos,
+				     int noProgress);
 void udpc_receiverStatsStartTimer(receiver_stats_t);
 void udpc_receiverStatsAddBytes(receiver_stats_t, long bytes);
 void udpc_displayReceiverStats(receiver_stats_t, int isFinal);
@@ -23,7 +24,8 @@ void udpc_displayReceiverStats(receiver_stats_t, int isFinal);
 #define senderSetAnswered udpc_senderSetAnswered
 
 sender_stats_t udpc_allocSenderStats(int fd, FILE *logfile, long bwPeriod,
-				     long statPeriod, int printUncompressedPos);
+				     long statPeriod, int printUncompressedPos,
+				     int noProgress);
 void udpc_senderStatsAddBytes(sender_stats_t, long bytes);
 void udpc_senderStatsAddRetransmissions(sender_stats_t ss, 
 				int retransmissions);

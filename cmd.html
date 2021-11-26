@@ -276,7 +276,7 @@ pased.</dd>
 <dd>Do not read start signal from keyboard, and do not display any
 message telling the user to press any key to start.</dd>
 
-<dt>--start-timeout sec</dt>
+<dt>--start-timeout <i>sec</i></dt>
 <dd>sender aborts at start if it doesn't see a receiver within this
 many seconds. Furthermore, transmission of data needs to start within
 this delay. Once transmission is started, the timeout no longer
@@ -284,7 +284,20 @@ applies.</dd>
 
 <dt>--daemon-mode</dt>
 <dd>Do not exit when done, but instead wait for the next batch of
-receivers.</dd>
+receivers. If this option is given twice, udp-sender puts itself into
+the background, closes its standard file descriptors, and acts as a
+real daemon.</dd>
+
+<dt>--pid-file <i>file</i></dt>
+<dd>Allow to specify a pid file. If given together with
+<tt>--daemon-mode</tt>, udp-sender will write its pid into this
+file. If given together with <tt>--kill</tt>, the process with the
+given pid will be killed.</dd>
+
+<dt>--kill</dt>
+<dd>Shuts down the udp-sender identified by the pid file (which also
+must be specified). Kill does not interrupt an ongoing transmission,
+but instead waits until it is finished.</dd>
 
 </dl>
 
@@ -340,6 +353,9 @@ change this behavior:
 <dt>--log <i>file</i></dt>
 <dd>Logs some stuff into <i>file</i>.</dd>
 
+<dt>--no-progress</dt>
+<dd>Do not display progress statistics.</dd>
+
 <dt>--bw-period <i>seconds</i></dt>
 
 <dd>Every so much seconds, log instantenous bandwidth seen during that
@@ -393,10 +409,15 @@ file, which is used for an informational progress display. The
 <dd>Do not read start signal from keyboard, and do not display any
 message telling the user to press any key to start.</dd>
 
-<dt>--start-timeout sec</dt>
+<dt>--start-timeout <i>sec</i></dt>
 <dd>receiver aborts at start if it doesn't see a sender within this many
 seconds. Furthermore, the sender needs to start transmission of data within
 this delay. Once transmission is started, the timeout no longer applies.</dd>
+
+<dt>--receive-timeout <i>sec</i></dt>
+<dd>receiver aborts during transmission if it doesn't see a packet
+from the sender within this many seconds. This timeout only applies
+once transmission has started. </dd>
 
 </dl>
 

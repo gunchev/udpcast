@@ -11,7 +11,7 @@
 #define printLongNum udpc_printLongNum 
 
 /*void printNewlineIfNeeded(void);*/
-#ifdef __GNUCC__
+#ifdef __GNUC__
 int logprintf(FILE *logfile, const char *fmt, ...)
     __attribute__ ((format (printf, 2, 3)));
 int flprintf(const char *fmt, ...) 

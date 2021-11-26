@@ -300,7 +300,8 @@ int startReceiver(int doWarn,
 
 	receiver_stats_t stats = allocReadStats(origOutFile,
 						stat_config->statPeriod,
-						printUncompressedPos);
+						printUncompressedPos,
+						stat_config->noProgress);
 	
 	udpc_initFifo(&fifo, net_config->blockSize);
 

@@ -1,3 +1,17 @@
+v20110710
+	* fixed some -Wextra compilation warnings
+	* new --no-progress flag to suppress progress display
+	* print most debug messages to log, if available
+	* properly handle Control-C signal
+	* --receive-timeout parameter for receiver timeout during transmission
+	* "real" daemon mode
+v20100501
+	* Merged Michael Schutte's changes
+v20100417
+	* Merged Tomas Pospisek's changes
+v20100130
+	* In busybox, call the executables udp-receiver and
+	  udp-sender, the same as outside of busybox
 v20091230
 	* new "--ignore-lost-data" mode
 	* Lift limit in number of supported network interfaces

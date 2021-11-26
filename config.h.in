@@ -6,6 +6,9 @@
 /* Define to 1 if you have the `atexit' function. */
 #undef HAVE_ATEXIT
 
+/* Define to 1 if you have the `daemon' function. */
+#undef HAVE_DAEMON
+
 /* Define to 1 if you have the <dlfcn.h> header file. */
 #undef HAVE_DLFCN_H
 
@@ -35,6 +38,9 @@
 
 /* Define to 1 if the system has the type `in_addr_t'. */
 #undef HAVE_IN_ADDR_T
+
+/* Define to 1 if you have the `kill' function. */
+#undef HAVE_KILL
 
 /* Define to 1 if you have the `dl' library (-ldl). */
 #undef HAVE_LIBDL
@@ -102,7 +108,7 @@
 /* Define to 1 if you have the <string.h> header file. */
 #undef HAVE_STRING_H
 
-/* Define to 1 if `imr_ifindex' is member of `struct ip_mreqn'. */
+/* Define to 1 if `imr_ifindex' is a member of `struct ip_mreqn'. */
 #undef HAVE_STRUCT_IP_MREQN_IMR_IFINDEX
 
 /* Define to 1 if you have the <sys/ioctl.h> header file. */
@@ -161,6 +167,9 @@
 
 /* Define to the one symbol short name of this package. */
 #undef PACKAGE_TARNAME
+
+/* Define to the home page for this package. */
+#undef PACKAGE_URL
 
 /* Define to the version of this package. */
 #undef PACKAGE_VERSION

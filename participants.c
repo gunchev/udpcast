@@ -77,8 +77,8 @@ int addParticipant(participantsDb_t db,
 	    db->clientTable[i].rcvbuf = rcvbuf;
 	    db->nrParticipants++;
 
-	    flprintf("New connection from %s  (#%d) %08x\n", 
-			  getIpString(addr, ipBuffer), i, capabilities);
+	    fprintf(stderr, "New connection from %s  (#%d) %08x\n", 
+		    getIpString(addr, ipBuffer), i, capabilities);
 #ifdef USE_SYSLOG
 	    syslog(LOG_INFO, "New connection from %s  (#%d)\n",
 			    getIpString(addr, ipBuffer), i);
@@ -115,18 +115,18 @@ void printNotSet(participantsDb_t db, char *d)
 {
     int first=1;
     int i;
-    fprintf(stderr, "[");
+    flprintf("[");
     for (i=0; i < MAX_CLIENTS; i++) {
 	if (db->clientTable[i].used) {
 	    if(!BIT_ISSET(i, d)) {
 		if(!first)
-		    fprintf(stderr,",");
+		    flprintf(",");
 		first=0;
-		fprintf(stderr, "%d", i);
+		flprintf("%d", i);
 	    }
 	}
     }
-    fprintf(stderr, "]");
+    flprintf("]");
 }
 
 
@@ -134,16 +134,16 @@ void printSet(participantsDb_t db, char *d)
 {
     int first=1;
     int i;
-    fprintf(stderr, "[");
+    flprintf("[");
     for (i=0; i < MAX_CLIENTS; i++) {
 	if (db->clientTable[i].used) {
 	    if(BIT_ISSET(i, d)) {
 		if(!first)
-		    fprintf(stderr,",");
+		    flprintf(",");
 		first=0;
-		fprintf(stderr, "%d", i);
+		flprintf("%d", i);
 	    }
 	}
     }
-    fprintf(stderr, "]");
+    flprintf("]");
 }

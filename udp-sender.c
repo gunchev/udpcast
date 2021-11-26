@@ -7,6 +7,7 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <signal.h>
 
 #include "log.h"
 #include "socklib.h"
@@ -70,6 +71,7 @@ static struct option options[] = {
     { "autorate", 0, NULL, 'A' },
 #endif
     { "log", 1, NULL, 'l' },
+    { "no-progress", 0, NULL, 0x701 },
 
     /* slice size configuration */
     { "min-slice-size", 1, NULL, 0x0101 },
@@ -109,6 +111,11 @@ static struct option options[] = {
     { "retries-until-drop", 1, NULL, 'R' },
 
     { "daemon-mode", 0, NULL, 'D'},
+    { "pid-file", 1, NULL, 0x901 },
+
+#ifdef HAVE_KILL
+    { "kill", 0, NULL, 'K' },
+#endif
 
     { "bw-period", 1, NULL, 'I'},
 
@@ -134,7 +141,7 @@ static struct option options[] = {
 #ifdef NO_BB
 static void usage(char *progname) {
 #ifdef HAVE_GETOPT_LONG
-    fprintf(stderr, "%s [--file file] [--full-duplex] [--pipe pipe] [--portbase portbase] [--blocksize size] [--interface net-interface] [--mcast-data-address data-mcast-address] [--mcast-rdv-address mcast-rdv-address] [--max-bitrate bitrate] [--pointopoint] [--async] [--log file] [--min-slice-size min] [--max-slice-size max] [--slice-size] [--ttl time-to-live] [--fec <stripes>x<redundancy>/<stripesize>] [--print-seed] [--rexmit-hello-interval interval] [--autostart autostart] [--broadcast] [--min-receivers receivers] [--min-wait sec] [--max-wait sec] [--start-timeout n] [--retries-until-drop n] [--nokbd] [--bw-period n] [--streaming] [--rehello-offset offs]"
+    fprintf(stderr, "%s [--file file] [--full-duplex] [--pipe pipe] [--portbase portbase] [--blocksize size] [--interface net-interface] [--mcast-data-address data-mcast-address] [--mcast-rdv-address mcast-rdv-address] [--max-bitrate bitrate] [--pointopoint] [--async] [--log file] [--no-progress] [--min-slice-size min] [--max-slice-size max] [--slice-size] [--ttl time-to-live] [--fec <stripes>x<redundancy>/<stripesize>] [--print-seed] [--rexmit-hello-interval interval] [--autostart autostart] [--broadcast] [--min-receivers receivers] [--min-wait sec] [--max-wait sec] [--start-timeout n] [--retries-until-drop n] [--nokbd] [--bw-period n] [--streaming] [--rehello-offset offs]"
 #ifdef DL_RATE_GOVERNOR
 	    " [--rate-governor module:parameters]" 
 #endif
@@ -161,6 +168,16 @@ static inline void usage(char *progname) {
 }
 #endif
 
+static const char *pidfile = NULL;
+
+#ifdef HAVE_DAEMON
+static void cleanPidfile(int nr UNUSED) {
+    unlink(pidfile);
+    signal(SIGTERM, SIG_DFL);
+    raise(SIGTERM);
+}
+#endif
+
 #ifndef NO_BB
 int udp_sender_main(int argc, char **argv);
 int udp_sender_main(int argc, char **argv)
@@ -176,6 +193,8 @@ int main(int argc, char **argv)
 #endif
 
     int daemon_mode = 0;
+    int doKill = 0;
+
     int r;
     struct net_config net_config;
     struct disk_config disk_config;
@@ -183,6 +202,7 @@ int main(int argc, char **argv)
     char *ifName = NULL;
 
     int dataMcastSupplied = 0;
+    int mainSock;
 
     /* argument parsing */
     disk_config.fileName = NULL;
@@ -218,6 +238,7 @@ int main(int argc, char **argv)
     stat_config.bwPeriod = 0;
     stat_config.printUncompressedPos = -1;
     stat_config.statPeriod = DEFLT_STAT_PERIOD;
+    stat_config.noProgress = 0;
 
     ptr = strrchr(argv[0], '/');
     if(!ptr)
@@ -235,7 +256,11 @@ int main(int argc, char **argv)
 #ifdef DL_RATE_GOVERNOR
 	    "g:"
 #endif
-	    "H:i:I:l:m:M:p:P:r:R:s:S:t:T:w:W:x:z:12a"
+	    "H:i:I:"
+#ifdef HAVE_KILL
+	    "K"
+#endif
+	    "l:m:M:p:P:r:R:s:S:t:T:w:W:x:z:12a"
 #ifdef FLAG_AUTORATE
 	    "A"
 #endif
@@ -287,6 +312,9 @@ int main(int argc, char **argv)
 		    break;
 		case 'l':
 		    stat_config.log = udpc_log = fopen(optarg, "a");
+		    break;
+		case 0x701:
+		    stat_config.noProgress = 1;
 		    break;
 		case 'm':
 		    setIpFromString(&net_config.dataMcastAddr, optarg);
@@ -420,7 +448,13 @@ int main(int argc, char **argv)
 		    break;
 
 	        case 'D': /* daemon-mode */
-		    daemon_mode = 1;
+		    daemon_mode++;
+		    break;
+		case 'K':
+		    doKill = 1;
+		    break;
+		case 0x901:
+		    pidfile = optarg;
 		    break;
 
 	        case 'I': /* bw-period */
@@ -443,6 +477,44 @@ int main(int argc, char **argv)
 	    }
 	}
     }
+
+#ifdef HAVE_KILL
+    if(doKill) {
+	FILE *p;
+	char line[80];
+	int pid;
+
+	if(pidfile == NULL) {
+	    fprintf(stderr, "-K only works together with --pidfile\n");
+	    return 1;
+	}
+	p = fopen(pidfile, "r");
+	if(p == NULL) {
+	    perror("Could not read pidfile");
+	    return 1;
+	}
+	if(fgets(line, sizeof(line), p) == NULL) {
+	    fprintf(stderr, "Empty pid file\n");
+	    return 1;
+	}
+	fclose(p);
+	pid = atoi(line);
+	if(pid <= 0) {
+	    fprintf(stderr, "Negative or null pid\n");
+	    return -1;
+	}
+
+	if(kill(pid, SIGTERM) < 0) {
+	    if(errno == ESRCH) {
+		/* Process does not exist => already killed */
+		unlink(pidfile);
+	    }
+	    perror("Kill");
+	    return 1;	   
+	}
+	return 0;
+    }
+#endif
 
     if(net_config.flags & FLAG_ASYNC) {
       if(dataMcastSupplied)
@@ -508,7 +580,8 @@ int main(int argc, char **argv)
 	    net_config.default_slice_size = net_config.max_slice_size;
     }
 
-    fprintf(stderr, "Udp-sender %s\n", version);
+    if(daemon_mode < 2)
+	fprintf(stderr, "Udp-sender %s\n", version);
 
     /*
     if(disk_config.fileName == NULL && disk_config.pipeName == NULL) {
@@ -519,11 +592,35 @@ int main(int argc, char **argv)
 #ifdef USE_SYSLOG
     openlog((const char *)"udpcast", LOG_NDELAY|LOG_PID, LOG_SYSLOG);
 #endif
-    
+
+    mainSock = openMainSenderSock(&net_config, ifName);
+    if(mainSock < 0) {
+	perror("Make main sock");
+	exit(1);
+    }
+
+#ifdef HAVE_DAEMON
+    if(daemon_mode == 2) {
+	net_config.flags |= FLAG_NOKBD;
+	stat_config.noProgress = 1;
+	if(daemon(1, 0) < 0) {
+	    perror("Could not daemonize");
+	    exit(1);
+	}
+	if(pidfile) {
+	    FILE *p = fopen(pidfile, "w");
+	    fprintf(p, "%d\n", getpid());
+	    fclose(p);
+	    signal(SIGTERM, cleanPidfile);
+	}
+    }
+#endif
+
     do {
-	r= startSender(&disk_config, &net_config, &stat_config, ifName);
+	r= startSender(&disk_config, &net_config, &stat_config, mainSock);
     } while(daemon_mode);
 
+    closesocket(mainSock);
     rgShutdownAll(&net_config);
     return r;
 }

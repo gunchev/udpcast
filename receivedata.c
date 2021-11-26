@@ -999,9 +999,9 @@ static int dispatchMessage(struct clientState *clst)
 				     NR_CLIENT_SOCKS, &read_set);
 	if(client_config->console && !clst->promptPrinted)
 #ifdef __MINGW32__
-	  udpc_flprintf("Press return to start receiving data!\n");
+	    fprintf(stderr, "Press return to start receiving data!\n");
 #else /* __MINGW32__ */
-	  udpc_flprintf("Press any key to start receiving data!\n");
+	    fprintf(stderr, "Press any key to start receiving data!\n");
 #endif /* __MINGW32__ */
 	clst->promptPrinted=1;
 
@@ -1045,7 +1045,30 @@ static int dispatchMessage(struct clientState *clst)
     loseRecvPacket(fd);
     ret=RecvMsg(fd, &clst->data_hdr, 0);
 #else
-    ret=recvmsg(fd, &clst->data_hdr, 0);
+    ret=recvmsg(fd, &clst->data_hdr, 
+#ifdef MSG_DONTWAIT
+		clst->net_config->receiveTimeout ? MSG_DONTWAIT : 
+#endif
+		0);
+#ifdef MSG_DONTWAIT
+    if(ret < 0 && (errno == EAGAIN || errno == EWOULDBLOCK)) {
+	struct timeval tv;
+	fd_set read_set;
+	int nr_desc;
+
+	FD_ZERO(&read_set);
+	FD_SET(fd, &read_set);
+	tv.tv_sec = clst->net_config->receiveTimeout;
+	tv.tv_usec = 0;
+	nr_desc = select(fd+1,  &read_set, 0, 0,  &tv);
+	if(nr_desc == 0) {
+	  flprintf("Receiver timeout\n");
+	  exit(1);
+	}
+	ret = recvmsg(fd, &clst->data_hdr, MSG_DONTWAIT);
+    }
+#endif
+
 #endif
     if (ret < 0) {
 #if DEBUG

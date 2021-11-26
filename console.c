@@ -6,6 +6,7 @@
 
 #include "console.h"
 #include "util.h"
+#include "udpcast.h"
 
 #ifndef __MINGW32__
 
@@ -80,13 +81,14 @@ int selectWithConsole(console_t *con, int maxFd,
 void restoreConsole(console_t **cp, int doConsume) {
     console_t *c=*cp;
     int ch='\0';
-    
+    int r UNUSED;
+
     if(c == NULL)
       return;
 
     /* If key pressed, consume it. If letter is q, quit */
     if(doConsume) {
-	read(c->fd, &ch, 1);
+      r = read(c->fd, &ch, 1);
     }
 
     if(c->needRestore && tcsetattr(c->fd, TCSAFLUSH, &c->oldtio) < 0) {

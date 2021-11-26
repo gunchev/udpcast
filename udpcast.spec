@@ -1,6 +1,9 @@
+%define _binary_payload w9.gzdio
+%global _binary_filedigest_algorithm 1
+%global _source_filedigest_algorithm 1
 Name:           udpcast
 Summary:        UDP broadcast file distribution and installation
-Version:        20100130
+Version:        20110710
 Release:        1
 License:        GPLv2+ and BSD
 Group:          Applications/System
@@ -52,6 +55,13 @@ make install
 
 
 %changelog
+* Sun Jul 10 2011 Alain Knaff <alain@knaff.lu>
+- fixed some -Wextra compilation warnings
+- new --no-progress flag to suppress progress display
+- print most debug messages to log, if available
+- properly handle Control-C signal
+- --receive-timeout parameter for receiver timeout during transmission
+- "real" daemon mode
 * Sat Jan 30 2010 Alain Knaff <alain@knaff.lu>
 - In busybox, call the executables udp-receiver and udp-sender, the
 same as outside of busybox

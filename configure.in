@@ -73,7 +73,7 @@ if test "$mtools_cv_have_lseek64_prototype" = yes; then
 fi
 
 
-AC_CHECK_FUNCS(htons)
+AC_CHECK_FUNCS(htons kill daemon)
 
 dnl Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST

@@ -773,15 +773,15 @@ void fec_init(void)
  * few (typically, 4 or 8) that they will fit easily in the cache (even
  * in the L2 cache...)
  */
-void fec_encode(int blockSize,
+void fec_encode(unsigned int blockSize,
 		unsigned char **data_blocks,
-		int nrDataBlocks,
+		unsigned int nrDataBlocks,
 		unsigned char **fec_blocks,
-		int nrFecBlocks)
+		unsigned int nrFecBlocks)
 
 {
-    int blockNo; /* loop for block counter */
-    int row, col;
+    unsigned int blockNo; /* loop for block counter */
+    unsigned int row, col;
 
     assert(fec_initialized);    
     assert(nrDataBlocks <= 128);    
@@ -807,16 +807,16 @@ void fec_encode(int blockSize,
  * (with size being number of blocks lost, rather than number of data blocks
  * + fec)
  */
-static inline void reduce(int blockSize,
+static inline void reduce(unsigned int blockSize,
 			  unsigned char **data_blocks,
-			  int nr_data_blocks,
+			  unsigned int nr_data_blocks,
 			  unsigned char **fec_blocks,
 			  unsigned int *fec_block_nos,
 			  unsigned int *erased_blocks,
-			  short nr_fec_blocks)
+			  unsigned short nr_fec_blocks)
 {
     int erasedIdx=0;
-    int col;
+    unsigned int col;
 
     /* First we reduce the code vector by substracting all known elements
      * (non-erased data packets) */
@@ -855,7 +855,6 @@ long long invTime =0;
  */
 static inline void resolve(int blockSize,
 			   unsigned char **data_blocks,
-			   int nr_data_blocks,
 			   unsigned char **fec_blocks,
 			   unsigned int *fec_block_nos,
 			   unsigned int *erased_blocks,
@@ -917,14 +916,14 @@ static inline void resolve(int blockSize,
     }
 }
 
-void fec_decode(int blockSize,
+void fec_decode(unsigned int blockSize,
 
 		unsigned char **data_blocks,
-		int nr_data_blocks,
+		unsigned int nr_data_blocks,
 		unsigned char **fec_blocks,
 		unsigned int *fec_block_nos,
 		unsigned int *erased_blocks,
-		short nr_fec_blocks)
+		unsigned short nr_fec_blocks)
 {
 #ifdef PROFILE
     long long begin;
@@ -941,7 +940,7 @@ void fec_decode(int blockSize,
     reduceTime += end - begin;
     begin = end;
 #endif
-    resolve(blockSize, data_blocks, nr_data_blocks,
+    resolve(blockSize, data_blocks,
 	    fec_blocks, fec_block_nos, erased_blocks,
 	    nr_fec_blocks);
 #ifdef PROFILE

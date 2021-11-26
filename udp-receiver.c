@@ -60,12 +60,14 @@ static struct option options[] = {
     { "exit-wait", 1, NULL, 'w' },
 
     { "start-timeout", 1, NULL, 's' },
+    { "receive-timeout", 1, NULL, 0x801 },
 
 #ifdef BB_FEATURE_UDPCAST_FEC
     { "license", 0, NULL, 'L' },
 #endif
 
     { "log", 1, NULL, 'l' },
+    { "no-progress", 0, NULL, 0x701 },
 
     { "print-uncompressed-position", 1, NULL, 'x' },
     { "statistics-period", 1, NULL, 'z' },
@@ -81,14 +83,31 @@ static struct option options[] = {
 # define getopt_l(c,v,o) getopt(c, v, o)
 #endif /* HAVE_GETOPT_LONG */
 
+static int signalNumber=0;
+
+#ifdef SIG_UNBLOCK
+static void signalForward(void) {
+	if(signalNumber != 0) {
+		sigset_t sig;
+		signal(signalNumber, SIG_DFL);
+		sigemptyset(&sig);
+		sigaddset(&sig, signalNumber);
+		sigprocmask(SIG_UNBLOCK, &sig, NULL);
+		raise(signalNumber);
+		perror("raise");
+	}
+}
+#endif
+
 static void intHandler(int nr) {
+    signalNumber=nr;
     udpc_fatal(1, "Signal %d: Cancelled by user\n", nr);
 }
 
 #ifdef NO_BB
 static void usage(char *progname) {
 #ifdef HAVE_GETOPT_LONG
-    fprintf(stderr, "%s [--file file] [--pipe pipe] [--portbase portbase] [--interface net-interface] [--log file] [--ttl time-to-live] [--mcast-rdv-address mcast-rdv-address] [--rcvbuf buf] [--nokbd] [--exit-wait milliseconds] [--nosync] [--sync] [--start-timeout sto] [--license] [-x uncomprStatPrint] [-z statPeriod] [--print-uncompressed-position flag] [--stat-period millis] [--ignore-lost-data]\n", 
+    fprintf(stderr, "%s [--file file] [--pipe pipe] [--portbase portbase] [--interface net-interface] [--log file] [--no-progress] [--ttl time-to-live] [--mcast-rdv-address mcast-rdv-address] [--rcvbuf buf] [--nokbd] [--exit-wait milliseconds] [--nosync] [--sync] [--start-timeout sto] [--receive-timeout rct] [--license] [-x uncomprStatPrint] [-z statPeriod] [--print-uncompressed-position flag] [--stat-period millis] [--ignore-lost-data]\n", 
 	    progname);
 #else /* HAVE_GETOPT_LONG */
     fprintf(stderr, "%s [--f file] [--p pipe] [-P portbase] [-i net-interface] [-l logfile] [-t time-to-live] [-M mcast-rdv-address] [-b rcvbuf] [-k] [-w exit-wait-milliseconds] [-n] [-y] [-s start-timeout] [-L] [-x uncomprStatPrint] [-z statPeriod] [-Z]\n", 
@@ -119,6 +138,10 @@ int main(int argc, char **argv)
     int printSeed = 0;
 #endif
 
+#ifdef SIG_UNBLOCK
+    atexit(signalForward);
+#endif
+
     disk_config.fileName=NULL;
     disk_config.pipeName=NULL;
     disk_config.flags = 0;
@@ -129,9 +152,11 @@ int main(int argc, char **argv)
     net_config.mcastRdv = NULL;
     net_config.exitWait = 500;
     net_config.startTimeout = 0;
+    net_config.receiveTimeout = 0;
 
     stat_config.statPeriod = DEFLT_STAT_PERIOD;
     stat_config.printUncompressedPos = -1;
+    stat_config.noProgress = 0;
 
 #ifdef WINDOWS
     /* windows is basically unusable with its default buffer size of 8k...*/
@@ -168,6 +193,9 @@ int main(int argc, char **argv)
 		break;
 	    case 'l':
 		udpc_log = fopen(optarg, "a");
+		break;
+	    case 0x701:
+		stat_config.noProgress = 1;
 		break;
 	    case 't': /* ttl */
 		net_config.ttl = atoi(optarg);
@@ -222,6 +250,10 @@ int main(int argc, char **argv)
 
 	    case 's': /* start-timeout */
 		net_config.startTimeout = atoi(optarg);		
+		break;
+
+	    case 0x801: /* receive-timeout */
+		net_config.receiveTimeout = atoi(optarg);
 		break;
 
 	    case 'z':

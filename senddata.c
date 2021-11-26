@@ -130,9 +130,9 @@ static int isSliceXmitted(struct slice *slice) {
 
 
 static int freeSlice(sender_state_t sendst, struct slice *slice) {
+#if DEBUG
     int i;
     i = slice - sendst->slices;
-#if DEBUG
     flprintf("Freeing slice %p %d %d\n", slice, slice->sliceNo, i);
 #endif
     slice->state = SLICE_PRE_FREE;

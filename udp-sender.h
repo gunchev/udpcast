@@ -16,6 +16,7 @@ struct fifo;
 #define localReader udpc_localReader
 #define spawnNetSender udpc_spawnNetSender
 #define sendHello udpc_sendHello
+#define openMainSenderSock udpc_openMainSenderSock
 #define startSender udpc_startSender
 #define doSend udpc_doSend
 
@@ -29,10 +30,14 @@ int spawnNetSender(struct fifo *fifo,
 		   participantsDb_t db,
 		   sender_stats_t stats);
 void sendHello(struct net_config *net_config, int sock, int streaming);
+
+int openMainSenderSock(struct net_config *net_config,
+		       const char *ifName);
+
 int startSender(struct disk_config *disk_config,
 		struct net_config *net_config,
 		struct stat_config *stat_config,
-		const char *ifName);
+		int mainSock);
 
 
 #define BCAST_DATA(s, msg) \

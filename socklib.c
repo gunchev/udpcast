@@ -609,7 +609,7 @@ net_if_t *getNetIf(const char *wanted) {
 
 	ifc.ifc_len = sizeof(struct ifreq) * 10;
 	while(1) {
-	    size_t len = ifc.ifc_len;
+	    int len = ifc.ifc_len;
 	    ifc.ifc_buf = (caddr_t) malloc(ifc.ifc_len);
 	    if(ifc.ifc_buf == NULL) {
 		udpc_fatal(1, "Out of memory error");
@@ -1088,8 +1088,6 @@ int prepareForSelect(int *socks, int nr, fd_set *read_set) {
 
 int getSelectedSock(int *socks, int nr, fd_set *read_set) {
     int i;
-    int maxFd;
-    maxFd=-1;
     for(i=0; i<nr; i++) {
 	if(socks[i] == -1)
 	    continue;

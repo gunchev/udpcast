@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <errno.h>
+#include <signal.h>
 
 #include "log.h"
 #include "fifo.h"
@@ -172,9 +173,9 @@ static int mainDispatcher(int *fd, int nr,
     if ((udpc_nrParticipants(db) || (net_config->flags &  FLAG_ASYNC)) &&
 	!(net_config->flags &  FLAG_NOKBD) && *console != NULL)
 #ifdef __MINGW32__
-	udpc_flprintf("Ready. Press return to start sending data.\n");
+	fprintf(stderr, "Ready. Press return to start sending data.\n");
 #else /* __MINGW32__ */
-	udpc_flprintf("Ready. Press any key to start sending data.\n");
+        fprintf(stderr, "Ready. Press any key to start sending data.\n");
 #endif /* __MINGW32__ */
  
     if (firstConnected && !*firstConnected && udpc_nrParticipants(db)) {
@@ -282,10 +283,21 @@ static int mainDispatcher(int *fd, int nr,
     return startNow;
 }
 
+
+int udpc_openMainSenderSock(struct net_config *net_config,
+			    const char *ifName)
+{
+    net_config->net_if = getNetIf(ifName);
+    return makeSocket(ADDR_TYPE_UCAST,
+		      net_config->net_if,
+		      NULL,
+		      SENDER_PORT(net_config->portBase));
+}
+
 int startSender(struct disk_config *disk_config,
 		struct net_config *net_config,
 		struct stat_config *stat_config,
-		const char *ifName)
+		int mainSock)
 {
     char ipBuffer[16];
     int tries;
@@ -302,12 +314,13 @@ int startSender(struct disk_config *disk_config,
     int nr=0;
     int fd;
 
-    net_config->net_if = getNetIf(ifName);
+#ifdef SIG_BLOCK
+    /* signal sets */
+    sigset_t sig, oldsig;
+    int shouldRestoreSig;
+#endif
 
-    sock[nr++] = makeSocket(ADDR_TYPE_UCAST,
-			    net_config->net_if,
-			    NULL,
-			    SENDER_PORT(net_config->portBase));
+    sock[nr++] = mainSock;
 
     if(! (net_config->flags & (FLAG_SN | FLAG_NOTSN)) ) {
       if(isFullDuplex(sock[0], net_config->net_if->name) == 1) {
@@ -397,6 +410,13 @@ int startSender(struct disk_config *disk_config,
       if(sock[j] != sock[0])
 	closesocket(sock[j]);
 
+#ifdef SIG_BLOCK
+    sigemptyset(&sig);
+    sigaddset(&sig, SIGTERM);
+    if(sigprocmask(SIG_BLOCK, &sig, &oldsig) == 0)
+      shouldRestoreSig=1;
+#endif
+
     restoreConsole(&console,0);
     if(r == 1) {
 	int i;
@@ -409,7 +429,10 @@ int startSender(struct disk_config *disk_config,
 	  fprintf(stderr, "No participants... exiting\n");
     }
     free(db);
-    closesocket(sock[0]);
+#ifdef SIG_BLOCK
+    if(shouldRestoreSig)
+      sigprocmask(SIG_SETMASK, &oldsig, NULL);
+#endif
     return 0;
 }
 
@@ -423,7 +446,6 @@ static int doTransfer(int sock,
 		      struct stat_config *stat_config)
 {
     int i;
-    int ret;
     struct fifo fifo;
     sender_stats_t stats;
     int in;
@@ -488,9 +510,10 @@ static int doTransfer(int sock,
 
     stats = allocSenderStats(origIn, stat_config->log, stat_config->bwPeriod,
 			     stat_config->statPeriod,
-			     printUncompressedPos);
+			     printUncompressedPos,
+			     stat_config->noProgress);
     udpc_initFifo(&fifo, net_config->blockSize);
-    ret = spawnNetSender(&fifo, sock, net_config, db, stats);
+    spawnNetSender(&fifo, sock, net_config, db, stats);
     localReader(&fifo, in);
 
     close(in);

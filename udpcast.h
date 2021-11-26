@@ -1,6 +1,10 @@
 #ifndef UDPCAST_H
 #define UDPCAST_H
 
+#ifdef __GNUC__
+#define UNUSED __attribute__((unused))
+#endif
+
 #include "socklib.h"
 #include <sys/time.h>
 #include <stdio.h>
@@ -87,6 +91,7 @@ struct net_config {
     int exitWait; /* How many milliseconds to wait on program exit */
 
     int startTimeout; /* Timeout at start */
+    int receiveTimeout; /* Receive timeout */
 
     /* FEC config */
 #ifdef BB_FEATURE_UDPCAST_FEC
@@ -105,6 +110,7 @@ struct stat_config {
 
     int statPeriod;
     int printUncompressedPos;
+    int noProgress;
 };
 
 

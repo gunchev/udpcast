@@ -30,6 +30,7 @@ struct stats {
     struct timeval lastPrinted;
     long statPeriod;
     int printUncompressedPos;
+    int noProgress;
 };
 
 struct receiver_stats {
@@ -57,7 +58,8 @@ static int shouldPrint(struct stats *s, struct timeval *now, int isFinal) {
 }
 
 static void initStats(struct stats *s,
-		      int fd, long statPeriod, int printUncompressedPos)
+		      int fd, long statPeriod, int printUncompressedPos,
+		      int noProgress)
 {
     struct timeval now;
     gettimeofday(&now, 0);
@@ -65,13 +67,15 @@ static void initStats(struct stats *s,
     s->statPeriod = statPeriod;    
     s->printUncompressedPos = printUncompressedPos;
     s->lastPrinted = now;
+    s->noProgress = noProgress;
 }
 
 receiver_stats_t allocReadStats(int fd,
 				long statPeriod,
-				int printUncompressedPos) {
+				int printUncompressedPos,
+				int noProgress) {
     receiver_stats_t rs =  MALLOC(struct receiver_stats);
-    initStats(&rs->s, fd, statPeriod, printUncompressedPos);
+    initStats(&rs->s, fd, statPeriod, printUncompressedPos, noProgress);
     return rs;
 }
 
@@ -150,7 +154,7 @@ void displayReceiverStats(receiver_stats_t rs, int isFinal) {
     long long timePassed;
     struct timeval tv_now;
 
-    if(rs == NULL)
+    if(rs == NULL || rs->s.noProgress)
 	return;
 
     gettimeofday(&tv_now, 0);
@@ -189,13 +193,14 @@ struct sender_stats {
     struct stats s;
 };
 
- sender_stats_t allocSenderStats(int fd, FILE *logfile, long bwPeriod,
-				 long statPeriod, int printUncompressedPos) {
+sender_stats_t allocSenderStats(int fd, FILE *logfile, long bwPeriod,
+				long statPeriod, int printUncompressedPos,
+				int noProgress) {
     sender_stats_t ss = MALLOC(struct sender_stats);
     ss->log = logfile;
     ss->bwPeriod = bwPeriod;
     gettimeofday(&ss->periodStart, 0);
-    initStats(&ss->s, fd, statPeriod, printUncompressedPos);
+    initStats(&ss->s, fd, statPeriod, printUncompressedPos, noProgress);
     return ss;
 }
 
@@ -237,7 +242,7 @@ void displaySenderStats(sender_stats_t ss, int blockSize, int sliceSize,
     unsigned int blocks, percent;
     struct timeval tv_now;
     
-    if(ss == NULL)
+    if(ss == NULL || ss->s.noProgress)
 	return;
 
     gettimeofday(&tv_now, 0);

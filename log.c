@@ -5,6 +5,7 @@
 #include <assert.h>
 #include <time.h>
 #include <sys/time.h>
+#include <string.h>
 #include "log.h"
 
 static int needNewline=0;
@@ -16,6 +17,7 @@ static void printNewlineIfNeeded(void) {
     needNewline=0;
 }
 
+static int vlogprintf(FILE *logfile, const char *fmt, va_list ap);
 
 /**
  * Print message to the log, if not null
@@ -24,15 +26,25 @@ int logprintf(FILE *logfile, const char *fmt, ...) {
     va_list ap;
 
     va_start(ap, fmt);
+    return vlogprintf(logfile, fmt, ap);
+}
+
+static int newlineSeen=1;
+
+static int vlogprintf(FILE *logfile, const char *fmt, va_list ap) {
     if(logfile != NULL) {	
 	char buf[9];
 	struct timeval tv;
 	int r;
-	gettimeofday(&tv, NULL);
-	strftime(buf, sizeof(buf), "%H:%M:%S", localtime(&tv.tv_sec));
-	fprintf(logfile, "%s.%06ld ", buf, tv.tv_usec);
+	if(newlineSeen) {
+	    gettimeofday(&tv, NULL);
+	    strftime(buf, sizeof(buf), "%H:%M:%S", localtime(&tv.tv_sec));
+	    fprintf(logfile, "%s.%06ld ", buf, tv.tv_usec);
+	}
+	newlineSeen = (strchr(fmt, '\n') != NULL);
 	r= vfprintf(logfile, fmt, ap);
-	fflush(logfile);
+	if(newlineSeen)
+	    fflush(logfile);
 	return r;
     } else
 	return -1;
@@ -48,8 +60,12 @@ int flprintf(const char *fmt, ...) {
 
     va_start(ap, fmt);
 
-    printNewlineIfNeeded();
-    return vfprintf(stderr, fmt, ap);
+    if(udpc_log)
+	return vlogprintf(udpc_log, fmt, ap);
+    else {
+	printNewlineIfNeeded();
+	return vfprintf(stderr, fmt, ap);
+    }
 }
 
 volatile int quitting = 0;

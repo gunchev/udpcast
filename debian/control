@@ -1,18 +1,18 @@
 Source: udpcast
-Build-Depends-Indep: fakeroot, devscripts, debhelper
 Section: utils
 Priority: optional
 Maintainer: Alain Knaff <alain@knaff.lu>
+Build-Depends: debhelper (>> 7.0.50~), m4
+Standards-Version: 3.8.4
+Homepage: http://www.udpcast.linux.lu/
 
 Package: udpcast
-Section: otherosfs
-Priority: optional
 Architecture: any
-Depends: libc6 (>= 2.4-1)
-Essential: no
-Provides: udpcast
-Description: Broadcast data to multiple destination
- Command-line client for UDP sender and receiver. Udpcast is an
- application for multicasting data to multiple targets.
- .
- Homepage: http://www.udpcast.linux.lu/
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: multicast file transfer tool
+ UDPcast can send data simultaneously to many destinations on a LAN.
+ This can be used, for example, to install entire classrooms of PCs at
+ once.  The advantage of UDPcast over other methods (such as NFS, FTP,
+ etc.) is that UDPcast uses Ethernet's multicast abilities, which means
+ it won't take longer to install 15 machines than it would to install
+ just two.

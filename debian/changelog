@@ -1,3 +1,41 @@
+udpcast (20110710) stable; urgency=low
+
+  * fixed some -Wextra compilation warnings
+  * new --no-progress flag to suppress progress display
+  * print most debug messages to log, if available
+  * properly handle Control-C signal
+  * --receive-timeout parameter for receiver timeout during transmission
+  * "real" daemon mode
+
+ -- Alain Knaff <alain@knaff.lu>  Sun, 10 Jul 2011 08:45:57 +0200
+udpcast (20100501)unstable; urgency=low
+
+  * Merged Michael's changes
+ -- Alain Knaff <alain@knaff.lu>  Sat,  1 May 2010 17:53:19 +0200
+udpcast (20100417) unstable; urgency=low
+
+  * Adopt this package, closes: #575167.
+  * New upstream release, closes: #375682.
+    - printMyIp() in socklib.c now uses a proper format string to
+      udpc_flprintf(), closes: #387169.
+    - Build-depend on m4.
+  * Use debhelper 7, change build-dependency, update debian/compat and
+    greatly shorten debian/rules.
+  * Add ${misc:Depends}.
+  * Bump Standards-Version to 3.8.4, no changes needed.
+  * Convert package to the 3.0 (quilt) format.
+  * Provide a debian/watch file.
+  * Convert debian/copyright to the machine-readable format as proposed in
+    DEP 5 and update the information.
+  * Upload package to a collab-maint Git repository and add Vcs-* fields in
+    debian/control.
+  * Point to the project homepage in debian/control.
+
+  [Tomas Pospisek]
+  * thanks to Alain Knaff for providing Debian packages for all these
+    years
+
+ -- Michael Schutte <michi@uiae.at>  Sat, 17 Apr 2010 14:03:19 +0200
 udpcast (20100130) stable; urgency=low
 
   * In busybox, call the executables udp-receiver and udp-sender, the same
