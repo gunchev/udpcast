@@ -1,6 +1,12 @@
 #ifndef _LARGEFILE64_SOURCE
 #define _LARGEFILE64_SOURCE
 #endif
+#include "config.h"
+
+#ifndef HAVE_LOFF_T
+typedef unsigned long long loff_t;
+#endif
+
 #include <sys/time.h>
 #include <unistd.h>
 #include "log.h"
@@ -35,12 +41,15 @@ void receiverStatsStartTimer(receiver_stats_t rs) {
 }
 
 static void printFilePosition(int fd) {
-#ifndef WINDOWS
     if(fd != -1) {
+#ifdef HAVE_LSEEK64
 	loff_t offset = lseek64(fd, 0, SEEK_CUR);
 	printLongNum(offset);
-    }
+#else
+	off_t offset = lseek(fd, 0, SEEK_CUR);
+	fprintf(stderr, "%10d", offset);
 #endif
+    }
 }
 
 void displayReceiverStats(receiver_stats_t rs) {
@@ -73,26 +82,55 @@ void displayReceiverStats(receiver_stats_t rs) {
 
 
 struct sender_stats {
+    FILE *log;    
     unsigned long long totalBytes;
     unsigned long long retransmissions;
     int fd;
     int clNo;
+    unsigned long periodBytes;
+    struct timeval periodStart;
+    long bwPeriod;
 };
 
-sender_stats_t allocSenderStats(int fd) {
+sender_stats_t allocSenderStats(int fd, FILE *log, long bwPeriod) {
     sender_stats_t ss = MALLOC(struct sender_stats);
     ss->fd = fd;
+    ss->log = log;
+    ss->bwPeriod = bwPeriod;
+    gettimeofday(&ss->periodStart, 0);
     return ss;
 }
 
 void senderStatsAddBytes(sender_stats_t ss, long bytes) {
-    if(ss != NULL)
+    if(ss != NULL) {
 	ss->totalBytes += bytes;
+
+	if(ss->bwPeriod) {
+	    double tdiff, bw;
+	    struct timeval tv;
+	    gettimeofday(&tv, 0);
+	    ss->periodBytes += bytes;
+	    if(tv.tv_sec - ss->periodStart.tv_sec < ss->bwPeriod-1)
+		return;
+	    tdiff = (tv.tv_sec-ss->periodStart.tv_sec) * 1000000.0 +
+		tv.tv_usec - ss->periodStart.tv_usec;
+	    if(tdiff < ss->bwPeriod * 1000000.0)
+		return;
+	    bw = ss->periodBytes * 8.0 / tdiff;
+	    ss->periodBytes=0;
+	    ss->periodStart = tv;
+	    logprintf(ss->log, "Inst BW=%f\n", bw);
+	    fflush(ss->log);
+	}
+    }
 }
 
 void senderStatsAddRetransmissions(sender_stats_t ss, int retransmissions) {
-    if(ss != NULL)
+    if(ss != NULL) {
 	ss->retransmissions += retransmissions;
+	logprintf(ss->log, "RETX %9lld %4d\n", ss->retransmissions, 
+		  retransmissions);
+    }
 }
 
 

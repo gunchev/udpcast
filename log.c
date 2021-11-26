@@ -3,6 +3,8 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <time.h>
+#include <sys/time.h>
 #include "log.h"
 
 static int needNewline=0;
@@ -22,9 +24,17 @@ int logprintf(FILE *logfile, const char *fmt, ...) {
     va_list ap;
 
     va_start(ap, fmt);
-    if(logfile != NULL)
-	return vfprintf(logfile, fmt, ap);
-    else
+    if(logfile != NULL) {	
+	char buf[9];
+	struct timeval tv;
+	int r;
+	gettimeofday(&tv, NULL);
+	strftime(buf, sizeof(buf), "%H:%M:%S", localtime(&tv.tv_sec));
+	fprintf(logfile, "%s.%06ld ", buf, tv.tv_usec);
+	r= vfprintf(logfile, fmt, ap);
+	fflush(logfile);
+	return r;
+    } else
 	return -1;
 }
 

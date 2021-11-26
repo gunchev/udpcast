@@ -126,6 +126,8 @@ struct clientState {
 
     int selectedFd;
 
+    int promptPrinted;  /* Has "Press any key..." prompt already been printed */
+
 #ifdef BB_FEATURE_UDPCAST_FEC
     fec_code_t fec_code;
 #endif
@@ -908,12 +910,13 @@ static int dispatchMessage(struct clientState *clst)
 	int keyPressed = 0;
 	int maxFd = prepareForSelect(client_config->socks,
 				     NR_CLIENT_SOCKS, &read_set);
-	if(client_config->console)
+	if(client_config->console && !clst->promptPrinted)
 #ifdef __MINGW32__
 	  udpc_flprintf("Press return to start receiving data!\n");
 #else /* __MINGW32__ */
 	  udpc_flprintf("Press any key to start receiving data!\n");
 #endif /* __MINGW32__ */
+	clst->promptPrinted=1;
 	ret = selectWithConsole(client_config->console, maxFd+1, &read_set,
 				NULL, &keyPressed);
 	if(ret < 0) {
@@ -1025,6 +1028,7 @@ static THREAD_RETURN netReceiverMain(void *args0)
     
     clst->currentSliceNo = -1;
     clst->currentSlice = NULL;
+    clst->promptPrinted = 0;
     newSlice(clst, 0);
 
     while(clst->endReached < 3) {

@@ -11,7 +11,6 @@ extern FILE *udpc_log;
 
 struct fifo;
 
-#define log udpc_log
 #define openFile udpc_openFile
 #define openPipe udpcs_openPipe
 #define localReader udpc_localReader
@@ -30,6 +29,7 @@ int spawnNetSender(struct fifo *fifo,
 		   sender_stats_t stats);
 int startSender(struct disk_config *disk_config,
 		struct net_config *net_config,
+		struct stat_config *stat_config,
 		const char *ifName);
 
 

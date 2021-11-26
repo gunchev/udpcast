@@ -9,7 +9,7 @@
 #include "udpcast.h"
 #include "fifo.h"
 #include "udp-receiver.h"
-#include "process.h"
+#include "udpc_process.h"
 
 #define BLOCKSIZE 4096
 

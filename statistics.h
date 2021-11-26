@@ -21,7 +21,7 @@ void udpc_displayReceiverStats(receiver_stats_t);
 #define displaySenderStats udpc_displaySenderStats
 #define senderSetAnswered udpc_senderSetAnswered
 
-sender_stats_t udpc_allocSenderStats(int fd);
+sender_stats_t udpc_allocSenderStats(int fd, FILE *log, long bwPeriod);
 void udpc_senderStatsAddBytes(sender_stats_t, long bytes);
 void udpc_senderStatsAddRetransmissions(sender_stats_t ss, 
 				int retransmissions);

@@ -454,7 +454,6 @@ int setMcastDestination(int sock, net_if_t *net_if, struct sockaddr_in *addr) {
 
 
 #ifdef __MINGW32__
-#define IP_TABLE_SIZE 2048
 static MIB_IFROW *getIfRow(MIB_IFTABLE *iftab, DWORD dwIndex) {
     int j;
     
@@ -579,8 +578,8 @@ net_if_t *getNetIf(const char *wanted) {
 	int etherNo=-1;
 	int wantedEtherNo=-2; /* Wanted ethernet interface */
 
-	MIB_IPADDRTABLE *iptab;
-	MIB_IFTABLE *iftab;
+	MIB_IPADDRTABLE *iptab=NULL;
+	MIB_IFTABLE *iftab=NULL;
 
 	MIB_IPADDRROW *iprow, *chosen=NULL;
 	MIB_IFROW *chosenIf=NULL;
@@ -736,13 +735,15 @@ net_if_t *getNetIf(const char *wanted) {
 	}
 	/* End WINSOCK initialization */
 	
-	iptab=malloc(IP_TABLE_SIZE);
-	iftab=malloc(IP_TABLE_SIZE);
 
-	a = IP_TABLE_SIZE;
+	a=0;
+	r=GetIpAddrTable(iptab, &a, TRUE);
+	iptab=malloc(a);
 	r=GetIpAddrTable(iptab, &a, TRUE);
 
-	a = IP_TABLE_SIZE;
+	a=0;
+	r=GetIfTable(iftab, &a, TRUE);
+	iftab=malloc(a);
 	r=GetIfTable(iftab, &a, TRUE);
 
 	if(wanted && !strncmp(wanted, "eth", 3) && wanted[3]) {

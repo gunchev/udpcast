@@ -28,15 +28,9 @@ window.</p>
 
 <h1>Udp-sender</h1>
 
-<!-- =defdoc udp-sender udp-sender 1 -->
-<!-- =section udp-sender NAME -->
-<!-- =text udp-sender - broadcast file on a LAN -->
-<!-- =section udp-sender AUTHOR -->
-<!-- =text Alain Knaff -->
-<!-- =section udp-sender SYNOPSIS -->
-<!-- =text
-udp-sender [--file <i>file</i>] [--full-duplex] [--half-duplex] [--pipe <i>pipe</i>] [--portbase <i>portbase</i>] [--blocksize <i>size</i>] [--interface <i>net-interface</i>] [--mcast-data-address <i>data-mcast-address</i>] [--mcast-rdv-address <i>mcast-rdv-address</i>] [--max-bitrate <i>bitrate</i>] [--pointopoint</i>] [--async] [--log <i>file</i>] [--min-slice-size <i>min</i>] [--max-slice-size <i>max</i>] [--slice-size] [--ttl <i>time-to-live</i>] [--fec <i>stripes</i>x<i>redundancy</i>/<i>stripesize</i>] [--print-seed] [--rexmit-hello-interval <i>interval</i>] [--autostart <i>autostart</i>] [--broadcast] [--min-receivers receivers] [--min-wait sec] [--max-wait sec] [--nokbd] [--retries-until-drop n]
-<!-- =stop -->
+<!--
+UDPSENDER
+-->
 <!-- =cont -->
 
 <!-- =section udp-sender SEE ALSO -->
@@ -67,9 +61,6 @@ blocks. The <i>command</i> gets a direct handle on the input file or
 device, and thus may seek inside it, if needed. <tt>Udpcast</tt>
 itself also keeps a handle on the file, which is used for an informal
 progress display. The <i>command</i>'s stdout is a pipe to udpcast.</dd>
-
-<dt>--log <i>file</i></dt>
-<dd>Logs some stuff into <i>file</i>.</dd>
 
 <dt>--autostart <i>n</i></dt>
 <dd>Starts transmission after <i>n</i> retransmissions of hello
@@ -296,23 +287,32 @@ receivers.</dd>
 
 </ul>
 
-<!-- =defdoc udp-receiver udp-receiver 1 -->
-<!-- =section udp-receiver NAME -->
-<!-- =text udp-receiver - receive files broadcast by udp-sender -->
-<!-- =section udp-receiver AUTHOR -->
-<!-- =text Alain Knaff -->
-<!-- =section udp-receiver SYNOPSIS -->
-<!-- =text
-./udp-receiver [--file <i>file</i>] [--pipe <i>pipe</i>] [--portbase <i>portbase</i>] [--interface <i>net-interface</i>] [--log <i>file</i>] [--ttl <i>time-to-live</i>] [--mcast-rdv-address <i>mcast-rdv-address</i>] [--nokbd] [--exitWait milliseconds]
-<!-- =stop -->
-<!-- =cont -->
 
-<!-- =section udp-receiver SEE ALSO -->
-<!-- =text udp-sender -->
 
-<!-- =section udp-receiver DESCRIPTION -->
+<h2>Logging options</h2>
 
-<!-- =stop -->
+The options instruct <tt>udp-sender</tt> to log some additional
+statistics to a file:
+
+<dl>
+
+<dt>--log <i>file</i></dt>
+<dd>Logs some stuff into <i>file</i>.</dd>
+
+<dt>--bw-period <i>seconds</i></dt>
+
+<dd>Every so much seconds, log instantenous bandwidth seen during that
+period. Note: this is different from the bandwidth displayed to stderr
+of the receiver, which is the <em>average</em> since start of
+transmission.</dd>
+
+</dl>
+
+
+<!--
+UDPRECEIVER
+-->
+
 <h1>Udp-receiver</h1>
 <!-- =cont -->
 

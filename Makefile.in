@@ -1,14 +1,44 @@
-DESTDIR =
+top_srcdir=@top_srcdir@
+srcdir=@srcdir@
+VPATH=@srcdir@
 
-#CFLAGS = -O4 -Wall -DNDEBUG -DLOSSTEST
-CFLAGS =-Wall -Wshadow -DBB_FEATURE_UDPCAST_FEC -D_FILE_OFFSET_BITS=64 -DUSE_SYSLOG -DUSE_ASSEMBLER -O6
-LDFLAGS =-s -Wl,-warn-common
-LIBS=-lpthread
+prefix      = @prefix@
+exec_prefix = @exec_prefix@
+bindir      = @bindir@
+infodir     = @infodir@
+mandir      = @mandir@
+sysconfdir  = @sysconfdir@
+
+CC         = @CC@
+CFLAGS     = @CFLAGS@
+CPPFLAGS   = -I. @extraincludedir@ -I@srcdir@ @CPPFLAGS@
+HOST_ID    = @HOST_ID@
+DEFS       = @DEFS@ $(HOST_ID)
+
+LDFLAGS     = @LDFLAGS@
+LIBS        = @LIBS@
+SHLIB       = @SHLIB@
+MACHDEPLIBS = @MACHDEPLIBS@
+LN_S        = @LN_S@
+
+INSTALL         = @INSTALL@
+INSTALL_PROGRAM = @INSTALL_PROGRAM@
+
+.SUFFIXES:
+.SUFFIXES: .o .c
+.SUFFIXES: .o .c
+
+
+#override CFLAGS += -O4 -Wall -DNDEBUG -DLOSSTEST
+override CFLAGS +=-Wall -Wshadow -DBB_FEATURE_UDPCAST_FEC -D_FILE_OFFSET_BITS=64 -DUSE_SYSLOG -DUSE_ASSEMBLER -O6
+override LDFLAGS +=-s -Wl,-warn-common
+LIBS +=@LIBS@
+
 BUSYBOX=../udp-busybox/busybox
 BBTARGET=$(BUSYBOX)/udpcast
-EXESUFFIX=
+EXESUFFIX=@EXESUFFIX@
 
-CFLAGS += -DNO_BB
+override CFLAGS += -DNO_BB
 
 all: udp-receiver$(EXESUFFIX) udp-sender$(EXESUFFIX) \
 	udp-receiver.1 udp-sender.1
@@ -23,10 +53,10 @@ clean:
 	udp-sender.1 udp-receiver.1 *~
 
 install: udp-sender udp-receiver
-	install -d $(DESTDIR)/usr/sbin
-	install -m 755 udp-sender udp-receiver $(DESTDIR)/usr/sbin
-	install -d $(DESTDIR)/usr/share/man/man1
-	install -m 644 udp-sender.1 udp-receiver.1 $(DESTDIR)/usr/share/man/man1
+	install -d $(prefix)/sbin
+	install -m 755 udp-sender udp-receiver $(prefix)/sbin
+	install -d $(mandir)/man1
+	install -m 644 udp-sender.1 udp-receiver.1 $(mandir)/man1
 
 udp-sender$(EXESUFFIX): udp-sender.o socklib.o udpcast.o rate-limit.o \
 	sender-diskio.o senddata.o udps-negotiate.o \
@@ -40,14 +70,18 @@ udp-receiver$(EXESUFFIX): udp-receiver.o socklib.o udpcast.o \
 	fifo.o log.o statistics.o fec.o udpc_version.o console.o process.o
 	$(CC) $(LDFLAGS) $^ $(LIBS) -o $@
 
-udp-receiver.1 udp-sender.1: html2man.pl cmd.html 
-	perl $< $^
+
+cmd.html.man: udp-receiver.txt udp-sender.txt cmd.html
+	cat $^ | m4 >cmd.html.man
+
+udp-receiver.1 udp-sender.1: html2man.pl cmd.html.man
+	perl $^
 
 fec-test: fec-test.o
 	$(CC) $(LDFLAGS) $^ -o $@
 
 fec.o: fec.c
-	$(CC) -c $(CFLAGS) -fno-inline $<
+	$(CC) -c $(CPPFLAGS) $(CFLAGS) -fno-inline $<
 
 
 bbcopy: $(BBTARGET) \
@@ -68,18 +102,19 @@ bbcopy: $(BBTARGET) \
 	$(BBTARGET)/participants.c $(BBTARGET)/sender-diskio.c \
 	$(BBTARGET)/udpc_version.h \
 	$(BBTARGET)/console.h $(BBTARGET)/console.c \
-	$(BBTARGET)/process.h $(BBTARGET)/process.c \
+	$(BBTARGET)/udpc_process.h $(BBTARGET)/process.c \
 	$(BBTARGET)/threads.h \
-	$(BBTARGET)/Config.in $(BBTARGET)/Makefile.in $(BBTARGET)/Makefile
+	$(BBTARGET)/Config.in $(BBTARGET)/Makefile.in $(BBTARGET)/Makefile \
+	$(BBTARGET)/config.h
 
 $(BBTARGET):
 	mkdir $(BBTARGET)
 
 $(BBTARGET)/Makefile: Makefile.busybox
-	cp -f Makefile.busybox $(BBTARGET)/Makefile
+	cp -f $< $(BBTARGET)/Makefile
 
 $(BBTARGET)/Makefile.in: Makefile.in.busybox
-	cp -f Makefile.in.busybox $(BBTARGET)/Makefile.in
+	cp -f $< $(BBTARGET)/Makefile.in
 
 $(BBTARGET)/%.c: %.c
 	cp -f $< $(BBTARGET)

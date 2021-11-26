@@ -1,3 +1,14 @@
+v20060917
+	* If --rexmit-hello-interval set on sender, still only display prompt
+	once on receiver
+	* Improved logging (on sender, offer option to periodically
+	log instantaneous bandwidth, log retransmission, and added datestamp
+	to all log)
+	* Enable autoconf (configure) in order to make it easier to
+	compile it on other Unices
+	* Reorganized cmd.html file to make it cleaner HTML (all the
+	man stuff now in separate files)
+	* Fix a buffer overrun on Windows
 v20060619
 	* Add null-termination to option lists
 v20060525

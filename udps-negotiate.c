@@ -26,7 +26,8 @@
 static int doTransfer(int sock, 
 		      participantsDb_t db,
 		      struct disk_config *disk_config,
-		      struct net_config *net_config);
+		      struct net_config *net_config,
+		      struct stat_config *stat_config);
 
 
 static int isPointToPoint(participantsDb_t db, int flags) {
@@ -271,6 +272,7 @@ static int mainDispatcher(int *fd, int nr,
 
 int startSender(struct disk_config *disk_config,
 		struct net_config *net_config,
+		struct stat_config *stat_config,
 		const char *ifName)
 {
     char ipBuffer[16];
@@ -401,7 +403,7 @@ int startSender(struct disk_config *disk_config,
 	int i;
 	for(i=1; i<nr; i++)
 	    udpc_closeSock(sock, nr, i);
-	doTransfer(sock[0], db, disk_config, net_config);
+	doTransfer(sock[0], db, disk_config, net_config, stat_config);
     }
     free(db);
     close(sock[0]);
@@ -414,7 +416,8 @@ int startSender(struct disk_config *disk_config,
 static int doTransfer(int sock, 
 		      participantsDb_t db,
 		      struct disk_config *disk_config,
-		      struct net_config *net_config)
+		      struct net_config *net_config,
+		      struct stat_config *stat_config)
 {
     int i;
     int ret;
@@ -473,7 +476,7 @@ static int doTransfer(int sock,
        net_config->dataMcastAddr = net_config->controlMcastAddr;
 
     origIn = openFile(disk_config);
-    stats = allocSenderStats(origIn);
+    stats = allocSenderStats(origIn, stat_config->log, stat_config->bwPeriod);
     in = openPipe(disk_config, origIn, &pid);
     udpc_initFifo(&fifo, net_config->blockSize);
     ret = spawnNetSender(&fifo, sock, net_config, db, stats);

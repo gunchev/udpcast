@@ -11,4 +11,6 @@
 #  mingw-runtime
 #  mingw-w32api
 
-exec make LIBS="-lws2_32 -liphlpapi" EXESUFFIX=.exe CC=i386-mingw32-gcc "$@"
+dir=`dirname $0`
+$dir/configure --srcdir $dir  --host i386-mingw32
+make

@@ -88,12 +88,14 @@ static struct option options[] = {
     { "retries-until-drop", 1, NULL, 0xc01 },
 
     { "daemon-mode", 0, NULL, 0xd01},
+
+    { "bw-period", 1, NULL, 0xe01},
     { NULL, 0, NULL, 0}
 };
 
 #ifdef NO_BB
 static void usage(char *progname) {
-    fprintf(stderr, "%s [--file file] [--full-duplex] [--pipe pipe] [--portbase portbase] [--blocksize size] [--interface net-interface] [--mcast-data-addr data-mcast-address] [--mcast-rdv-addr mcast-rdv-address] [--max-bitrate bitrate] [--pointopoint] [--async] [--log file] [--min-slice-size min] [--max-slice-size max] [--slice-size] [--ttl time-to-live] [--fec <stripes>x<redundancy>/<stripesize>] [--print-seed] [--rexmit-hello-interval interval] [--autostart autostart] [--broadcast] [--min-receivers receivers] [--min-wait sec] [--max-wait sec] [--retries-until-drop n] [--nokbd] [--license]\n", progname); /* FIXME: copy new options to busybox */
+    fprintf(stderr, "%s [--file file] [--full-duplex] [--pipe pipe] [--portbase portbase] [--blocksize size] [--interface net-interface] [--mcast-data-addr data-mcast-address] [--mcast-rdv-addr mcast-rdv-address] [--max-bitrate bitrate] [--pointopoint] [--async] [--log file] [--min-slice-size min] [--max-slice-size max] [--slice-size] [--ttl time-to-live] [--fec <stripes>x<redundancy>/<stripesize>] [--print-seed] [--rexmit-hello-interval interval] [--autostart autostart] [--broadcast] [--min-receivers receivers] [--min-wait sec] [--max-wait sec] [--retries-until-drop n] [--nokbd] [--bw-period n] [--license]\n", progname); /* FIXME: copy new options to busybox */
     exit(1);
 }
 #else
@@ -119,6 +121,7 @@ int main(int argc, char **argv)
     int r;
     struct net_config net_config;
     struct disk_config disk_config;
+    struct stat_config stat_config;
     char *ifName = NULL;
 
     /* argument parsing */
@@ -147,6 +150,9 @@ int main(int argc, char **argv)
     net_config.min_receivers_wait=0;
 
     net_config.retriesUntilDrop = 200;
+
+    stat_config.log = NULL;
+    stat_config.bwPeriod = 0;
 
     ptr = strrchr(argv[0], '/');
     if(!ptr)
@@ -206,7 +212,7 @@ int main(int argc, char **argv)
 #endif
 		    break;
 		case 'l':
-		    udpc_log = fopen(optarg, "a");
+		    stat_config.log = udpc_log = fopen(optarg, "a");
 		    break;
 		case 'm':
 		    setIpFromString(&net_config.dataMcastAddr, optarg);
@@ -330,6 +336,9 @@ int main(int argc, char **argv)
 		    daemon_mode = 1;
 		    break;
 
+		case 0xe01:
+		    stat_config.bwPeriod = atol(optarg);
+		    break;
 		case '?':
 		    usage(argv[0]);
 	    }
@@ -404,7 +413,7 @@ int main(int argc, char **argv)
 #endif
     
     do {
-	r= startSender(&disk_config, &net_config, ifName);
+	r= startSender(&disk_config, &net_config, &stat_config, ifName);
     } while(daemon_mode);
     return r;
 }

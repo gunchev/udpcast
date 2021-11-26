@@ -98,6 +98,11 @@ struct net_config {
 #endif
 };
 
+struct stat_config {
+    FILE *log; /* Log file for statistics */
+    long bwPeriod; /* How often are bandwidth estimations logged? */
+};
+
 #define MAX_SLICE_SIZE 1024
 
 #endif

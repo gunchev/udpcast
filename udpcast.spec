@@ -1,4 +1,4 @@
-%define udpcast_version 20060619
+%define udpcast_version 20060917
 %define udpcast_release 1
 
 Summary: UDP Broadcast Installation
@@ -16,6 +16,7 @@ application for multicasting data to multiple targets.
 
 %prep
 %setup -q
+./configure --prefix=%{buildroot}%{_prefix} --mandir=%{buildroot}%{_mandir}
 
 %build
 make
@@ -24,7 +25,7 @@ make
 [ X%{buildroot} != X ] && [ X%{buildroot} != X/ ] && rm -rf %{buildroot}
 
 %install
-make install DESTDIR=%{buildroot}
+make install
 
 %files
 %defattr(-,root,root)
@@ -35,5 +36,16 @@ make install DESTDIR=%{buildroot}
 /usr/share/man/man1/udp-receiver.1.gz
 
 %changelog
+* Sun Sep 17 2006 Alain Knaff <alain@knaff.lu>
+- If --rexmit-hello-interval set on sender, still only display prompt
+once on receiver
+- Improved logging (on sender, offer option to periodically log
+instantaneous bandwidth, log retransmission, and added datestamp to
+all log)
+- Enable autoconf (configure) in order to make it easier to compile it
+on other Unices
+- Reorganized cmd.html file to make it cleaner HTML (all the man stuff
+now in separate files)
+- Fix a buffer overrun on Windows
 * Sat Mar 25 2006 Alain Knaff <alain@knaff.lu>
 - Separate commandline spec file and mkimage spec file

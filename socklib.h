@@ -1,16 +1,29 @@
 #ifndef SOCKLIB_H
 #define SOCKLIB_H
 
+#include "config.h"
+
 #include <sys/types.h>
 #include <string.h>
 
-#ifndef __MINGW32__
+#ifdef HAVE_SOCKET_H
 #include <sys/socket.h>
+#endif
+
+#ifdef HAVE_NETINET_IN_H
 #include <netinet/in.h>
+#endif
+
+#ifdef HAVE_NETDB_H
 #include <netdb.h>
-#else /* __MINGW32__ */
-#define WINDOWS
+#endif
+
+#ifdef HAVE_WINSOCK2_H
 #include <winsock2.h>
+#endif
+
+#ifdef __MINGW32__
+#define WINDOWS
 #undef USE_SYSLOG
 #endif /* __MINGW32__ */
 

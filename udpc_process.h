@@ -1,5 +1,5 @@
-#ifndef PROCESS_H
-#define PROCESS_H
+#ifndef UDPC_PROCESS_H
+#define UDPC_PROCESS_H
 
 #ifdef __MINGW32__
 

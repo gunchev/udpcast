@@ -8,7 +8,7 @@
 #include "fifo.h"
 #include "udp-sender.h"
 #include "udpcast.h"
-#include "process.h"
+#include "udpc_process.h"
 
 #define BLOCKSIZE 4096
 
