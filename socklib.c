@@ -250,7 +250,16 @@ int getMyAddress(net_if_t *net_if, struct sockaddr_in *addr) {
 
 int getBroadCastAddress(net_if_t *net_if, struct sockaddr_in *addr, 
 			short port){
-    return initSockAddress(ADDR_TYPE_BCAST, net_if, INADDR_ANY, port, addr);
+    int r= initSockAddress(ADDR_TYPE_BCAST, net_if, INADDR_ANY, port, addr);
+    if(addr->sin_addr.s_addr == 0) {
+      /* Quick hack to make it work for loopback */
+      struct sockaddr_in ucast;
+      initSockAddress(ADDR_TYPE_UCAST, net_if, INADDR_ANY, port, &ucast);
+
+      if((ntohl(ucast.sin_addr.s_addr) & 0xff000000) == 0x7f000000)
+	addr->sin_addr.s_addr = ucast.sin_addr.s_addr;
+    }
+    return r;
 }
 
 static int mcastListen(int sock, net_if_t *net_if, struct sockaddr_in *addr);

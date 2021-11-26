@@ -61,6 +61,8 @@ static struct option options[] = {
 #endif
 
     { "log", 1, NULL, 'l' },
+
+    { NULL, 0, NULL, 0 }
 };
 
 static void intHandler(int nr) {

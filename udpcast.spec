@@ -1,11 +1,11 @@
-%define udpcast_version 20060325
+%define udpcast_version 20060619
 %define udpcast_release 1
 
 Summary: UDP Broadcast Installation
 Name: udpcast
 Version: %{udpcast_version}
 Release: %{udpcast_release}
-Copyright: GPL (for main code), BSD-like (for fec.c) 
+License: GPL (for main code), BSD-like (for fec.c) 
 Group: Applications/System
 Source: http://udpcast.linux.lu/download/udpcast-%{udpcast_version}.tar.gz
 Buildroot: %{_tmppath}/%{name}-%{version}-buildroot

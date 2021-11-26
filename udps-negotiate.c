@@ -276,6 +276,7 @@ int startSender(struct disk_config *disk_config,
     char ipBuffer[16];
     int tries;
     int r; /* return value for maindispatch. If 1, start transfer */
+    int j;
     time_t firstConnected = 0;
     time_t *firstConnectedP;
     console_t *console=NULL;
@@ -391,6 +392,10 @@ int startSender(struct disk_config *disk_config,
 
     while(!(r=mainDispatcher(sock, nr, db, disk_config, net_config,
 			     &console,&tries,firstConnectedP))){}
+    for(j=1; j<nr; j++)
+      if(sock[j] != sock[0])
+	close(sock[j]);
+
     restoreConsole(&console,0);
     if(r == 1) {
 	int i;
@@ -399,6 +404,7 @@ int startSender(struct disk_config *disk_config,
 	doTransfer(sock[0], db, disk_config, net_config);
     }
     free(db);
+    close(sock[0]);
     return 0;
 }
 
@@ -483,6 +489,10 @@ static int doTransfer(int sock,
 #ifdef USE_SYSLOG
     syslog(LOG_INFO, "Transfer complete.");
 #endif
+
+    close(origIn);
+    if(in != origIn)
+      close(in);
 
     /* remove all participants */
     for(i=0; i < MAX_CLIENTS; i++) {

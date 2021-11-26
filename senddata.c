@@ -759,8 +759,15 @@ static THREAD_RETURN netSenderMain(void	*args0)
 	    config->sliceSize = 128 * config->fec_stripes;
 #endif
     }
-    if(config->sliceSize > MAX_SLICE_SIZE)
-	config->sliceSize = MAX_SLICE_SIZE;
+
+#ifdef BB_FEATURE_UDPCAST_FEC
+    if( (sendst->config->flags & FLAG_FEC) &&
+	config->max_slice_size > config->fec_stripes * 128)
+      config->max_slice_size = config->fec_stripes * 128;
+#endif
+
+    if(config->sliceSize > config->max_slice_size)
+	config->sliceSize = config->max_slice_size;
 
     assert(config->sliceSize <= MAX_SLICE_SIZE);
 
@@ -1022,10 +1029,11 @@ int spawnNetSender(struct fifo *fifo,
     sendst->config = config;
     sendst->stats = stats;
 #ifdef BB_FEATURE_UDPCAST_FEC
-    sendst->fec_data =  xmalloc(NR_SLICES *
-				config->fec_stripes * 
-				config->fec_redundancy *
-				config->blockSize);
+    if(sendst->config->flags & FLAG_FEC)
+      sendst->fec_data =  xmalloc(NR_SLICES *
+				  config->fec_stripes * 
+				  config->fec_redundancy *
+				  config->blockSize);
 #endif
     sendst->rc.participantsDb = db;
     initReturnChannel(&sendst->rc, sendst->config, sendst->socket);

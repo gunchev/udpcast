@@ -86,6 +86,9 @@ static struct option options[] = {
 
     { "retriesUntilDrop", 1, NULL, 0xc01 }, /* Obsolete name */
     { "retries-until-drop", 1, NULL, 0xc01 },
+
+    { "daemon-mode", 0, NULL, 0xd01},
+    { NULL, 0, NULL, 0}
 };
 
 #ifdef NO_BB
@@ -112,6 +115,8 @@ int main(int argc, char **argv)
     int printSeed = 0;
 #endif
 
+    int daemon_mode = 0;
+    int r;
     struct net_config net_config;
     struct disk_config disk_config;
     char *ifName = NULL;
@@ -321,6 +326,10 @@ int main(int argc, char **argv)
 		    net_config.retriesUntilDrop = atoi(optarg);
 		    break;
 
+		case 0xd01:
+		    daemon_mode = 1;
+		    break;
+
 		case '?':
 		    usage(argv[0]);
 	    }
@@ -394,5 +403,8 @@ int main(int argc, char **argv)
     openlog((const char *)"udpcast", LOG_NDELAY|LOG_PID, LOG_SYSLOG);
 #endif
     
-    return startSender(&disk_config, &net_config, ifName);
+    do {
+	r= startSender(&disk_config, &net_config, ifName);
+    } while(daemon_mode);
+    return r;
 }

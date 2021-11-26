@@ -1,3 +1,13 @@
+v20060619
+	* Add null-termination to option lists
+v20060525
+	* Change copyright into license in RPM spec file
+	* Fix allocation of FEC memory, so that it only happens when
+	needed
+	* Fix udpcast for loopback device (send to "self" address)
+	* In FEC mode make sure we don't get an excessive number of
+	blocks if number of slices is too small
+	* Daemon-mode for udp-sender
 v20060325
 	* Fix packaging, so that we now can build an clean rpm with
 	just the command-line programs. The mkimage script for the
