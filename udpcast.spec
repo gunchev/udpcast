@@ -1,6 +1,6 @@
 Name:           udpcast
 Summary:        UDP broadcast file distribution and installation
-Version:        20081130
+Version:        20081213
 Release:        1
 License:        GPLv2+ and BSD
 Group:          Applications/System
@@ -52,6 +52,8 @@ make install
 
 
 %changelog
+* Sat Dec 13 2008 Alain Knaff <alain@knaff.lu>
+- Fixed compilation on pre-historic compilers
 * Sun Nov 30 2008 Alain Knaff <alain@knaff.lu>
 - Fix a couple of compiler warnings
 * Sun Nov 16 2008 Alain Knaff <alain@knaff.lu>

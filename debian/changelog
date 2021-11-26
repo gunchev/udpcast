@@ -1,4 +1,9 @@
-udpcast (20081130) stable; urgency=low
+udpcast (20081213) stable; urgency=low
+
+  * Fixed compilation on pre-historic compilers
+
+ -- Alain Knaff <alain@knaff.lu>  Sat, 13 Dec 2008 09:48:01 +0100
+udpcast (20081130)stable; urgency=low
 
   * Fixed a couple of compilation warnings
 

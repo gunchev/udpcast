@@ -221,16 +221,17 @@ int main(int argc, char **argv)
 	disk_config.pipeName = strdup("/bin/gzip -c");
 	disk_config.fileName = "/dev/hda";
     } else {
-        while( (c=getopt_l(argc, argv, 
-			   "b:C:f:F:"
+	const char *argLetters = 
+	    "b:C:f:F:"
 #ifdef DL_RATE_GOVERNOR
-			   "g:"
+	    "g:"
 #endif
-			   "H:i:I:l:m:M:p:P:r:R:s:S:t:w:W:x:z:12a"
+	    "H:i:I:l:m:M:p:P:r:R:s:S:t:w:W:x:z:12a"
 #ifdef FLAG_AUTORATE
-			   "A"
+	    "A"
 #endif
-			   "BcdDkL")) 
+	    "BcdDkL";
+        while( (c=getopt_l(argc, argv, argLetters)) 
 	       != EOF ) {
 	    switch(c) {
 		case 'a':

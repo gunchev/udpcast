@@ -1,3 +1,5 @@
+v20081213
+	* Compatibility with pre-historic compilers
 v20081130
 	* Fixed a couple of compilation warnings
 v20081116
