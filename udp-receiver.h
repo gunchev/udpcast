@@ -76,4 +76,9 @@ int startReceiver(int doWarn,
  */
 #define FLAG_STREAMING 0x200
 
+/**
+ * Ignore lost data
+ */
+#define FLAG_IGNORE_LOST_DATA 0x400
+
 #endif

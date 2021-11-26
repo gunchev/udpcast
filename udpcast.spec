@@ -1,6 +1,6 @@
 Name:           udpcast
 Summary:        UDP broadcast file distribution and installation
-Version:        20091031
+Version:        20091230
 Release:        1
 License:        GPLv2+ and BSD
 Group:          Applications/System
@@ -52,6 +52,9 @@ make install
 
 
 %changelog
+* Wed Dec 30 2009 Alain Knaff <alain@knaff.lu>
+- new "--ignore-lost-data" mode
+- Lift limit in number of supported network interfaces
 * Sat Oct 31 2009 Alain Knaff <alain@knaff.lu>
 - Support for start-timeout also on sender
 * Sun Sep 20 2009 Alain Knaff <alain@knaff.lu>

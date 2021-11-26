@@ -436,6 +436,11 @@ should not be used except in very special situations, such as when
 receiving the final REQACK. This is done in order to guard against
 loss of the final ACK. Is 500 milliseconds by default.</dd>
 
+<dt>--ignore-lost-data</dt>
+<dd>Do not stop reception when data loss is detected, but instead fill
+with random data. This is useful for multimedia transmission where
+100% integrity is not need.</dd>
+
 </dl>
 
 <h2>Statistics options</h2>

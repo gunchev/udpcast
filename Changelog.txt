@@ -1,3 +1,6 @@
+v20091230
+	* new "--ignore-lost-data" mode
+	* Lift limit in number of supported network interfaces
 v20091031
 	* Support for start-timeout also on sender
 v20090920

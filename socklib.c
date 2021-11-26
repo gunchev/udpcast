@@ -107,7 +107,7 @@ void loseRecvPacket(int s) {
 	while(stashed < STASH_SIZE && random() < read_swap) {
 	    int size;
 	    flprintf("Stashing packet %d\n", stashed);
-	    size = recv(s, packetStash[stashed].data, 
+	    size = recv(s, packetStash[stashed].data,
 			sizeof(packetStash[stashed].data),0);
 	    packetStash[stashed].size = size;
 	    stashed++;
@@ -184,7 +184,7 @@ int makeSockAddr(char *hostname, short port, struct sockaddr_in *addr)
 	if (host == NULL) {
 	    udpc_fatal(1, "Unknown host %s\n", hostname);
 	}
-	
+
 	inaddr = host->h_addr_list[0];
 	len = host->h_length;
 	memcpy((void *)&((struct sockaddr_in *)addr)->sin_addr, inaddr, len);
@@ -217,9 +217,9 @@ static inline int INET_ATON(const char *a, struct in_addr *i) {
 
 
 static int initSockAddress(addr_type_t addr_type,
-			   net_if_t *net_if, 
+			   net_if_t *net_if,
 			   in_addr_t ip,
-			   unsigned short port, 
+			   unsigned short port,
 			   struct sockaddr_in *addr) {
     memset ((char *) addr, 0, sizeof(struct sockaddr_in));
     addr->sin_family = AF_INET;
@@ -247,7 +247,7 @@ int getMyAddress(net_if_t *net_if, struct sockaddr_in *addr) {
 }
 
 
-int getBroadCastAddress(net_if_t *net_if, struct sockaddr_in *addr, 
+int getBroadCastAddress(net_if_t *net_if, struct sockaddr_in *addr,
 			short port){
     int r= initSockAddress(ADDR_TYPE_BCAST, net_if, INADDR_ANY, port, addr);
     if(addr->sin_addr.s_addr == 0) {
@@ -293,7 +293,7 @@ int doSend(int s, void *message, size_t len, struct sockaddr_in *to) {
     return sendto(s, message, len, 0, (struct sockaddr*) to, sizeof(*to));
 }
 
-int doReceive(int s, void *message, size_t len, 
+int doReceive(int s, void *message, size_t len,
 	      struct sockaddr_in *from, int portBase) {
     socklen_t slen;
     int r;
@@ -309,7 +309,7 @@ int doReceive(int s, void *message, size_t len,
 	return r;
     port = ntohs(from->sin_port);
     if(port != RECEIVER_PORT(portBase) && port != SENDER_PORT(portBase)) {
-	udpc_flprintf("Bad message from port %s.%d\n", 
+	udpc_flprintf("Bad message from port %s.%d\n",
 		      getIpString(from, ipBuffer),
 		      ntohs(((struct sockaddr_in *)from)->sin_port));
 	return -1;
@@ -340,7 +340,7 @@ unsigned int getRcvBuf(int sock) {
 }
 
 void setRcvBuf(int sock, unsigned int bufsize) {
-    if(setsockopt(sock, SOL_SOCKET, SO_RCVBUF, 
+    if(setsockopt(sock, SOL_SOCKET, SO_RCVBUF,
 		  (char*) &bufsize, sizeof(bufsize))< 0)
 	perror("Set receiver buffer");
 }
@@ -388,7 +388,7 @@ static int mcastOp(int sock, net_if_t *net_if, struct in_addr addr,
 		   int code, const char *message) {
     struct IP_MREQN mreq;
     int r;
-    
+
     fillMreq(net_if, addr, &mreq);
     r = setsockopt(sock, SOL_IP, code, (char*)&mreq, sizeof(mreq));
     if(r < 0) {
@@ -428,7 +428,7 @@ int setMcastDestination(int sock, net_if_t *net_if, struct sockaddr_in *addr) {
     struct in_addr if_addr;
     getMyAddress(net_if, &interface_addr);
     if_addr = getSinAddr(&interface_addr);
-    r = setsockopt (sock, IPPROTO_IP, IP_MULTICAST_IF, 
+    r = setsockopt (sock, IPPROTO_IP, IP_MULTICAST_IF,
 		    (char *) &if_addr, sizeof(if_addr));
     if(r < 0)
 	fatal(1, "Set multicast send interface");
@@ -444,7 +444,7 @@ int setMcastDestination(int sock, net_if_t *net_if, struct sockaddr_in *addr) {
 #ifdef __MINGW32__
 static MIB_IFROW *getIfRow(MIB_IFTABLE *iftab, DWORD dwIndex) {
     int j;
-    
+
     /* Find the corresponding interface row (for name and
      * MAC address) */
     for(j=0; j<iftab->dwNumEntries; j++) {
@@ -556,7 +556,6 @@ int isFullDuplex(int s, const char *ifname) {
  */
 net_if_t *getNetIf(const char *wanted) {
 #ifndef __MINGW32__
-	struct ifreq ibuf[100];
 	struct ifreq *ifrp, *ifend, *chosen;
 	struct ifconf ifc;
 	int s;
@@ -606,40 +605,52 @@ net_if_t *getNetIf(const char *wanted) {
 	if (s < 0) {
 	    perror("make socket");
 	    exit(1);
-	}	
+	}
 
-	ifc.ifc_len = sizeof(ibuf);
-	ifc.ifc_buf = (caddr_t) ibuf;
+	ifc.ifc_len = sizeof(struct ifreq) * 10;
+	while(1) {
+	    size_t len = ifc.ifc_len;
+	    ifc.ifc_buf = (caddr_t) malloc(ifc.ifc_len);
+	    if(ifc.ifc_buf == NULL) {
+		udpc_fatal(1, "Out of memory error");
+	    }
 
-	if (ioctl(s, SIOCGIFCONF, (char *)&ifc) < 0 ||
-            ifc.ifc_len < (signed int)sizeof(struct ifreq)) {
-                perror("udpcast: SIOCGIFCONF: ");
-                exit(1);
-        }
+	    if (ioctl(s, SIOCGIFCONF, (char *)&ifc) < 0 ||
+		ifc.ifc_len < (signed int)sizeof(struct ifreq)) {
+		perror("udpcast: SIOCGIFCONF: ");
+		exit(1);
+	    }
 
-	ifend = (struct ifreq *)((char *)ibuf + ifc.ifc_len);
+	    if(len == ifc.ifc_len) {
+		ifc.ifc_len += sizeof(struct ifreq) * 10;
+		free(ifc.ifc_buf);
+	    } else
+		break;
+	}
+
+	ifend = (struct ifreq *)((char *)ifc.ifc_buf + ifc.ifc_len);
 	chosen=NULL;
 
-	for (ifrp = ibuf ; ifrp < ifend;
+	for (ifrp = (struct ifreq *) ifc.ifc_buf ; ifrp < ifend;
 #ifdef IFREQ_SIZE
 	     ifrp = IFREQ_SIZE(*ifrp) + (char *)ifrp
 #else
 	     ifrp++
-#endif       
+#endif
 	     ) {
 	    unsigned long iaddr = getSinAddr(&ifrp->ifr_addr).s_addr;
 	    int goodness;
 
 	    if(ifrp->ifr_addr.sa_family != PF_INET)
 		continue;
-	    
+
 	    if(wanted) {
 		if(isAddress && iaddr == wantedAddress.s_addr) {
 		    goodness=8;
 		} else if(strcmp(wanted, ifrp->ifr_name) ==0) {
 		    /* perfect match on interface name */
 		    goodness=12;
-		} else if(wanted != NULL && 
+		} else if(wanted != NULL &&
 			  strncmp(wanted, ifrp->ifr_name, wantedLen) ==0) {
 		    /* prefix match on interface name */
 		    goodness=7;
@@ -671,11 +682,11 @@ net_if_t *getNetIf(const char *wanted) {
 	    }
 
 	    if(hasLink(s, ifrp->ifr_name))
-	      /* Good or unknown link status privileged over known 
+	      /* Good or unknown link status privileged over known
 	       * disconnected */
 	      goodness += 3;
 
-	    /* If all else is the same, prefer interfaces that 
+	    /* If all else is the same, prefer interfaces that
 	     * have broadcast */
 	    goodness = goodness * 2;
 	    if(goodness >= lastGoodness) {
@@ -699,7 +710,7 @@ net_if_t *getNetIf(const char *wanted) {
 	    fprintf(stderr, "No suitable network interface found\n");
 	    fprintf(stderr, "The following interfaces are available:\n");
 
-	    for (ifrp = ibuf ; ifrp < ifend;
+	    for (ifrp = (struct ifreq *) ifc.ifc_buf ; ifrp < ifend;
 #ifdef IFREQ_SIZE
 		 ifrp = IFREQ_SIZE(*ifrp) + (char *)ifrp
 #else
@@ -712,7 +723,7 @@ net_if_t *getNetIf(const char *wanted) {
 		    continue;
 
 		fprintf(stderr, "\t%s\t%s\n",
-			ifrp->ifr_name, 
+			ifrp->ifr_name,
 			udpc_getIpString((struct sockaddr_in *)&ifrp->ifr_addr, buffer));
 	    }
 	    exit(1);
@@ -735,17 +746,18 @@ net_if_t *getNetIf(const char *wanted) {
 	net_if->bcast = getSinAddr(&chosen->ifr_ifru.ifru_broadaddr);
 
 	close(s);
+	free(ifc.ifc_buf);
 
 #else /* __MINGW32__ */
 
-	/* WINSOCK initialization */	
+	/* WINSOCK initialization */
 	wVersionRequested = MAKEWORD(2, 0); /* Request Winsock v2.0 */
 	if (WSAStartup(wVersionRequested, &wsaData) != 0) /* Load Winsock DLL */ {
 	    fprintf(stderr,"WSAStartup() failed");
 	    exit(1);
 	}
 	/* End WINSOCK initialization */
-	
+
 
 	a=0;
 	r=GetIpAddrTable(iptab, &a, TRUE);
@@ -819,7 +831,7 @@ net_if_t *getNetIf(const char *wanted) {
 	    }
 
 	    goodness = goodness * 2;
-	    /* If all else is the same, prefer interfaces that 
+	    /* If all else is the same, prefer interfaces that
 	     * have broadcast */
 	    if(goodness >= lastGoodness) {
 		/* Privilege broadcast-enabled interfaces */
@@ -833,9 +845,9 @@ net_if_t *getNetIf(const char *wanted) {
 		lastGoodness = goodness;
 	    }
 	}
-	
+
 	if(!chosen) {
-	    fprintf(stderr, "No suitable network interface found%s%s\n", 
+	    fprintf(stderr, "No suitable network interface found%s%s\n",
 		    wanted ? " for " : "", wanted ? wanted : "");
 	    fprintf(stderr, "The following interfaces are available:\n");
 
@@ -884,8 +896,8 @@ net_if_t *getNetIf(const char *wanted) {
  * @param port
  *   Port to bind address to
  */
-int makeSocket(addr_type_t addr_type, 
-	       net_if_t *net_if, 
+int makeSocket(addr_type_t addr_type,
+	       net_if_t *net_if,
 	       struct sockaddr_in *tmpl,
 	       int port) {
     int ret, s;
@@ -915,7 +927,7 @@ int makeSocket(addr_type_t addr_type,
 
     ret = initSockAddress(addr_type, net_if, ip, port, &myaddr);
     if(ret < 0)
-	udpc_fatal(1, "Could not get socket address fot %d/%s", 
+	udpc_fatal(1, "Could not get socket address fot %d/%s",
 		   addr_type, net_if->name);
     if(addr_type == ADDR_TYPE_BCAST && myaddr.sin_addr.s_addr == 0) {
       /* Attempting to bind to broadcast address on not-broadcast media ... */
@@ -926,7 +938,7 @@ int makeSocket(addr_type_t addr_type,
     if (ret < 0) {
 	char buffer[16];
 	udpc_fatal(1, "bind socket to %s:%d (%s)\n",
-		   udpc_getIpString(&myaddr, buffer), 
+		   udpc_getIpString(&myaddr, buffer),
 		   udpc_getPort(&myaddr),
 		   strerror(errno));
     }
@@ -950,7 +962,7 @@ void printMyIp(net_if_t *net_if)
 
 char *udpc_getIpString(struct sockaddr_in *addr, char *buffer) {
     long iaddr = htonl(getSinAddr(addr).s_addr);
-    sprintf(buffer,"%ld.%ld.%ld.%ld", 
+    sprintf(buffer,"%ld.%ld.%ld.%ld",
 	    (iaddr >> 24) & 0xff,
 	    (iaddr >> 16) & 0xff,
 	    (iaddr >>  8) & 0xff,
@@ -997,7 +1009,7 @@ void getDefaultMcastAddress(net_if_t *net_if, struct sockaddr_in *mcast) {
 }
 
 
-void copyToMessage(unsigned char *dst, struct sockaddr_in *src) {    
+void copyToMessage(unsigned char *dst, struct sockaddr_in *src) {
     memcpy(dst, (char *) &((struct sockaddr_in *)src)->sin_addr,
 	   sizeof(struct in_addr));
 }
@@ -1121,7 +1133,7 @@ static void doCopy(const struct msghdr *msg, char *ptr, int n, int dir) {
     for(i=0; n >=0 && i<msg->msg_iovlen; i++) {
 	int l = msg->msg_iov[i].iov_len;
 	if(l > n)
-	    l = n;   
+	    l = n;
 	if(dir) {
 	    memcpy(msg->msg_iov[i].iov_base, ptr, l);
 	} else {

@@ -71,6 +71,8 @@ static struct option options[] = {
     { "statistics-period", 1, NULL, 'z' },
     { "stat-period", 1, NULL, 'z' },
 
+    { "ignore-lost-data", 0, NULL, 'Z' },
+
     { NULL, 0, NULL, 0 }
 };
 
@@ -86,10 +88,10 @@ static void intHandler(int nr) {
 #ifdef NO_BB
 static void usage(char *progname) {
 #ifdef HAVE_GETOPT_LONG
-    fprintf(stderr, "%s [--file file] [--pipe pipe] [--portbase portbase] [--interface net-interface] [--log file] [--ttl time-to-live] [--mcast-rdv-address mcast-rdv-address] [--rcvbuf buf] [--nokbd] [--exit-wait milliseconds] [--nosync] [--sync] [--start-timeout sto] [--license] [-x uncomprStatPrint] [-z statPeriod] [--print-uncompressed-position flag] [--stat-period millis]\n", 
+    fprintf(stderr, "%s [--file file] [--pipe pipe] [--portbase portbase] [--interface net-interface] [--log file] [--ttl time-to-live] [--mcast-rdv-address mcast-rdv-address] [--rcvbuf buf] [--nokbd] [--exit-wait milliseconds] [--nosync] [--sync] [--start-timeout sto] [--license] [-x uncomprStatPrint] [-z statPeriod] [--print-uncompressed-position flag] [--stat-period millis] [--ignore-lost-data]\n", 
 	    progname);
 #else /* HAVE_GETOPT_LONG */
-    fprintf(stderr, "%s [--f file] [--p pipe] [-P portbase] [-i net-interface] [-l logfile] [-t time-to-live] [-M mcast-rdv-address] [-b rcvbuf] [-k] [-w exit-wait-milliseconds] [-n] [-y] [-s start-timeout] [-L] [-x uncomprStatPrint] [-z statPeriod]\n", 
+    fprintf(stderr, "%s [--f file] [--p pipe] [-P portbase] [-i net-interface] [-l logfile] [-t time-to-live] [-M mcast-rdv-address] [-b rcvbuf] [-k] [-w exit-wait-milliseconds] [-n] [-y] [-s start-timeout] [-L] [-x uncomprStatPrint] [-z statPeriod] [-Z]\n", 
 	    progname);
 #endif /* HAVE_GETOPT_LONG */
     exit(1);
@@ -150,7 +152,7 @@ int main(int argc, char **argv)
 	disk_config.pipeName = strdup("/bin/gzip -dc");
 	disk_config.fileName = "/dev/hda";
     }
-    while( (c=getopt_l(argc, argv, "b:f:p:P:i:l:M:s:t:w:x:z:dkLny")) != EOF ) {
+    while( (c=getopt_l(argc, argv, "b:f:p:P:i:l:M:s:t:w:x:z:dkLnyZ")) != EOF ) {
 	switch(c) {
 	    case 'f':
 		disk_config.fileName=optarg;
@@ -227,6 +229,10 @@ int main(int argc, char **argv)
 		break;
 	    case 'x':
 		stat_config.printUncompressedPos = atoi(optarg);
+		break;
+
+	    case 'Z':
+		net_config.flags |= FLAG_IGNORE_LOST_DATA;
 		break;
 
 	    case '?':

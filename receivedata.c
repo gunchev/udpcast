@@ -255,13 +255,18 @@ static struct slice *initSlice(struct clientState *clst,
     BZERO(slice->retransmit);
     slice->freePos = 0;
     slice->bytes = 0;
-    if(clst->currentSlice != NULL && !clst->currentSlice->bytesKnown) {
-	udpc_fatal(1, "Previous slice size not known\n");
+    if(clst->currentSlice != NULL) {
+	if(!clst->currentSlice->bytesKnown)
+	    udpc_fatal(1, "Previous slice size not known\n");
+	if(clst->net_config->flags & FLAG_IGNORE_LOST_DATA)
+	    slice->bytes = clst->currentSlice->bytes;
     }
-    if(clst->currentSliceNo != sliceNo-1) {
-	udpc_fatal(1, "Slice no mismatch %d <-> %d\n",
-		   sliceNo, clst->currentSliceNo);
-    }
+
+    if(!(clst->net_config->flags & FLAG_STREAMING))
+	if(clst->currentSliceNo != sliceNo-1) {
+	    udpc_fatal(1, "Slice no mismatch %d <-> %d\n",
+		       sliceNo, clst->currentSliceNo);
+	}
     slice->bytesKnown = 0;
     slice->sliceNo = sliceNo;
 
@@ -307,6 +312,27 @@ static struct slice *newSlice(struct clientState *clst, int sliceNo)
     return slice;
 }
 
+static void checkSliceComplete(struct clientState *clst, struct slice *slice);
+
+static struct slice *findSlice(struct clientState *clst, int sliceNo);
+
+static void setSliceBytes(struct slice *slice, 
+			  struct clientState *clst,
+			  int bytes);
+
+static void fakeSliceComplete(struct clientState *clst)
+{
+    slice_t slice = NULL;
+    slice = findSlice(clst, clst->receivedSliceNo+1);
+    assert(slice != NULL);
+    assert(slice->state != SLICE_DONE);
+    if(! slice->bytesKnown )
+	setSliceBytes(slice, clst, slice->bytes);
+    slice->blocksTransferred = slice->dataBlocksTransferred =
+	(slice->bytes + clst->net_config->blockSize - 1) / 
+	clst->net_config->blockSize;
+    checkSliceComplete(clst, slice);
+}
 
 static struct slice *findSlice(struct clientState *clst, int sliceNo)
 {
@@ -330,24 +356,25 @@ static struct slice *findSlice(struct clientState *clst, int sliceNo)
 	}
 	return slice;
     }
-    if(sliceNo != clst->currentSliceNo + 1) {
-	udpc_flprintf("Slice %d skipped\n", sliceNo-1);
-	exit(1);
-    }
 
     if((clst->net_config->flags & FLAG_STREAMING) &&
        sliceNo != clst->currentSliceNo) {
+	assert(clst->currentSlice = &clst->slices[0]);
 	return initSlice(clst, clst->currentSlice, sliceNo);	    
     }
 
-    if(sliceNo > clst->receivedSliceNo + 2) {
-
+    while(sliceNo > clst->receivedSliceNo + 2 ||
+	  sliceNo != clst->currentSliceNo + 1) {
 	slice_t slice = findSlice(clst, clst->receivedSliceNo+1);
-	udpc_flprintf("Dropped by server now=%d last=%d\n", sliceNo,
+	if(clst->net_config->flags & FLAG_IGNORE_LOST_DATA)
+	    fakeSliceComplete(clst);
+	else {
+	    udpc_flprintf("Dropped by server now=%d last=%d\n", sliceNo,
 		      clst->receivedSliceNo);
-	if(slice != NULL)
-	    printMissedBlockMap(clst, slice);
-	exit(1);
+	    if(slice != NULL)
+		printMissedBlockMap(clst, slice);
+	    exit(1);
+	}
     }
     return newSlice(clst, sliceNo);
 }
@@ -397,8 +424,6 @@ static void advanceReceivedPointer(struct clientState *clst) {
     }
     clst->receivedPtr = pos;
 }
-
-
 
 /**
  * Cleans up all finished slices. At first, invoked by the net receiver
@@ -1144,10 +1169,12 @@ int spawnNetReceiver(struct fifo *fifo,
 
     clst->free_slices_pc = pc_makeProduconsum(NR_SLICES, "free slices");
     pc_produce(clst->free_slices_pc, NR_SLICES);
-    for(i = 0; i <NR_SLICES; i++)
+    for(i = 0; i <NR_SLICES; i++) {
 	clst->slices[i].state = SLICE_FREE;
+	clst->slices[i].sliceNo = -1;
+    }
     clst->receivedPtr = 0;
-    clst->receivedSliceNo = 0;
+    clst->receivedSliceNo = -1;
 
 #ifdef BB_FEATURE_UDPCAST_FEC
     fec_init(); /* fec new involves memory

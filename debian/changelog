@@ -1,4 +1,10 @@
-udpcast (20091031) stable; urgency=low
+udpcast (20091230) stable; urgency=low
+
+  * new "--ignore-lost-data" mode
+  * Lift limit in number of supported network interfaces
+
+ -- Alain Knaff <alain@knaff.lu>  Wed, 30 Dec 2009 18:54:33 +0100
+udpcast (20091031)stable; urgency=low
 
   * Support for start-timeout also on sender
 
