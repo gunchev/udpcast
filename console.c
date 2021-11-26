@@ -86,7 +86,9 @@ void restoreConsole(console_t **cp, int doConsume) {
 
     /* If key pressed, consume it. If letter is q, quit */
     if(doConsume) {
-      read(c->fd, &ch, 1);
+	if (1 != read(c->fd, &ch, 1)) {
+	    ch='\0';
+	}
     }
 
     if(c->needRestore && tcsetattr(c->fd, TCSAFLUSH, &c->oldtio) < 0) {
