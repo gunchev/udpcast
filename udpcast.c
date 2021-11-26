@@ -29,7 +29,7 @@ int udpc_parseCommand(char *pipeName, char **arg) {
 
 static int printProcessStatus(const char *message, int status)
 {
-#ifndef __MINGW32__
+#ifdef WIFEXITED
     if (WIFEXITED(status)) {
 	if(WEXITSTATUS(status)) {
 	    udpc_flprintf("%s process died with code %d\n",
@@ -45,11 +45,11 @@ static int printProcessStatus(const char *message, int status)
 	udpc_flprintf("%s process did not cleanly exit\n", message);
 	return 1;
     }
-#else /* __MINGW32__ */
+#else /* WIFEXITED */
     if(status != 0)
       udpc_flprintf("%s process died with code %d\n",		    
 		    message, status);
-#endif /* __MINGW32__ */
+#endif /* WIFEXITED */
     return 0;
 }
 

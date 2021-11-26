@@ -1,4 +1,4 @@
-%define udpcast_version 20070602
+%define udpcast_version 20071228
 %define udpcast_release 1
 
 Summary: UDP Broadcast Installation

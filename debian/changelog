@@ -1,0 +1,5 @@
+udpcast (20071228) stable; urgency=low
+
+  * first release of debian package
+
+ -- Alain Knaff <alain@knaff.lu>  Thu, 26 Dec 2007 12:23:37 +0100

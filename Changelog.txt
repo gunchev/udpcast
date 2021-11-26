@@ -1,3 +1,9 @@
+v20071228
+	* Removed -Wdeclaration-after-statement flag which only exists
+	on gcc4
+	* Make exit status testing dependant on WIFEXITED rather than
+	MINGW32 (because exit status might be missing on other
+	platforms as well)
 v20070602
 	* Adapt to Solaris 10 x86 (added includes and configure checks)
 	* Patch to fix parallel make & make DESTDIR=/tmp/xxx install

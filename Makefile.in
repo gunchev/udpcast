@@ -30,7 +30,7 @@ INSTALL_PROGRAM = @INSTALL_PROGRAM@
 
 
 #override CFLAGS += -O4 -Wall -DNDEBUG -DLOSSTEST
-override CFLAGS +=-Wall -Wstrict-prototypes -Wdeclaration-after-statement -Wshadow -DBB_FEATURE_UDPCAST_FEC -D_FILE_OFFSET_BITS=64 -DUSE_SYSLOG -DUSE_ASSEMBLER -O6
+override CFLAGS +=-Wall -Wstrict-prototypes -Wshadow -DBB_FEATURE_UDPCAST_FEC -D_FILE_OFFSET_BITS=64 -DUSE_SYSLOG -DUSE_ASSEMBLER -O6
 override LDFLAGS +=-s
 LIBS +=@LIBS@
 
