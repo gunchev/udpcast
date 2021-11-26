@@ -1,3 +1,6 @@
+v20060929
+	* Fix usage message to use full names for --mcast-data-address and
+	mcast-rdv-address
 v20060921
 	* Avoid variable name "log", apparently, for older compilers,
 	this shadows the name of a built-in

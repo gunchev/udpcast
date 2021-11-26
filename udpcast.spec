@@ -1,4 +1,4 @@
-%define udpcast_version 20060921
+%define udpcast_version 20060929
 %define udpcast_release 1
 
 Summary: UDP Broadcast Installation
@@ -36,7 +36,10 @@ make install
 /usr/share/man/man1/udp-receiver.1.gz
 
 %changelog
-* Thu Sep 20 2006 Alain Knaff <alain@knaff.lu>
+* Fri Oct 20 2006 Alain Knaff <alain@knaff.lu>
+- Fix usage message to use full names for --mcast-data-address and
+mcast-rdv-address
+* Thu Sep 21 2006 Alain Knaff <alain@knaff.lu>
 - Include uio.h into socklib.h, needed with older include files for iovec
 - Avoid variable name "log", apparently, for older compilers, this shadows the
 name of a built-in
