@@ -1,6 +1,6 @@
 Name:           udpcast
 Summary:        UDP broadcast file distribution and installation
-Version:        20090830
+Version:        20090912
 Release:        1
 License:        GPLv2+ and BSD
 Group:          Applications/System
@@ -52,6 +52,10 @@ make install
 
 
 %changelog
+* Sat Sep 12 2009 Alain Knaff <alain@knaff.lu>
+- Restored block alignment enforcement (needed when reading data from a pipe)
+- Fixed division-by-zero error on zero-sized transmissions
+- only make data blocks as big as needed
 * Tue Sep 01 2009 Alain Knaff <alain@knaff.lu>
 - "Streaming" mode
 - On receiver, make failure to send hello packet not fatal

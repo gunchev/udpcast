@@ -1,3 +1,10 @@
+udpcast (20090912) stable; urgency=low
+
+  * Restored block alignment enforcement (needed when reading data from a pipe)
+  * Fixed division-by-zero error on zero-sized transmissions
+  * only make data blocks as big as needed
+
+ -- Alain Knaff <alain@knaff.lu>  Sat, 12 Sep 2009 10:34:49 +0200
 udpcast (20090830) stable; urgency=low
 
   * "Streaming" mode
@@ -7,24 +14,24 @@ udpcast (20090830) stable; urgency=low
   async, as long as a dataMcastAddress is supplied
 
  -- Alain Knaff <alain@knaff.lu>  Tue,  1 Sep 2009 20:23:24 +0200
-udpcast (20081213)stable; urgency=low
+udpcast (20081213) stable; urgency=low
 
   * Fixed compilation on pre-historic compilers
 
  -- Alain Knaff <alain@knaff.lu>  Sat, 13 Dec 2008 09:48:01 +0100
-udpcast (20081130)stable; urgency=low
+udpcast (20081130) stable; urgency=low
 
   * Fixed a couple of compilation warnings
 
  -- Alain Knaff <alain@knaff.lu>  Sun, 30 Nov 2008 17:14:56 +0100
-udpcast (20081116)stable; urgency=low
+udpcast (20081116) stable; urgency=low
 
   * Settable statistics printout delay
   * Print uncompressed size only when it makes sense (pipe used, and
   seekable output)
 
  -- Alain Knaff <alain@knaff.lu>  Sun, 16 Nov 2008 17:20:56 +0100
-udpcast (20080914)stable; urgency=low
+udpcast (20080914) stable; urgency=low
 
   * Added distclean target to make Debian build easier
   * Removed obsolete m486 flag
@@ -36,7 +43,7 @@ udpcast (20080914)stable; urgency=low
   * Mingw fixes (socket closing)
 
  -- Alain Knaff <alain@knaff.lu>  Sat, 20 Sep 2008 11:54:41 +0200
-udpcast (20071228)stable; urgency=low
+udpcast (20071228) stable; urgency=low
 
   * first release of debian package
 

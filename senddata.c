@@ -167,10 +167,10 @@ static struct slice *makeSlice(sender_state_t sendst, int sliceNo) {
     /* fixme: use current slice size here */
     if(slice->bytes > config->blockSize * config->sliceSize)
 	slice->bytes = config->blockSize * config->sliceSize;
-#if 0
+
     if(slice->bytes > config->blockSize)
 	slice->bytes -= slice->bytes % config->blockSize;
-#endif
+
     pc_consumed(fifo->data, slice->bytes);
     slice->nextBlock = 0;
     slice->state = SLICE_NEW;
@@ -230,6 +230,7 @@ static int transmitDataBlock(sender_state_t sendst, struct slice *slice, int i)
     struct fifo *fifo = sendst->fifo;
     struct net_config *config = sendst->config;
     struct dataBlock msg;
+    int size;
 
     assert(i < MAX_SLICE_SIZE);
     
@@ -240,12 +241,18 @@ static int transmitDataBlock(sender_state_t sendst, struct slice *slice, int i)
     msg.reserved = 0;
     msg.reserved2 = 0;
     msg.bytes = htonl(slice->bytes);
+
+    size = slice->bytes - i * config->blockSize;
+    if(size < 0)
+	size = 0;
+    if(size > config->blockSize)
+	size = config->blockSize;
     
     sendRawData(sendst->socket, config, 
 		(char *) &msg, sizeof(msg),
 		fifo->dataBuffer + 
 		(slice->base + i * config->blockSize) % fifo->dataBufSize,
-		config->blockSize);
+		size);
     return 0;
 }
 
@@ -998,13 +1005,13 @@ static THREAD_RETURN fecMain(void *args0)
     slice_t slice;
     int sliceNo = 0;
 
-    do {
+    while(1) {
 	/* consume free slice */
 	slice = makeSlice(sendst, sliceNo++);
 	/* do the fec calculation here */
 	fec_encode_all_stripes(sendst,slice);
 	pc_produce(sendst->fec_data_pc, 1);
-    } while(slice->bytes != 0);
+    }
     return 0;
 }
 #endif

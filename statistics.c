@@ -245,7 +245,10 @@ void displaySenderStats(sender_stats_t ss, int blockSize, int sliceSize,
 	return;
 
     blocks = (ss->totalBytes + blockSize - 1) / blockSize;
-    percent = (1000L * ss->retransmissions) / blocks;
+    if(blocks == 0)
+      percent = 0;
+    else
+      percent = (1000L * ss->retransmissions) / blocks;
     
     fprintf(stderr, "bytes=");
     printLongNum(ss->totalBytes);
