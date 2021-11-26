@@ -1,3 +1,6 @@
+v20120424
+	* In receiver, return correct status if pipe fails
+	* By default, use nosync, even on device files
 v20110710
 	* fixed some -Wextra compilation warnings
 	* new --no-progress flag to suppress progress display

@@ -3,7 +3,7 @@
 %global _source_filedigest_algorithm 1
 Name:           udpcast
 Summary:        UDP broadcast file distribution and installation
-Version:        20110710
+Version:        20120424
 Release:        1
 License:        GPLv2+ and BSD
 Group:          Applications/System
@@ -55,6 +55,9 @@ make install
 
 
 %changelog
+* Tue Apr 24 2012 Alain Knaff <alain@knaff.lu>
+- In receiver, return correct status if pipe fails
+- By default, use nosync, even on device files
 * Sun Jul 10 2011 Alain Knaff <alain@knaff.lu>
 - fixed some -Wextra compilation warnings
 - new --no-progress flag to suppress progress display

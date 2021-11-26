@@ -87,13 +87,6 @@ static int openOutFile(struct disk_config *disk_config)
 	int oflags = O_CREAT | O_WRONLY | O_TRUNC;
 	if((disk_config->flags & FLAG_SYNC)) {
 	    oflags |= O_SYNC;
-	} else if( !(disk_config->flags & FLAG_NOSYNC)) {
-	    struct stat buf;
-	    if(stat(disk_config->fileName, &buf) == 0) {
-		/* If target is device, open it synchronously */
-		if(S_ISCHR(buf.st_mode) || S_ISBLK(buf.st_mode))
-			oflags |= O_SYNC;
-	    }
 	}
 	outFile = open(disk_config->fileName, oflags | O_BINARY, 0644);
 	if(outFile < 0) {
@@ -129,6 +122,7 @@ int startReceiver(int doWarn,
     int pipePid = 0;
     int origOutFile;
     int haveServerAddress;
+    int ret=0;
 
     client_config.sender_is_newgen = 0;
 
@@ -328,7 +322,7 @@ int startReceiver(int doWarn,
 
 	/* if we have a pipe, now wait for that too */
 	if(pipePid) {
-	    udpc_waitForProcess(pipePid, "Pipe");
+	    ret=udpc_waitForProcess(pipePid, "Pipe");
 	}
 #ifndef __MINGW32__
 	fsync(origOutFile);
@@ -339,5 +333,5 @@ int startReceiver(int doWarn,
     fixConsole();
     sendDisconnectWrapper();
     global_client_config= NULL;
-    return 0;
+    return ret;
 }
