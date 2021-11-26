@@ -1,4 +1,4 @@
-%define udpcast_version 20070306
+%define udpcast_version 20070323
 %define udpcast_release 1
 
 Summary: UDP Broadcast Installation
@@ -36,6 +36,8 @@ make install
 /usr/share/man/man1/udp-receiver.1.gz
 
 %changelog
+* Fri Mar 23 2007 Alain Knaff <alain@knaff.lu>
+- Fixed typoes in socklib.c
 * Tue Mar 6 2007 Alain Knaff <alain@knaff.lu>
 - Fix issue with pipes and no destination file on receiver
 * Sun Feb 18 2007 Alain Knaff <alain@knaff.lu>

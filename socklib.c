@@ -309,7 +309,7 @@ int doReceive(int s, void *message, size_t len,
 	      struct sockaddr_in *from, int portBase) {
     socklen_t slen;
     int r;
-    short port;
+    unsigned short port;
     char ipBuffer[16];
 
     slen = sizeof(*from);
@@ -724,7 +724,7 @@ net_if_t *getNetIf(const char *wanted) {
 	    for (ifrp = ibuf ; ifrp < ifend;
 #ifdef IFREQ_SIZE
 		 ifrp = IFREQ_SIZE(*ifrp) + (char *)ifrp
-#lse
+#else
 		 ifrp++
 #endif
 		 ) {

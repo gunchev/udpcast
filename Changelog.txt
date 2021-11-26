@@ -1,3 +1,5 @@
+v20070323
+	* Fixed typoes in socklib.c
 v20070306
 	* Fix issue with pipes and no destination file on receiver
 v20070218
