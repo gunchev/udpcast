@@ -23,6 +23,7 @@ struct console_t {
 console_t *prepareConsole(int fd) {
     struct termios newtio;
     int needClose=0;
+    console_t *c;
 
     if(fd < 0) {
 	fd = open("/dev/tty", O_RDWR);
@@ -33,7 +34,7 @@ console_t *prepareConsole(int fd) {
 	needClose=1;
     }
 
-    console_t *c = MALLOC(console_t);
+    c = MALLOC(console_t);
     if(c == NULL)
 	return c;
 

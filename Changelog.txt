@@ -1,3 +1,6 @@
+v20060208
+	* Fix compilation issue (variable declaration after code)
+	* Avoid sending connect request twice
 v20051223
 	* Phase out of most of the way old endianness backwards
 	compatibility hacks

@@ -151,11 +151,6 @@ int startReceiver(int doWarn,
     connectReqSent = 0;
     haveServerAddress = 0;
 
-    if (sendConnectReq(&client_config, net_config, haveServerAddress) < 0) {
-	perror("sendto to locate server");
-	exit(1);
-    }
-
     client_config.clientNumber= 0; /*default number for asynchronous transfer*/
     while(1) {
 	// int len;
