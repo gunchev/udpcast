@@ -1,6 +1,6 @@
-#define udpreceiver_trivial_usage \
+#define udp_receiver_trivial_usage \
 	"[--file file] [--pipe pipe] [--portbase portbase] [--interface net-interface] [--log file] [--ttl time-to-live] [--mcast-all-addr mcast-all-address] [--rcvbuf buf]"
-#define udpreceiver_full_usage \
+#define udp_receiver_full_usage \
 	"Receives a file via UDP multicast\n\n" \
 	"Options:\n" \
 	"\t--file\tfile where to store received data\n" \
@@ -12,9 +12,9 @@
 	"\t--mcast-all-addr\tmulticast address\n" \
 	"\t--rcvbuf\tsize of receive buffer\n"
 
-#define udpsender_trivial_usage \
+#define udp_sender_trivial_usage \
 	"[--file file] [--full-duplex] [--pipe pipe] [--portbase portbase] [--blocksize size] [--interface net-interface] [--mcast-addr data-mcast-address] [--mcast-all-addr mcast-all-address] [--max-bitrate bitrate] [--pointopoint] [--async] [--log file] [--min-slice-size min] [--max-slice-size max] [--slice-size] [--ttl time-to-live] [--fec <stripes>x<redundancy>/<stripesize>] [--print-seed] [--rexmit-hello-interval interval] [--autostart autostart] [--broadcast]"
-#define udpsender_full_usage \
+#define udp_sender_full_usage \
 	"Sends a file via UDP multicast\n\n" \
 	"\t--file\tfile to be transmitted\n" \
 	"\t--full-duplex\toptimize for full duplex network (equipped with a switch, rather than a hub)\n" \

@@ -1,4 +1,10 @@
-udpcast (20091230) stable; urgency=low
+udpcast (20100130) stable; urgency=low
+
+  * In busybox, call the executables udp-receiver and udp-sender, the same
+  as outside of busybox
+
+ -- Alain Knaff <alain@knaff.lu>  Sat, 30 Jan 2010 17:40:12 +0100
+udpcast (20091230)stable; urgency=low
 
   * new "--ignore-lost-data" mode
   * Lift limit in number of supported network interfaces

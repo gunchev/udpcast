@@ -1,6 +1,6 @@
 Name:           udpcast
 Summary:        UDP broadcast file distribution and installation
-Version:        20091230
+Version:        20100130
 Release:        1
 License:        GPLv2+ and BSD
 Group:          Applications/System
@@ -52,6 +52,9 @@ make install
 
 
 %changelog
+* Sat Jan 30 2010 Alain Knaff <alain@knaff.lu>
+- In busybox, call the executables udp-receiver and udp-sender, the
+same as outside of busybox
 * Wed Dec 30 2009 Alain Knaff <alain@knaff.lu>
 - new "--ignore-lost-data" mode
 - Lift limit in number of supported network interfaces
