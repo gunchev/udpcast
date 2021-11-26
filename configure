@@ -3288,8 +3288,9 @@ done
 
 
 
+
 for ac_header in fcntl.h limits.h sys/ioctl.h sys/time.h arpa/inet.h \
-sys/param.h memory.h malloc.h signal.h netinet/in.h winsock2.h
+sys/param.h memory.h malloc.h signal.h netinet/in.h winsock2.h sys/uio.h
 do
 as_ac_Header=`echo "ac_cv_header_$ac_header" | $as_tr_sh`
 if eval "test \"\${$as_ac_Header+set}\" = set"; then

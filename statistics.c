@@ -92,10 +92,10 @@ struct sender_stats {
     long bwPeriod;
 };
 
-sender_stats_t allocSenderStats(int fd, FILE *log, long bwPeriod) {
+sender_stats_t allocSenderStats(int fd, FILE *logfile, long bwPeriod) {
     sender_stats_t ss = MALLOC(struct sender_stats);
     ss->fd = fd;
-    ss->log = log;
+    ss->log = logfile;
     ss->bwPeriod = bwPeriod;
     gettimeofday(&ss->periodStart, 0);
     return ss;

@@ -1,3 +1,8 @@
+v20060921
+	* Avoid variable name "log", apparently, for older compilers,
+	this shadows the name of a built-in
+	* Include uio.h into socklib.h, needed with older include files for
+	iovec
 v20060920
 	* Added missing format string to printMyIp
 v20060917

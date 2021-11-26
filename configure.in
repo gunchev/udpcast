@@ -23,7 +23,7 @@ dnl Checks for header files.
 AC_HEADER_STDC
 AC_HEADER_SYS_WAIT
 AC_CHECK_HEADERS(fcntl.h limits.h sys/ioctl.h sys/time.h arpa/inet.h \
-sys/param.h memory.h malloc.h signal.h netinet/in.h winsock2.h)
+sys/param.h memory.h malloc.h signal.h netinet/in.h winsock2.h sys/uio.h)
 AC_CHECK_HEADERS(termios.h sys/termios.h, [break])
 
 

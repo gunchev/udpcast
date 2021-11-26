@@ -22,6 +22,10 @@
 #include <winsock2.h>
 #endif
 
+#ifdef HAVE_SYS_UIO_H
+#include <sys/uio.h>
+#endif
+
 #ifdef __MINGW32__
 #define WINDOWS
 #undef USE_SYSLOG
