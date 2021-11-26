@@ -87,7 +87,7 @@ int printLongNum(unsigned long long x) {
 
     while(divisor) {
 	int digits;
-	char *format;
+	const char *format;
 
 	digits = (int) ((x / divisor) % 1000);
 	if (nonzero) {

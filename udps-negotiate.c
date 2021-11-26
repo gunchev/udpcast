@@ -484,7 +484,7 @@ static int doTransfer(int sock,
 
     /* if we have a pipe, now wait for that too */
     if(pid) {
-	waitForProcess(pid, "Pipe");
+	udpc_waitForProcess(pid, "Pipe");
     }
 
     pthread_join(fifo.thread, NULL);    

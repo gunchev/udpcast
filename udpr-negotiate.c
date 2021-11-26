@@ -94,7 +94,9 @@ static int openOutFile(struct disk_config *disk_config)
 	outFile = open(disk_config->fileName, oflags | O_BINARY, 0644);
 	if(outFile < 0) {
 #ifdef NO_BB
+#ifndef errno
 	    extern int errno;
+#endif
 #endif
 	    udpc_fatal(1, "open outfile %s: %s\n",
 		       disk_config->fileName, strerror(errno));
@@ -310,7 +312,7 @@ int startReceiver(int doWarn,
 
 	/* if we have a pipe, now wait for that too */
 	if(pipePid) {
-	    waitForProcess(pipePid, "Pipe");
+	    udpc_waitForProcess(pipePid, "Pipe");
 	}
 #ifndef __MINGW32__
 	fsync(origOutFile);

@@ -9,8 +9,16 @@
 #include <sys/types.h>
 #include <string.h>
 
-#ifdef HAVE_SOCKET_H
+#ifdef HAVE_SYS_SOCKET_H
 #include <sys/socket.h>
+#endif
+
+#ifdef HAVE_SYS_SELECT_H
+#include <sys/select.h>
+#endif
+
+#ifdef HAVE_SYS_SOCKIO_H
+#include <sys/sockio.h>
 #endif
 
 #ifdef HAVE_NETINET_IN_H
@@ -104,7 +112,7 @@ int RecvMsg(int s, struct msghdr *msg, int flags);
 struct net_if {
     struct in_addr addr;
     struct in_addr bcast;
-    char *name;
+    const char *name;
 #ifdef SIOCGIFINDEX
     int index;
 #endif
@@ -123,7 +131,7 @@ int makeSockAddr(char *hostname, short port, struct sockaddr_in *addr);
 
 int getMyAddress(net_if_t *net_if, struct sockaddr_in *addr);
 int getBroadCastAddress(net_if_t *net_if, struct sockaddr_in *addr, short port);
-int getMcastAllAddress(struct sockaddr_in *addr, char *address, short port);
+int getMcastAllAddress(struct sockaddr_in *addr, const char *address, short port);
 
 
 int doSend(int s, void *message, size_t len, struct sockaddr_in *to);

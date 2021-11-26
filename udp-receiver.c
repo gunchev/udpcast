@@ -80,6 +80,7 @@ static void usage(char *progname) {
 #endif
 
 #ifndef NO_BB
+int udpreceiver_main(int argc, char **argv);
 int udpreceiver_main(int argc, char **argv)
 #else
 int main(int argc, char **argv)

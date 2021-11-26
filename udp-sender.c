@@ -105,6 +105,7 @@ static inline void usage(char *progname) {
 #endif
 
 #ifndef NO_BB
+int udpsender_main(int argc, char **argv);
 int udpsender_main(int argc, char **argv)
 #else
 int main(int argc, char **argv)

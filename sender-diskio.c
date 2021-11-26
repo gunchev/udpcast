@@ -27,7 +27,9 @@ int openFile(struct disk_config *config)
 	int in = open(config->fileName, O_RDONLY | O_BINARY, 0);
 	if (in < 0) {
 #ifdef NO_BB
+#ifndef errno
 	    extern int errno;
+#endif
 #endif
 	    udpc_fatal(1, "Could not open file %s: %s\n", config->fileName,
 		       strerror(errno));
@@ -53,7 +55,7 @@ int openPipe(struct disk_config *config, int in, int *pidp)
 	char *arg[256];
 	int filedes[2];
 
-	parseCommand(config->pipeName, arg);
+	udpc_parseCommand(config->pipeName, arg);
 
 	if(pipe(filedes) < 0) {
 	    perror("pipe");

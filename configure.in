@@ -22,9 +22,20 @@ AC_CHECK_LIB(pthread, pthread_create)
 dnl Checks for header files.
 AC_HEADER_STDC
 AC_HEADER_SYS_WAIT
-AC_CHECK_HEADERS(fcntl.h limits.h sys/ioctl.h sys/time.h arpa/inet.h \
-sys/param.h memory.h malloc.h signal.h netinet/in.h winsock2.h sys/uio.h)
+AC_CHECK_HEADERS(fcntl.h limits.h sys/ioctl.h sys/time.h arpa/inet.h netdb.h \
+sys/select.h sys/sockio.h sys/socket.h sys/param.h memory.h malloc.h signal.h \
+net/if.h netinet/in.h winsock2.h sys/uio.h)
 AC_CHECK_HEADERS(termios.h sys/termios.h, [break])
+
+dnl Check for structures
+AC_CHECK_MEMBERS([struct ip_mreqn.imr_ifindex],[],[],[#ifdef HAVE_NETINET_IN_H
+#include <netinet/in.h>
+#endif])
+
+dnl Check for types
+AC_CHECK_TYPES(in_addr_t,[],[],[#ifdef HAVE_ARPA_INET_H
+#include <arpa/inet.h>
+#endif])
 
 
 dnl
@@ -72,7 +83,7 @@ AC_STRUCT_TM
 
 dnl Checks for library functions.
 AC_TYPE_SIGNAL
-AC_CHECK_FUNCS(atexit on_exit tcsetattr lseek64 snprintf)
+AC_CHECK_FUNCS(atexit on_exit tcsetattr lseek64 snprintf inet_pton inet_aton)
 
 dnl
 dnl Check for 64-bit off_t
@@ -182,6 +193,10 @@ if [ "X$GCC" = "Xyes" ] ; then
     Wall=-Wall
     if [ "$host_os3" = sunos ] ; then
 	    Wall=""
+    fi
+    if [ "$host_os3" = solaris ] ; then
+	    CFLAGS="$CFLAGS -D_XOPEN_SOURCE -D_XOPEN_SOURCE_EXTENDED=1 -D__EXTENSIONS__"
+ 	    LIBS="$LIBS -lnsl -lsocket"
     fi
     if [ "$host_os3" = ultrix ] ; then
 	    Wall=""

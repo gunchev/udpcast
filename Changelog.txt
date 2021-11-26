@@ -1,3 +1,8 @@
+v20070602
+	* Adapt to Solaris 10 x86 (added includes and configure checks)
+	* Patch to fix parallel make & make DESTDIR=/tmp/xxx install
+	* Address gcc4 warnings
+	* Remove some #define fn udpc_fn lines
 v20070323
 	* Fixed typoes in socklib.c
 v20070306

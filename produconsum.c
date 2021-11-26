@@ -18,11 +18,11 @@ struct produconsum {
     pthread_mutex_t mutex;
     volatile int consumerIsWaiting;
     pthread_cond_t cond;
-    char *name;
+    const char *name;
 };
 
 
-produconsum_t pc_makeProduconsum(int size, char *name)
+produconsum_t pc_makeProduconsum(int size, const char *name)
 {
     produconsum_t pc = MALLOC(struct produconsum);
     pc->size = size;

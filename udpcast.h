@@ -16,26 +16,18 @@
 
 #define DATABUFSIZE (RDATABUFSIZE + 4096 - RDATABUFSIZE % 4096)
 
-#define writeSize udpc_writeSize
-#define largeReadSize udpc_largeReadSize
-#define smallReadSize udpc_smallReadSize
-#define makeDataBuffer udpc_makeDataBuffer
-#define parseCommand udpc_parseCommand
-#define printLongNum udpc_printLongNum
-#define waitForProcess udpc_waitForProcess
+int udpc_writeSize(void);
+int udpc_largeReadSize(void);
+int udpc_smallReadSize(void);
+int udpc_makeDataBuffer(int blocksize);
+int udpc_parseCommand(char *pipeName, char **arg);
 
-int writeSize(void);
-int largeReadSize(void);
-int smallReadSize(void);
-int makeDataBuffer(int blocksize);
-int parseCommand(char *pipeName, char **arg);
-
-int printLongNum(unsigned long long x);
-int waitForProcess(int pid, char *message);
+int udpc_printLongNum(unsigned long long x);
+int udpc_waitForProcess(int pid, const char *message);
 
 struct disk_config {
     int origOutFile;
-    char *fileName;
+    const char *fileName;
     char *pipeName;
     int flags;
 };
@@ -48,7 +40,7 @@ struct net_config {
     int sliceSize;
     struct sockaddr_in controlMcastAddr;
     struct sockaddr_in dataMcastAddr;
-    char *mcastRdv;
+    const char *mcastRdv;
     int ttl;
     struct rate_limit *rateLimit;
     /*int async;*/

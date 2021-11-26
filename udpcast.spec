@@ -1,4 +1,4 @@
-%define udpcast_version 20070323
+%define udpcast_version 20070602
 %define udpcast_release 1
 
 Summary: UDP Broadcast Installation
@@ -36,6 +36,13 @@ make install
 /usr/share/man/man1/udp-receiver.1.gz
 
 %changelog
+* Fri Jun  1 2007 Alain Knaff <alain@knaff.lu>
+- Patch to fix parallel make & make DESTDIR=/tmp/xxx install
+- Address gcc4 warnings
+- Remove some #define fn udpc_fn lines
+* Thu May 30 2007 Jan Oelschlaegel <joe77@web.de>
+- Adapt to Solaris 10 x86 (added includes and configure checks)
+- Tested on Linux and Solaris 10 (maybe some other OS are broken now...)
 * Fri Mar 23 2007 Alain Knaff <alain@knaff.lu>
 - Fixed typoes in socklib.c
 * Tue Mar 6 2007 Alain Knaff <alain@knaff.lu>

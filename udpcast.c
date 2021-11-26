@@ -4,7 +4,7 @@
 
 FILE *udpc_log;
 
-int parseCommand(char *pipeName, char **arg) {
+int udpc_parseCommand(char *pipeName, char **arg) {
     char *ptr;
     int i;
     int haveSpace;
@@ -27,7 +27,7 @@ int parseCommand(char *pipeName, char **arg) {
     return 0;
 }
 
-static int printProcessStatus(char *message, int status)
+static int printProcessStatus(const char *message, int status)
 {
 #ifndef __MINGW32__
     if (WIFEXITED(status)) {
@@ -56,7 +56,7 @@ static int printProcessStatus(char *message, int status)
 /* wait for process.  If process returned abnormally, print message, and
  * exit too.
  */
-int waitForProcess(int pid, char *message)
+int udpc_waitForProcess(int pid, const char *message)
 {
     int status;
 
@@ -65,33 +65,4 @@ int waitForProcess(int pid, char *message)
 	return 0;
     }
     return printProcessStatus(message, status);
-}
-
-
-/**
- * BACKWARDS COMPATIBILITY
- * swapl: swaps a long
- */
-unsigned int swapl(int pc) {
-    int iout;
-    char *in = (char *) &pc;
-    char *out = (char *) &iout;
-    out[0]=in[3];
-    out[1]=in[2];
-    out[2]=in[1];
-    out[3]=in[0];
-    return iout;
-}
-
-/**
- * BACKWARDS COMPATIBILITY
- * swapl: swaps a long
- */
-unsigned short swaps(short pc) {
-    short iout;
-    char *in = (char *) &pc;
-    char *out = (char *) &iout;
-    out[0]=in[1];
-    out[1]=in[0];
-    return iout;
 }

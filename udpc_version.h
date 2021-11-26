@@ -2,6 +2,6 @@
 #define UDPC_VERSION_H
 
 #include "libbb_udpcast.h"
-extern char *version;
+extern const char *version;
 
 #endif

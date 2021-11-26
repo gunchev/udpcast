@@ -1,3 +1,5 @@
+#include "config.h"
+
 #include <sys/types.h>
 #include <unistd.h>
 #include <sys/time.h>
@@ -7,13 +9,23 @@
 
 #include <fcntl.h>
 
-#ifndef __MINGW32__
-#include <arpa/inet.h>
-#include <netdb.h>
-#include <net/if.h>
-#include <sys/ioctl.h>
+#ifdef HAVE_ARPA_INET_H
+# include <arpa/inet.h>
+#endif
 
-#else /* __MINGW32__ */
+#ifdef HAVE_NETDB_H
+# include <netdb.h>
+#endif
+
+#ifdef HAVE_NET_IF_H
+# include <net/if.h>
+#endif
+
+#ifdef HAVE_SYS_IOCTL_H
+# include <sys/ioctl.h>
+#endif
+
+#ifdef __MINGW32__
 
 #include <ws2tcpip.h>
 #define ioctl ioctlsocket
@@ -202,32 +214,26 @@ int makeSockAddr(char *hostname, short port, struct sockaddr_in *addr)
     return 0;
 }
 
-#ifdef __MINGW32__
-static int inet_aton(const char *address, struct in_addr *ip) {
-    unsigned long result=0;
-    int j;
-    for(j=0; j<4; j++) {
-	int digit;
-
-	if(!*address)
-	    return 0;
-	digit = strtoul(address, (char**)&address, 10);
-	result = (result << 8) + digit;
-	if(j < 3) {
-	    if(*address == '.')
-		address++;
-	    else
-		return 0;
-	}
-    }
-    if(*address)
-	return 0;
-    ip->s_addr = htonl(result);
-    return ip->s_addr;
-}
-
+#ifndef HAVE_IN_ADDR_T
 typedef unsigned long in_addr_t;
-#endif /* __MINGW32__ */
+#endif
+
+#ifdef HAVE_PTON
+# define INET_ATON(a,i) inet_pton(AF_INET,a,i)
+#else
+# ifdef HAVE_ATON
+#  define INET_ATON(a,i) inet_aton(a,i)
+# else
+
+static inline int INET_ATON(const char *a, struct in_addr *i) {
+	i->s_addr=inet_addr(a);
+	if(i->s_addr == INADDR_NONE && strcmp(a, "255.255.255.255"))
+		return 0; /* Address invalid */
+	return 1; /* Address valid */
+}
+# endif
+#endif
+
 
 static int initSockAddress(addr_type_t addr_type,
 			   net_if_t *net_if, 
@@ -276,19 +282,20 @@ int getBroadCastAddress(net_if_t *net_if, struct sockaddr_in *addr,
 
 static int mcastListen(int sock, net_if_t *net_if, struct sockaddr_in *addr);
 
-static int safe_inet_aton(char *address, struct in_addr *ip) {
-    if(!inet_aton(address, ip))
+static int safe_inet_aton(const char *address, struct in_addr *ip) {
+    if(!INET_ATON(address, ip))
 	udpc_fatal(-1, "Bad address %s", address);
     return 0;
 }
 
 
-int getMcastAllAddress(struct sockaddr_in *addr, char *address, short port){
+int getMcastAllAddress(struct sockaddr_in *addr, const char *address,
+		       short port){
     struct in_addr ip;
     int ret;
 
     if(address == NULL || address[0] == '\0')
-	inet_aton("224.0.0.1", &ip);
+	safe_inet_aton("224.0.0.1", &ip);
     else {
 	if((ret=safe_inet_aton(address, &ip))<0)
 	   return ret;
@@ -380,7 +387,7 @@ int setTtl(int sock, int ttl) {
     return setsockopt(sock, SOL_IP, IP_MULTICAST_TTL, (char*)&ttl, sizeof(int));
 }
 
-#ifdef SIOCGIFINDEX
+#ifdef HAVE_STRUCT_IP_MREQN_IMR_IFINDEX
 # define IP_MREQN ip_mreqn
 #else
 # define IP_MREQN ip_mreq
@@ -394,7 +401,7 @@ int setTtl(int sock, int ttl) {
  */
 static int fillMreq(int sock, net_if_t *net_if, struct in_addr addr,
 		    struct IP_MREQN *mreq) {
-#ifdef SIOCGIFINDEX
+#ifdef HAVE_STRUCT_IP_MREQN_IMR_IFINDEX
     mreq->imr_ifindex = net_if->index;
     mreq->imr_address.s_addr = 0;
 #else
@@ -409,7 +416,7 @@ static int fillMreq(int sock, net_if_t *net_if, struct in_addr addr,
  * Perform a multicast operation
  */
 static int mcastOp(int sock, net_if_t *net_if, struct in_addr addr,
-		   int code, char *message) {
+		   int code, const char *message) {
     struct IP_MREQN mreq;
     int r;
     
@@ -612,8 +619,10 @@ net_if_t *getNetIf(const char *wanted) {
 	    wanted = getenv("IFNAME");
 	}
 
-	if(wanted && inet_aton(wanted, &wantedAddress))
+	if(wanted && INET_ATON(wanted, &wantedAddress))
 	    isAddress=1;
+	else
+	    wantedAddress.s_addr=0;
 
 	if(wanted)
 	    wantedLen=strlen(wanted);
@@ -742,7 +751,7 @@ net_if_t *getNetIf(const char *wanted) {
 
 	net_if->name = strdup(chosen->ifr_name);
 
-#ifdef SIOCGIFINDEX
+#ifdef HAVE_STRUCT_IP_MREQN_IMR_IFINDEX
 	/* Index for multicast subscriptions */
 	if(ioctl(s,  SIOCGIFINDEX, chosen) < 0)
 	    udpc_fatal(-1, "Error getting index for %s: %s", net_if->name,

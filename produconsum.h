@@ -3,7 +3,7 @@
 
 typedef struct produconsum *produconsum_t;
 
-produconsum_t pc_makeProduconsum(int size, char *name);
+produconsum_t pc_makeProduconsum(int size, const char *name);
 void pc_produce(produconsum_t pc, unsigned int amount);
 void pc_produceEnd(produconsum_t pc);
 int pc_consumeAny(produconsum_t pc);
