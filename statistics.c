@@ -101,9 +101,10 @@ static void printFilePosition(int fd)
 	    n=read(pfd, buf, 160);
 	    if(n >= 0) {
 		char *num;
+		long long offset;
 		buf[n]='\0';
 		num = strpbrk(buf, "0123456789");
-		long long offset = strtoull(num, 0, 10);
+		offset = strtoull(num, 0, 10);
 		if(offset >= 0)
 		    printLongNum(offset);
 	    }

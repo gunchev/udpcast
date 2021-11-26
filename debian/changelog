@@ -1,4 +1,9 @@
-udpcast (20081116) stable; urgency=low
+udpcast (20081130) stable; urgency=low
+
+  * Fixed a couple of compilation warnings
+
+ -- Alain Knaff <alain@knaff.lu>  Sun, 30 Nov 2008 17:14:56 +0100
+udpcast (20081116)stable; urgency=low
 
   * Settable statistics printout delay
   * Print uncompressed size only when it makes sense (pipe used, and

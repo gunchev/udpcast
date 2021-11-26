@@ -34,23 +34,23 @@ static int getCurrentQueueLength(int sock) {
 }
 
 static void *allocAutoRate(void) {
-    struct auto_rate_t *autoRate = MALLOC(struct auto_rate_t);
-    if(autoRate == NULL)
+    struct auto_rate_t *autoRate_l = MALLOC(struct auto_rate_t);
+    if(autoRate_l == NULL)
 	    return NULL;
-    autoRate->isInitialized = 0;
-    return autoRate;
+    autoRate_l->isInitialized = 0;
+    return autoRate_l;
 }
 
-static void initialize(struct auto_rate_t *autoRate, int sock) {
+static void initialize(struct auto_rate_t *autoRate_l, int sock) {
   int q = getCurrentQueueLength(sock);
   if(q == 0) {
-    autoRate->dir = 0;
-    autoRate->sendbuf = getSendBuf(sock);
+    autoRate_l->dir = 0;
+    autoRate_l->sendbuf = getSendBuf(sock);
   } else {
-    autoRate->dir = 1;
-    autoRate->sendbuf = q;
+    autoRate_l->dir = 1;
+    autoRate_l->sendbuf = q;
   }
-  autoRate->isInitialized=1;
+  autoRate_l->isInitialized=1;
 }
 
 /**

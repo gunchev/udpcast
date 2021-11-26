@@ -1,3 +1,10 @@
+v20081130
+	* Fixed a couple of compilation warnings
+v20081116
+	* Settable statistics printout delay
+	* Print uncompressed size only when it makes sense (pipe used, and
+	seekable output)
+	* Linux lseek bug workaround
 v20080914
 	* Added distclean target to make Debian build easier
 	* Adapted to new name of mingw compiler, and other Mingw adaptations
