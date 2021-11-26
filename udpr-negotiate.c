@@ -21,6 +21,10 @@
 # define O_SYNC 0
 #endif
 
+#ifndef O_TRUNC
+# define O_TRUNC 0
+#endif
+
 static int sendConnectReq(struct client_config *client_config,
 			  struct net_config *net_config,
 			  int haveServerAddress) {
@@ -80,7 +84,7 @@ static int openOutFile(struct disk_config *disk_config)
 {
     int outFile=1;
     if(disk_config->fileName != NULL) {
-	int oflags = O_CREAT | O_WRONLY;
+	int oflags = O_CREAT | O_WRONLY | O_TRUNC;
 	if((disk_config->flags & FLAG_SYNC)) {
 	    oflags |= O_SYNC;
 	} else if( !(disk_config->flags & FLAG_NOSYNC)) {
@@ -180,7 +184,6 @@ int startReceiver(int doWarn,
 	    if (sendConnectReq(&client_config, net_config,
 			       haveServerAddress) < 0) {
 		perror("sendto to locate server");
-		exit(1);
 	    }
 	    connectReqSent = 1;
 	}
@@ -223,9 +226,12 @@ int startReceiver(int doWarn,
 		}
 		goto break_loop;
 
+	    case CMD_HELLO_STREAMING:
 	    case CMD_HELLO_NEW:
 	    case CMD_HELLO:
 		connectReqSent = 0;
+		if(ntohs(Msg.opCode) == CMD_HELLO_STREAMING)
+			net_config->flags |= FLAG_STREAMING;
 		if(ntohl(Msg.hello.capabilities) & CAP_NEW_GEN) {
 		    client_config.sender_is_newgen = 1;
 		    copyFromMessage(&net_config->dataMcastAddr,
@@ -239,6 +245,8 @@ int startReceiver(int doWarn,
 		haveServerAddress=1;
 		continue;
 	    case CMD_CONNECT_REQ:
+	    case CMD_DATA:
+	    case CMD_FEC:
 		continue;
 	    default:
 		break;

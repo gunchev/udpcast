@@ -58,21 +58,21 @@ static void initialize(struct auto_rate_t *autoRate_l, int sock) {
  */
 static void doAutoRate(void *data, int sock, in_addr_t ip, long size)
 {
-    struct auto_rate_t *autoRate = (struct auto_rate_t*) data;
+    struct auto_rate_t *autoRate_l = (struct auto_rate_t*) data;
     (void) ip;
 
-    if(!autoRate->isInitialized)
-      initialize(autoRate, sock);
+    if(!autoRate_l->isInitialized)
+      initialize(autoRate_l, sock);
 
     while(1) {
 	int r = getCurrentQueueLength(sock);
-	if(autoRate->dir)
-	    r = autoRate->sendbuf - r;
+	if(autoRate_l->dir)
+	    r = autoRate_l->sendbuf - r;
 
-	if(r < autoRate->sendbuf / 2 - size)
+	if(r < autoRate_l->sendbuf / 2 - size)
 	    return;
 #if DEBUG
-	flprintf("Queue full %d/%d... Waiting\n", r, autoRate->sendbuf);
+	flprintf("Queue full %d/%d... Waiting\n", r, autoRate_l->sendbuf);
 #endif
 	usleep(2500);
     }

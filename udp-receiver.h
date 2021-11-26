@@ -71,4 +71,9 @@ int startReceiver(int doWarn,
  */
 #define FLAG_SYNC 0x0100
 
+/**
+ * Streaming mode
+ */
+#define FLAG_STREAMING 0x200
+
 #endif

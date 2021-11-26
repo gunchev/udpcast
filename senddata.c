@@ -162,14 +162,15 @@ static struct slice *makeSlice(sender_state_t sendst, int sliceNo) {
 
     slice->base = pc_getConsumerPosition(sendst->fifo->data);
     slice->sliceNo = sliceNo;
-    slice->bytes = pc_consume(sendst->fifo->data, 10*config->blockSize);
+    slice->bytes = pc_consume(fifo->data, 10*config->blockSize);
 
     /* fixme: use current slice size here */
     if(slice->bytes > config->blockSize * config->sliceSize)
 	slice->bytes = config->blockSize * config->sliceSize;
-
+#if 0
     if(slice->bytes > config->blockSize)
 	slice->bytes -= slice->bytes % config->blockSize;
+#endif
     pc_consumed(fifo->data, slice->bytes);
     slice->nextBlock = 0;
     slice->state = SLICE_NEW;
@@ -278,7 +279,7 @@ static int sendSlice(sender_state_t sendst, struct slice *slice,
 {    
     struct net_config *config = sendst->config;
 
-    int nrBlocks, i;
+    int nrBlocks, i, rehello;
 #ifdef BB_FEATURE_UDPCAST_FEC
     int fecBlocks;
 #endif
@@ -311,6 +312,14 @@ static int sendSlice(sender_state_t sendst, struct slice *slice,
     }
 #endif
 
+    if((sendst->config->flags & FLAG_STREAMING)) {
+      rehello = nrBlocks - sendst->config->rehelloOffset;
+      if(rehello < 0)
+	rehello = 0;
+    } else {
+      rehello = -1;
+    }
+
     /* transmit the data */
     for(i = slice->nextBlock; i < nrBlocks
 #ifdef BB_FEATURE_UDPCAST_FEC
@@ -332,6 +341,11 @@ static int sendSlice(sender_state_t sendst, struct slice *slice,
 	    flprintf("Retransmitting %d.%d\n", slice->sliceNo, i);
 #endif
 	}
+
+	if(i == rehello) {
+	    sendHello(sendst->config, sendst->socket, 1);
+	}
+
 	if(i < nrBlocks)
 	    transmitDataBlock(sendst, slice, i);
 #ifdef BB_FEATURE_UDPCAST_FEC
@@ -984,13 +998,13 @@ static THREAD_RETURN fecMain(void *args0)
     slice_t slice;
     int sliceNo = 0;
 
-    while(1) {
+    do {
 	/* consume free slice */
 	slice = makeSlice(sendst, sliceNo++);
 	/* do the fec calculation here */
 	fec_encode_all_stripes(sendst,slice);
 	pc_produce(sendst->fec_data_pc, 1);
-    }
+    } while(slice->bytes != 0);
     return 0;
 }
 #endif

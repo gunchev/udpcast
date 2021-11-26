@@ -28,10 +28,10 @@ enum opCode {
     CMD_CONNECT_REPLY, /* receiver tries to find out server's address */
 
     CMD_DATA,        /* a block of data */
-#ifdef BB_FEATURE_UDPCAST_FEC
     CMD_FEC,	     /* a forward-error-correction block */
-#endif
-    CMD_HELLO_NEW,  /* sender says he's up */
+
+    CMD_HELLO_NEW,	  /* sender says he's up */
+    CMD_HELLO_STREAMING,  /* retransmitted hello during streaming mode */
 };
 
 /* Sender says he's up. This is not in the enum with the others,
@@ -39,6 +39,8 @@ enum opCode {
  * 2005-12-23, new receivers now understand a CMD_HELLO_NEW which is
  * in sequence. Once enough of those are out in the field, we'll send
  * CMD_HELLO_NEW by default, and then phase out the old variant. */
+/* Tried to remove this on 2009-08-30, but noticed that receiver was printing
+ * "unexpected opcode" on retransmitted hello */
 #define CMD_HELLO 0x0500
 
 union message {

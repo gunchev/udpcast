@@ -1,4 +1,13 @@
-udpcast (20081213) stable; urgency=low
+udpcast (20090830) stable; urgency=low
+
+  * "Streaming" mode
+  * On receiver, make failure to send hello packet not fatal
+  * More efficient transmission on small files
+  * Allow pointopoint mode to be "used" (ignored) together with
+  async, as long as a dataMcastAddress is supplied
+
+ -- Alain Knaff <alain@knaff.lu>  Tue,  1 Sep 2009 20:23:24 +0200
+udpcast (20081213)stable; urgency=low
 
   * Fixed compilation on pre-historic compilers
 

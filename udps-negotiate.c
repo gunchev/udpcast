@@ -79,10 +79,14 @@ static int sendConnectionReply(participantsDb_t db,
     return 0;
 }
 
-static void sendHello(struct net_config *net_config, int sock) {
+void sendHello(struct net_config *net_config, int sock,
+	       int streaming) {
     struct hello hello;
     /* send hello message */
-    hello.opCode = htons(CMD_HELLO);
+    if(streaming)
+	hello.opCode = htons(CMD_HELLO_STREAMING);
+    else
+	hello.opCode = htons(CMD_HELLO);
     hello.reserved = 0;
     hello.capabilities = htonl(net_config->capabilities);
     copyToMessage(hello.mcastAddr,&net_config->dataMcastAddr);
@@ -211,7 +215,7 @@ static int mainDispatcher(int *fd, int nr,
 
 	if(net_config->rexmit_hello_interval) {
 	    /* retransmit hello message */
-	    sendHello(net_config, fd[0]);
+	    sendHello(net_config, fd[0], 0);
 	    (*tries)++;
 	    if(net_config->autostart != 0 && *tries > net_config->autostart)
 		startNow=1;
@@ -365,7 +369,7 @@ int startSender(struct disk_config *disk_config,
     if(net_config->flags & FLAG_ASYNC)
 	net_config->capabilities |= CAP_ASYNC;
 
-    sendHello(net_config, sock[0]);
+    sendHello(net_config, sock[0], 0);
     db = udpc_makeParticipantsDb();
     tries = 0;
 

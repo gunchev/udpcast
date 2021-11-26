@@ -1,3 +1,9 @@
+v20090830
+	* "Streaming" mode
+	* On receiver, make failure to send hello packet not fatal
+	* More efficient transmission on small files
+	* Allow pointopoint mode to be "used" (ignored) together with
+	async, as long as a dataMcastAddress is supplied
 v20081213
 	* Compatibility with pre-historic compilers
 v20081130

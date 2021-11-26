@@ -1,6 +1,6 @@
 Name:           udpcast
 Summary:        UDP broadcast file distribution and installation
-Version:        20081213
+Version:        20090830
 Release:        1
 License:        GPLv2+ and BSD
 Group:          Applications/System
@@ -52,6 +52,12 @@ make install
 
 
 %changelog
+* Tue Sep 01 2009 Alain Knaff <alain@knaff.lu>
+- "Streaming" mode
+- On receiver, make failure to send hello packet not fatal
+- More efficient transmission on small files
+- Allow pointopoint mode to be "used" (ignored) together with async,
+  as long as a dataMcastAddress is supplied
 * Sat Dec 13 2008 Alain Knaff <alain@knaff.lu>
 - Fixed compilation on pre-historic compilers
 * Sun Nov 30 2008 Alain Knaff <alain@knaff.lu>

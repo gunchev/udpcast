@@ -15,6 +15,7 @@ struct fifo;
 #define openPipe udpcs_openPipe
 #define localReader udpc_localReader
 #define spawnNetSender udpc_spawnNetSender
+#define sendHello udpc_sendHello
 #define startSender udpc_startSender
 #define doSend udpc_doSend
 
@@ -27,6 +28,7 @@ int spawnNetSender(struct fifo *fifo,
 		   struct net_config *config,
 		   participantsDb_t db,
 		   sender_stats_t stats);
+void sendHello(struct net_config *net_config, int sock, int streaming);
 int startSender(struct disk_config *disk_config,
 		struct net_config *net_config,
 		struct stat_config *stat_config,
@@ -95,5 +97,10 @@ int startSender(struct disk_config *disk_config,
  * Don't ask for keyboard input on sender end.
  */
 #define FLAG_NOKBD 0x0080
+
+/**
+ * Streaming mode: allow receiver to join a running transmission
+ */
+#define FLAG_STREAMING 0x0100
 
 #endif

@@ -246,6 +246,9 @@ receivers, but they also increase the probability of false alerts
 (dropping receivers that are not actually crashed, but merely slow to
 respond for whatever reason)</dd>
 
+<dt>--streaming</dt>
+<dd>Allows receivers to join an ongoing transmission mid through</dd>
+
 </dl>
 
 
@@ -490,6 +493,12 @@ larger slices than this. Ignored in duplex mode (default).</dd>
 
 <dt>--default-slice-size <i>size</i></dt>
 <dd>Slice size used (starting slice size in half-duplex mode).</dd>
+
+<dt>--rehello-offset <i>offs</i></dt>
+<dd>in streaming mode, how many packets before end of slice the hello
+packet will be transferred (default 50). Chose larger values if you
+notice that receivers are excessively slow to pick up running
+transmission</dd>
 
 </dl>
 

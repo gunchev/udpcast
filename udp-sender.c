@@ -119,6 +119,9 @@ static struct option options[] = {
     { "statistics-period", 1, NULL, 'z' },
     { "stat-period", 1, NULL, 'z' },
 
+    { "streaming", 0, NULL, 'Z' },
+    { "rehello-offset", 0, NULL, 'Y' },
+
     { NULL, 0, NULL, 0}
 };
 
@@ -130,7 +133,7 @@ static struct option options[] = {
 #ifdef NO_BB
 static void usage(char *progname) {
 #ifdef HAVE_GETOPT_LONG
-    fprintf(stderr, "%s [--file file] [--full-duplex] [--pipe pipe] [--portbase portbase] [--blocksize size] [--interface net-interface] [--mcast-data-address data-mcast-address] [--mcast-rdv-address mcast-rdv-address] [--max-bitrate bitrate] [--pointopoint] [--async] [--log file] [--min-slice-size min] [--max-slice-size max] [--slice-size] [--ttl time-to-live] [--fec <stripes>x<redundancy>/<stripesize>] [--print-seed] [--rexmit-hello-interval interval] [--autostart autostart] [--broadcast] [--min-receivers receivers] [--min-wait sec] [--max-wait sec] [--retries-until-drop n] [--nokbd] [--bw-period n]"
+    fprintf(stderr, "%s [--file file] [--full-duplex] [--pipe pipe] [--portbase portbase] [--blocksize size] [--interface net-interface] [--mcast-data-address data-mcast-address] [--mcast-rdv-address mcast-rdv-address] [--max-bitrate bitrate] [--pointopoint] [--async] [--log file] [--min-slice-size min] [--max-slice-size max] [--slice-size] [--ttl time-to-live] [--fec <stripes>x<redundancy>/<stripesize>] [--print-seed] [--rexmit-hello-interval interval] [--autostart autostart] [--broadcast] [--min-receivers receivers] [--min-wait sec] [--max-wait sec] [--retries-until-drop n] [--nokbd] [--bw-period n] [--streaming] [--rehello-offset offs]"
 #ifdef DL_RATE_GOVERNOR
 	    " [--rate-governor module:parameters]" 
 #endif
@@ -139,7 +142,7 @@ static void usage(char *progname) {
 #endif
 	    "[--license]\n", progname); /* FIXME: copy new options to busybox */
 #else /* HAVE_GETOPT_LONG */
-    fprintf(stderr, "%s [-f file] [-d] [-p pipe] [-P portbase] [-b size] [-i net-interface] [-m data-mcast-address] [-M mcast-rdv-address] [-r bitrate] [-1] [-a] [-l logfile] [-t time-to-live] [-F <stripes>x<redundancy>/<stripesize>][-H hello-retransmit-interval] [-S autostart] [-B] [-C min-receivers] [-w min-wait-sec] [-w max-wait-sec] [-R n] [-k] [-I n] [-x uncomprStatPrint] [-z statPeriod]"
+    fprintf(stderr, "%s [-f file] [-d] [-p pipe] [-P portbase] [-b size] [-i net-interface] [-m data-mcast-address] [-M mcast-rdv-address] [-r bitrate] [-1] [-a] [-l logfile] [-t time-to-live] [-F <stripes>x<redundancy>/<stripesize>][-H hello-retransmit-interval] [-S autostart] [-B] [-C min-receivers] [-w min-wait-sec] [-w max-wait-sec] [-R n] [-k] [-I n] [-x uncomprStatPrint] [-z statPeriod] [-Z] [-Y rehello-offset]"
 #ifdef DL_RATE_GOVERNOR
 	    " [-g rate-governor:parameters ]" 
 #endif
@@ -178,6 +181,8 @@ int main(int argc, char **argv)
     struct stat_config stat_config;
     char *ifName = NULL;
 
+    int dataMcastSupplied = 0;
+
     /* argument parsing */
     disk_config.fileName = NULL;
     disk_config.pipeName = NULL;
@@ -205,6 +210,8 @@ int main(int argc, char **argv)
 
     net_config.retriesUntilDrop = 200;
 
+    net_config.rehelloOffset = 50;
+
     stat_config.log = NULL;
     stat_config.bwPeriod = 0;
     stat_config.printUncompressedPos = -1;
@@ -230,7 +237,7 @@ int main(int argc, char **argv)
 #ifdef FLAG_AUTORATE
 	    "A"
 #endif
-	    "BcdDkL";
+	    "BcdDkLY:Z";
         while( (c=getopt_l(argc, argv, argLetters)) 
 	       != EOF ) {
 	    switch(c) {
@@ -282,6 +289,7 @@ int main(int argc, char **argv)
 		case 'm':
 		    setIpFromString(&net_config.dataMcastAddr, optarg);
 		    ipIsZero(&net_config.dataMcastAddr);
+		    dataMcastSupplied = 1;
 		    break;
 		case 'M':
 		    net_config.mcastRdv = strdup(optarg);
@@ -418,11 +426,26 @@ int main(int argc, char **argv)
 		    rgParseRateGovernor(&net_config, optarg);
 		    break;
 #endif
+		case 'Z':
+		    net_config.flags |= FLAG_STREAMING;
+		    break;
+		case 'Y':
+		    net_config.rehelloOffset = atol(optarg);
+		    break;
 	        default:
 		case '?':
 		    usage(argv[0]);
 	    }
 	}
+    }
+
+    if(net_config.flags & FLAG_ASYNC) {
+      if(dataMcastSupplied)
+	net_config.flags &= ~FLAG_POINTOPOINT;
+      if(net_config.flags & FLAG_POINTOPOINT) {
+	fprintf(stderr, "Pointopoint supplied together with async, but no dataMcastAddress (-m)\n");
+	return -1;
+      }
     }
 
     if(optind < argc && !disk_config.fileName) {

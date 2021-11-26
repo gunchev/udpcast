@@ -94,6 +94,9 @@ struct net_config {
     int fec_stripesize; /* size of FEC group */
     int fec_stripes; /* number of FEC stripes per slice */
 #endif
+
+    int rehelloOffset; /* how far before end will rehello packet will
+			  be retransmitted */
 };
 
 struct stat_config {
