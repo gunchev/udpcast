@@ -1,3 +1,5 @@
+#include <errno.h>
+#include <limits.h>
 #include <sys/types.h>
 #include <sys/time.h>
 #include <unistd.h>
@@ -10,24 +12,30 @@
 struct rate_limit {
     long long date;
     long long realDate;
-    int bitrate;
-    int queueSize;
+    unsigned long bitrate;
+    unsigned long queueSize;
 };
 
-#define LLMILLION 1000000LL
+#define LLMILLION 1000000ULL
 
 static unsigned long parseSpeed(const char *speedString) {
     char *eptr;
     unsigned long speed = strtoul(speedString, &eptr, 10);
+    if (speed == ULONG_MAX && errno == ERANGE)
+	fatal(1, "Speed out of range!\n");
     if(eptr && *eptr) {
 	switch(*eptr) {
+	    case 'g':
+	    case 'G':
+		speed *= 1000000000ull;
+		break;
 	    case 'm':
 	    case 'M':
-		speed *= 1000000;
+		speed *= 1000000ull;
 		break;
 	    case 'k':
 	    case 'K':
-		speed *= 1000;
+		speed *= 1000ull;
 		break;
 	    case '\0':
 		break;
@@ -73,7 +81,7 @@ static void doRateLimit(void *data, int fd, in_addr_t ip, long size) {
     if(rateLimit) {
 	long long now = getLongLongDate();
 	long long elapsed = now - rateLimit->date;
-	long long bits = elapsed * ((long long)rateLimit->bitrate) / LLMILLION;
+	unsigned long long bits = elapsed * ((unsigned long long)rateLimit->bitrate) / LLMILLION;
 	int sleepTime;
 	size += 28; /* IP header size */
 
@@ -82,7 +90,7 @@ static void doRateLimit(void *data, int fd, in_addr_t ip, long size) {
 	    rateLimit->date = now;
 	    return;
 	}
-	
+
 	rateLimit->queueSize -= bits / 8;
 	rateLimit->date += bits * LLMILLION / rateLimit->bitrate;
 	rateLimit->realDate = now;
