@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <errno.h>
 #include <limits.h>
 #include <sys/types.h>
@@ -20,29 +21,51 @@ struct rate_limit {
 
 static unsigned long parseSpeed(const char *speedString) {
     char *eptr;
-    unsigned long speed = strtoul(speedString, &eptr, 10);
+    unsigned long speed;
+    char c;
+    assert(speedString);
+    if (*speedString == '\0')
+	fatal(1, "Empty string specified for speed!\n");
+    c = (*speedString < ' ' || *speedString > '~') ? '@' : *speedString; /* don't print non-ASCII characters */
+    if (c < '0' || c > '9') /* good enough to stop negative values */
+	fatal(1, "Speed starts with invalid character '%c'!\n", c);
+    speed = strtoul(speedString, &eptr, 10);
     if (speed == ULONG_MAX && errno == ERANGE)
 	fatal(1, "Speed out of range!\n");
     if(eptr && *eptr) {
 	switch(*eptr) {
 	    case 'g':
 	    case 'G':
+		if (speed > ULONG_MAX / 1000000000ull)
+		    fatal(1, "Speed out of range!\n");
 		speed *= 1000000000ull;
 		break;
 	    case 'm':
 	    case 'M':
+		if (speed > ULONG_MAX / 1000000ull)
+		    fatal(1, "Speed out of range!\n");
 		speed *= 1000000ull;
 		break;
 	    case 'k':
 	    case 'K':
+		if (speed > ULONG_MAX / 1000ull)
+		    fatal(1, "Speed out of range!\n");
 		speed *= 1000ull;
 		break;
 	    case '\0':
 		break;
 	    default:
-		udpc_fatal(1, "Unit %c unsupported\n", *eptr);
+		c = (*eptr < ' ' || *eptr > '~') ? '@' : *eptr; /* don't print non-ASCII characters */
+		udpc_fatal(1, "Unit '%c' unsupported\n", c);
+	}
+	++eptr;
+	if (*eptr != '\0') {
+	    c = (*eptr < ' ' || *eptr > '~') ? '@' : *eptr; /* don't print non-ASCII characters */
+	    udpc_fatal(1, "Valid speed input ends with garbage '%c'!\n", c);
 	}
     }
+    if (speed < 1)
+	udpc_fatal(1, "Speed limit of 0 bits per second takes forever!\n");
     return speed;
 }
 
