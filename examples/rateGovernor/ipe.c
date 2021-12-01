@@ -16,7 +16,7 @@
  *
  * In order to do this, udpcast calls the governor's wait function before
  * transmitting a packet. The governor may then wait some time until it
- * returns, thusly controling the transmission speed.
+ * returns, thusly controlling the transmission speed.
  *
  * This example rate governor acts upon the traffic control packets that a
  * "Logic Innovations IP Encapsulator 3000" sends
