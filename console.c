@@ -57,7 +57,7 @@ console_t *prepareConsole(int fd) {
     return c;
 }
 
-int selectWithConsole(console_t *con, int maxFd, 
+int selectWithConsole(console_t *con, int maxFd,
 		      fd_set *read_set, struct timeval *tv,
 		      int *keyPressed) {
     int ret;
@@ -128,22 +128,22 @@ static DWORD WINAPI waitForKeyPress(LPVOID lpParameter) {
 
 static DWORD WINAPI waitForSelect(LPVOID lpParameter) {
     console_t *con = lpParameter;
-    con->select_return = select(con->maxFd, &con->read_set, 
+    con->select_return = select(con->maxFd, &con->read_set,
 				NULL, NULL, con->tvp);
     return 0;
 }
 
 
-console_t *prepareConsole(int fd) { 
+console_t *prepareConsole(int fd) {
     console_t *con;
     if(fd < 0) {
 	fd = open("CON", O_RDONLY);
 	if(fd < 0)
 	    return NULL;
     } else {
-	fd = dup(fd);  /* dup console filedescriptor in order to avoid 
-			*  race with pipe spawner... */      
-    }    
+	fd = dup(fd);  /* dup console filedescriptor in order to avoid
+			*  race with pipe spawner... */
+    }
     con = MALLOC(console_t);
     if(con == NULL)
 	return con;
@@ -155,9 +155,9 @@ console_t *prepareConsole(int fd) {
 
 static HANDLE startThread(console_t *con,
 			  LPTHREAD_START_ROUTINE lpStartAddress) {
-    /* Start thread ... 
+    /* Start thread ...
      * see http://msdn.microsoft.com/library/default.asp?url=/library/en-us/dllproc/base/createthread.asp
-     */	       
+     */
     return CreateThread(NULL,	/* lpThreadAttributes */
 			0,	/* dwStackSize */
 			lpStartAddress,
@@ -166,7 +166,7 @@ static HANDLE startThread(console_t *con,
 			NULL    /* lpThreadId */);
 }
 
-int selectWithConsole(console_t *con, int maxFd, 
+int selectWithConsole(console_t *con, int maxFd,
 		      fd_set *read_set, struct timeval *tv,
 		      int *keyPressed) {
     int r;
@@ -196,7 +196,7 @@ int selectWithConsole(console_t *con, int maxFd,
 	udpc_fatal(1, "Could not start select thread");
 
     /* http://msdn.microsoft.com/library/default.asp?url=/library/en-us/dllproc/base/waitformultipleobjects.asp
-     */    
+     */
     switch( (r=WaitForMultipleObjects(2, con->thread, FALSE, INFINITE)) ) {
     case WAIT_OBJECT_0:
 	*keyPressed=1;
@@ -216,7 +216,7 @@ int selectWithConsole(console_t *con, int maxFd,
     }
 }
 
-void restoreConsole(console_t **cp, int doConsume) { 
+void restoreConsole(console_t **cp, int doConsume) {
     console_t *c=*cp;
 
     /* If key pressed, consume it. If letter is q, quit */

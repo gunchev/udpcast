@@ -67,7 +67,7 @@ static void sendDisconnectWrapper(void) {
 }
 
 void sendDisconnect(int exitStatus,
-		    struct client_config *client_config) {    
+		    struct client_config *client_config) {
     struct disconnect disconnect;
     disconnect.opCode = htons(CMD_DISCONNECT);
     disconnect.reserved = 0;
@@ -153,17 +153,17 @@ int startReceiver(int doWarn,
 	    setMcastDestination(client_config.S_UCAST, net_config->net_if,
 				&net_config->controlMcastAddr);
 	    setTtl(client_config.S_UCAST, net_config->ttl);
-	    
+
 	    client_config.S_MCAST_CTRL =
 		makeSocket(ADDR_TYPE_MCAST,
 			   net_config->net_if,
 			   &net_config->controlMcastAddr,
 			   RECEIVER_PORT(net_config->portBase));
-	    // TODO: subscribe address as receiver to!
+	    /* TODO: subscribe address as receiver to! */
 	}
     }
     clearIp(&net_config->dataMcastAddr);
-    udpc_flprintf("%sUDP receiver for %s at ", 
+    udpc_flprintf("%sUDP receiver for %s at ",
 		  disk_config->pipeName == NULL ? "" :  "Compressed ",
 		  disk_config->fileName == NULL ? "(stdout)":disk_config->fileName);
     printMyIp(net_config->net_if);
@@ -174,7 +174,7 @@ int startReceiver(int doWarn,
 
     client_config.clientNumber= 0; /*default number for asynchronous transfer*/
     while(1) {
-	// int len;
+	/* int len; */
 	ssize_t msglen;
 	int sock;
 
@@ -194,15 +194,15 @@ int startReceiver(int doWarn,
 		return -1;
 	}
 
-	// len = sizeof(server);
-	msglen=RECV(sock, 
+	/* len = sizeof(server); */
+	msglen=RECV(sock,
 		    Msg, client_config.serverAddr, net_config->portBase);
 	if (msglen < 0) {
 	    perror("recvfrom to locate server");
 	    exit(1);
 	}
-	
-	if(getPort(&client_config.serverAddr) != 
+
+	if(getPort(&client_config.serverAddr) !=
 	   SENDER_PORT(net_config->portBase))
 	    /* not from the right port */
 	    continue;
@@ -251,14 +251,14 @@ int startReceiver(int doWarn,
 	}
 
 
-	udpc_fatal(1, 
+	udpc_fatal(1,
 		   "Bad server reply %04x. Other transfer in progress?\n",
 		   (unsigned short) ntohs(Msg.opCode));
     }
 
  break_loop:
-    udpc_flprintf("Connected as #%d to %s\n", 
-		  client_config.clientNumber, 
+    udpc_flprintf("Connected as #%d to %s\n",
+		  client_config.clientNumber,
 		  getIpString(&client_config.serverAddr, ipBuffer));
 
     getMyAddress(net_config->net_if, &myIp);
@@ -270,9 +270,9 @@ int startReceiver(int doWarn,
 	)) {
 	udpc_flprintf("Listening to multicast on %s\n",
 		      getIpString(&net_config->dataMcastAddr, ipBuffer));
-	client_config.S_MCAST_DATA = 
-	  makeSocket(ADDR_TYPE_MCAST, net_config->net_if, 
-		     &net_config->dataMcastAddr, 
+	client_config.S_MCAST_DATA =
+	  makeSocket(ADDR_TYPE_MCAST, net_config->net_if,
+		     &net_config->dataMcastAddr,
 		     RECEIVER_PORT(net_config->portBase));
     }
 
@@ -300,7 +300,7 @@ int startReceiver(int doWarn,
 						stat_config->statPeriod,
 						printUncompressedPos,
 						stat_config->noProgress);
-	
+
 	udpc_initFifo(&fifo, net_config->blockSize);
 
 	fifo.data = pc_makeProduconsum(fifo.dataBufSize, "receive");

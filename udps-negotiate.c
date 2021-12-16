@@ -24,7 +24,7 @@
  * This file contains the code to set up the connection
  */
 
-static int doTransfer(int sock, 
+static int doTransfer(int sock,
 		      participantsDb_t db,
 		      struct disk_config *disk_config,
 		      struct net_config *net_config,
@@ -43,7 +43,7 @@ static int isPointToPoint(participantsDb_t db, int flags) {
 static int sendConnectionReply(participantsDb_t db,
 			       int sock,
 			       struct net_config *config,
-			       struct sockaddr_in *client, 
+			       struct sockaddr_in *client,
 			       unsigned int capabilities,
 			       unsigned int rcvbuf) {
     struct connectReply reply;
@@ -53,9 +53,9 @@ static int sendConnectionReply(participantsDb_t db,
 
     if(capabilities & CAP_BIG_ENDIAN) {
 	reply.opCode = htons(CMD_CONNECT_REPLY);
-	reply.clNr = 
+	reply.clNr =
 	    htonl(udpc_addParticipant(db,
-				      client, 
+				      client,
 				      capabilities,
 				      rcvbuf,
 				      config->flags & FLAG_POINTOPOINT));
@@ -100,7 +100,7 @@ void sendHello(struct net_config *net_config, int sock,
 }
 
 /* Returns 1 if we should start because of clientWait, 0 otherwise */
-static int checkClientWait(participantsDb_t db, 
+static int checkClientWait(participantsDb_t db,
 			   struct net_config *net_config,
 			   time_t *firstConnected)
 {
@@ -116,7 +116,7 @@ static int checkClientWait(participantsDb_t db,
     if(net_config->max_receivers_wait &&
        (now >= *firstConnected + net_config->max_receivers_wait)) {
 #ifdef USE_SYSLOG
-	    syslog(LOG_INFO, "max wait[%d] passed: starting", 
+	    syslog(LOG_INFO, "max wait[%d] passed: starting",
 			    net_config->max_receivers_wait );
 #endif
 	return 1; /* send-wait passed: start */
@@ -132,10 +132,10 @@ static int checkClientWait(participantsDb_t db,
 	 *  wait around anyway until then.
 	 *  Otherwise, we always transfer
 	 */
-	(!net_config->min_receivers_wait || 
+	(!net_config->min_receivers_wait ||
 	 now >= *firstConnected + net_config->min_receivers_wait)) {
 #ifdef USE_SYSLOG
-	    syslog(LOG_INFO, "min receivers[%d] reached: starting", 
+	    syslog(LOG_INFO, "min receivers[%d] reached: starting",
 			    net_config->min_receivers );
 #endif
 	    return 1;
@@ -146,7 +146,7 @@ static int checkClientWait(participantsDb_t db,
 /* *****************************************************
  * Receive and process a localization enquiry by a client
  * Params:
- * fd		- file descriptor for network socket on which to receiver 
+ * fd		- file descriptor for network socket on which to receiver
  *		client requests
  * db		- participant database
  * disk_config	- disk configuration
@@ -179,13 +179,13 @@ static int mainDispatcher(int *fd, int nr,
 #else /* __MINGW32__ */
         fprintf(stderr, "Ready. Press any key to start sending data.\n");
 #endif /* __MINGW32__ */
- 
+
     if (firstConnected && !*firstConnected && udpc_nrParticipants(db)) {
 	*firstConnected = time(0);
 #ifdef USE_SYSLOG
         syslog(LOG_INFO,
 	 "first connection: min wait[%d] secs - max wait[%d] - min clients[%d]",
-	  net_config->min_receivers_wait, net_config->max_receivers_wait, 
+	  net_config->min_receivers_wait, net_config->max_receivers_wait,
 	  net_config->min_receivers );
 #endif
     }
@@ -227,7 +227,7 @@ static int mainDispatcher(int *fd, int nr,
 	}
 
 	if(firstConnected)
-	    startNow = 
+	    startNow =
 		startNow || checkClientWait(db, net_config, firstConnected);
 
 	if(!startNow &&
@@ -330,7 +330,7 @@ int startSender(struct disk_config *disk_config,
 	net_config->flags |= FLAG_SN;
       }
     }
-    
+
     fd = makeSocket(ADDR_TYPE_BCAST,
 		    net_config->net_if,
 		    NULL,
@@ -347,7 +347,7 @@ int startSender(struct disk_config *disk_config,
 			    &net_config->controlMcastAddr,
 			    RECEIVER_PORT(net_config->portBase));
 	setSocketToBroadcast(sock[0]);
-    } 
+    }
 
     if(net_config->controlMcastAddr.sin_addr.s_addr == 0) {
 	getMcastAllAddress(&net_config->controlMcastAddr,
@@ -368,7 +368,7 @@ int startSender(struct disk_config *disk_config,
 
     if(!(net_config->flags & FLAG_POINTOPOINT) &&
        ipIsZero(&net_config->dataMcastAddr)) {
-	getDefaultMcastAddress(net_config->net_if, 
+	getDefaultMcastAddress(net_config->net_if,
 			       &net_config->dataMcastAddr);
 	udpc_flprintf("Using mcast address %s\n",
 		      getIpString(&net_config->dataMcastAddr, ipBuffer));
@@ -380,7 +380,7 @@ int startSender(struct disk_config *disk_config,
 
     setPort(&net_config->dataMcastAddr, RECEIVER_PORT(net_config->portBase));
 
-    udpc_flprintf("%sUDP sender for %s at ", 
+    udpc_flprintf("%sUDP sender for %s at ",
 		  disk_config->pipeName == NULL ? "" : "Compressed ",
 		  disk_config->fileName == NULL ? "(stdin)" :
 		  disk_config->fileName);
@@ -404,7 +404,7 @@ int startSender(struct disk_config *disk_config,
        net_config->max_receivers_wait)
 	firstConnectedP = &firstConnected;
     else
-	firstConnectedP = NULL;	
+	firstConnectedP = NULL;
 
     while(!(r=mainDispatcher(sock, nr, db, net_config,
 			     &console,&tries,firstConnectedP))){}
@@ -445,7 +445,7 @@ int startSender(struct disk_config *disk_config,
 /*
  * Do the actual data transfer
  */
-static int doTransfer(int sock, 
+static int doTransfer(int sock,
 		      participantsDb_t db,
 		      struct disk_config *disk_config,
 		      struct net_config *net_config,
@@ -473,22 +473,22 @@ static int doTransfer(int sock,
 	if(udpc_isParticipantValid(db, i)) {
 	    unsigned int pRcvBuf = udpc_getParticipantRcvBuf(db, i);
 	    if(isPtP)
-		copyIpFrom(&net_config->dataMcastAddr, 
+		copyIpFrom(&net_config->dataMcastAddr,
 			   udpc_getParticipantIp(db,i));
-	    net_config->capabilities &= 
+	    net_config->capabilities &=
 		udpc_getParticipantCapabilities(db, i);
-	    if(pRcvBuf != 0 && 
+	    if(pRcvBuf != 0 &&
 	       (net_config->rcvbuf == 0 || net_config->rcvbuf > pRcvBuf))
 		net_config->rcvbuf = pRcvBuf;
 	}
 
     if(isMcastAddress(&net_config->dataMcastAddr))
-	setMcastDestination(sock, net_config->net_if, 
+	setMcastDestination(sock, net_config->net_if,
 			    &net_config->dataMcastAddr);
 
     udpc_flprintf("Starting transfer: %08x\n", net_config->capabilities);
 #ifdef USE_SYSLOG
-    syslog(LOG_INFO, 
+    syslog(LOG_INFO,
       "Starting transfer: file[%s] pipe[%s] port[%d] if[%s] participants[%d]",
 	    disk_config->fileName == NULL ? "" : disk_config->fileName,
 	    disk_config->pipeName == NULL ? "" : disk_config->pipeName,
@@ -529,8 +529,8 @@ static int doTransfer(int sock,
 	udpc_waitForProcess(pid, "Pipe");
     }
 
-    pthread_join(fifo.thread, NULL);    
-    displaySenderStats(stats, 
+    pthread_join(fifo.thread, NULL);
+    displaySenderStats(stats,
 		       net_config->blockSize, net_config->sliceSize,
 		       1);
     /* This has to be done last, or else the final sender stats will not be

@@ -30,7 +30,7 @@ console_t *prepareConsole(int fd);
  * Select on the console in addition to the read_set
  * If character available on console, stuff it into c
  */
-int selectWithConsole(console_t *con, int maxFd, 
+int selectWithConsole(console_t *con, int maxFd,
 		      fd_set *read_set, struct timeval *tv,
 		      int *keyPressed);
 

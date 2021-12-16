@@ -69,7 +69,7 @@ static void initStats(struct stats *s,
     struct timeval now;
     gettimeofday(&now, 0);
     s->fd = fd;
-    s->statPeriod = statPeriod;    
+    s->statPeriod = statPeriod;
     s->printUncompressedPos = printUncompressedPos;
     s->lastPrinted = now;
     s->noProgress = noProgress;
@@ -173,7 +173,7 @@ void displayReceiverStats(receiver_stats_t rs, int isFinal) {
     fprintf(stderr, "bytes=");
     printLongNum(rs->totalBytes);
     fprintf(stderr, " (");
-    
+
     timePassed = tv_now.tv_sec - rs->tv_start.tv_sec;
     timePassed *= 1000000;
     timePassed += tv_now.tv_usec - rs->tv_start.tv_usec;
@@ -193,7 +193,7 @@ void displayReceiverStats(receiver_stats_t rs, int isFinal) {
 
 
 struct sender_stats {
-    FILE *log;    
+    FILE *log;
     unsigned long long totalBytes;
     unsigned long long retransmissions;
     uint32_t clNo;
@@ -243,10 +243,10 @@ void senderStatsAddRetransmissions(sender_stats_t ss,
     if(ss != NULL) {
 	ss->retransmissions += retransmissions;
 #ifdef __MINGW32__
-	logprintf(ss->log, "RETX %9I64d %4d\n", ss->retransmissions, 
+	logprintf(ss->log, "RETX %9I64d %4d\n", ss->retransmissions,
 		  retransmissions);
 #else
-	logprintf(ss->log, "RETX %9lld %4d\n", ss->retransmissions, 
+	logprintf(ss->log, "RETX %9lld %4d\n", ss->retransmissions,
 		  retransmissions);
 #endif
     }
@@ -258,7 +258,7 @@ void displaySenderStats(sender_stats_t ss, unsigned int blockSize,
     unsigned long long blocks;
     unsigned int permille;
     struct timeval tv_now;
-    
+
     if(ss == NULL || ss->s.noProgress)
 	return;
 
@@ -271,7 +271,7 @@ void displaySenderStats(sender_stats_t ss, unsigned int blockSize,
 	permille = 0;
     else
 	permille = (unsigned int)((1000L * ss->retransmissions) / blocks);
-    
+
     fprintf(stderr, "bytes=");
     printLongNum(ss->totalBytes);
     fprintf(stderr, " re-xmits=%07llu (%3u.%01u%%) slice=%04d ",

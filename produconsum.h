@@ -46,7 +46,7 @@ unsigned int pc_getSize(produconsum_t pc);
 
 
 /**
- * Get total amount of data currently waiting to be consumed, without 
+ * Get total amount of data currently waiting to be consumed, without
  * blocking
  */
 unsigned int pc_getWaiting(produconsum_t pc);

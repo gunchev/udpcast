@@ -17,7 +17,7 @@
 
 struct auto_rate_t {
   int isInitialized; /* has this already been initialized? */
-  int dir; /* 1 if TIOCOUTQ is remaining space, 
+  int dir; /* 1 if TIOCOUTQ is remaining space,
 	    * 0 if TIOCOUTQ is consumed space */
   int sendbuf; /* sendbuf */
 };

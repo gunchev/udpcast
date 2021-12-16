@@ -191,7 +191,7 @@ static void usage(char *progname) {
 #ifdef HAVE_GETOPT_LONG
     fprintf(stderr, "%s [--file file] [--full-duplex] [--pipe pipe] [--portbase portbase] [--blocksize size] [--interface net-interface] [--mcast-data-address data-mcast-address] [--mcast-rdv-address mcast-rdv-address] [--max-bitrate bitrate] [--pointopoint|--nopointopoint] [--async] [--log file] [--no-progress] [--min-slice-size min] [--max-slice-size max] [--slice-size] [--ttl time-to-live] [--fec <stripes>x<redundancy>/<stripesize>] [--print-seed] [--rexmit-hello-interval interval] [--autostart autostart] [--broadcast] [--min-receivers receivers] [--min-wait sec] [--max-wait sec] [--start-timeout n] [--retries-until-drop n] [--nokbd] [--bw-period n] [--streaming] [--rehello-offset offs]"
 #ifdef DL_RATE_GOVERNOR
-	    " [--rate-governor module:parameters]" 
+	    " [--rate-governor module:parameters]"
 #endif
 #ifdef FLAG_AUTORATE
 	    " [--autorate]"
@@ -200,7 +200,7 @@ static void usage(char *progname) {
 #else /* HAVE_GETOPT_LONG */
     fprintf(stderr, "%s [-f file] [-d] [-p pipe] [-P portbase] [-b size] [-i net-interface] [-m data-mcast-address] [-M mcast-rdv-address] [-r bitrate] [-1|-2] [-a] [-l logfile] [-t time-to-live] [-F <stripes>x<redundancy>/<stripesize>][-H hello-retransmit-interval] [-S autostart] [-B] [-C min-receivers] [-w min-wait-sec] [-w max-wait-sec] [-T start-timeout] [-R n] [-k] [-I n] [-x uncomprStatPrint] [-z statPeriod] [-Z] [-Y rehello-offset]"
 #ifdef DL_RATE_GOVERNOR
-	    " [-g rate-governor:parameters ]" 
+	    " [-g rate-governor:parameters ]"
 #endif
 #ifdef FLAG_AUTORATE
 	    " [-A]"
@@ -244,7 +244,7 @@ int main(int argc, char **argv)
 #ifdef HAVE_KILL
     int doKill = 0;
 #endif
-    
+
     int r;
     struct net_config net_config;
     struct disk_config disk_config;
@@ -301,7 +301,7 @@ int main(int argc, char **argv)
 	disk_config.pipeName = strdup("/bin/gzip -c");
 	disk_config.fileName = "/dev/hda";
     } else {
-	const char *argLetters = 
+	const char *argLetters =
 	    "b:C:f:F:"
 #ifdef DL_RATE_GOVERNOR
 	    "g:"
@@ -315,7 +315,7 @@ int main(int argc, char **argv)
 	    "A"
 #endif
 	    "BcdDkLY:Z";
-        while( (c=getopt_l(argc, argv, argLetters)) 
+        while( (c=getopt_l(argc, argv, argLetters))
 	       != EOF ) {
 	    switch(c) {
 		case 'a':
@@ -327,7 +327,7 @@ int main(int argc, char **argv)
 		    break;
 		case 'd':
 		    net_config.flags |= FLAG_SN;
-		    break;		    
+		    break;
 		case 'f':
 		    disk_config.fileName=optarg;
 		    break;
@@ -384,7 +384,7 @@ int main(int argc, char **argv)
 #ifdef FLAG_AUTORATE
 		    rgInitGovernor(&net_config, &autoRate);
 #else
-		    fatal(1, 
+		    fatal(1,
 			  "Auto rate limit not supported on this platform\n");
 #endif
 		    break;
@@ -411,7 +411,7 @@ int main(int argc, char **argv)
 			char *eptr;
 			ptr = strchr(optarg, 'x');
 			if(ptr) {
-			    net_config.fec_stripes = 
+			    net_config.fec_stripes =
 				strtous(optarg, &eptr, 10);
 			    if(ptr != eptr) {
 				flprintf("%s != %s\n", ptr, eptr);
@@ -425,7 +425,7 @@ int main(int argc, char **argv)
 			net_config.fec_redundancy = strtoui(ptr, &eptr, 10);
 			if(*eptr == '/') {
 			    ptr = eptr+1;
-			    net_config.fec_stripesize = 
+			    net_config.fec_stripesize =
 				strtoui(ptr, &eptr, 10);
 			} else {
 			    net_config.fec_stripesize = 128;
@@ -473,10 +473,10 @@ int main(int argc, char **argv)
 		    break;
 	        case 'B': /* broadcast */
 		    net_config.flags |= FLAG_BCAST;
-		    break;		    
+		    break;
 	        case 's': /* sendbuf */
 		    net_config.requestedBufSize=parseSize(optarg);
-		    break;		    
+		    break;
 	        case 'C': /* min-clients */
 		    net_config.min_receivers = strtoui(optarg, 0, 0);
 		    break;
@@ -562,7 +562,7 @@ int main(int argc, char **argv)
 		unlink(pidfile);
 	    }
 	    perror("Kill");
-	    return 1;	   
+	    return 1;
 	}
 	return 0;
     }
@@ -600,23 +600,23 @@ int main(int argc, char **argv)
 #endif
     if(net_config.flags &  FLAG_ASYNC) {
 	if(net_config.nrGovernors == 0) {
-	    fprintf(stderr, 
+	    fprintf(stderr,
 		    "Async mode chosen but no rate governor ==> unsafe\n");
-	    fprintf(stderr, 
+	    fprintf(stderr,
 		    "Transmission would fail due to buffer overrun\n");
-	    fprintf(stderr, 
+	    fprintf(stderr,
 		    "Add \"--max-bitrate 9500k\" to commandline (for example)\n");
 	    exit(1);
 	}
 #ifdef BB_FEATURE_UDPCAST_FEC
-	if(! (net_config.flags & FLAG_FEC)) 
+	if(! (net_config.flags & FLAG_FEC))
 #endif
 	  {
-	    fprintf(stderr, 
+	    fprintf(stderr,
 		    "Warning: Async mode but no forward error correction\n");
-	    fprintf(stderr, 
+	    fprintf(stderr,
 		    "Transmission may fail due to packet loss\n");
-	    fprintf(stderr, 
+	    fprintf(stderr,
 		    "Add \"--fec 8x8\" to commandline\n");
 	}
     }

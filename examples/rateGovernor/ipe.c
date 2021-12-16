@@ -139,7 +139,7 @@ static void *run(void *p)
     me->havePacket = 1;
     me->lastMatchedRoute = NULL;
     pthread_cond_signal(&me->cond);
-    pthread_mutex_unlock(&me->mutex); 
+    pthread_mutex_unlock(&me->mutex);
   }
   return NULL;
 }
@@ -154,7 +154,7 @@ static void *ipe_initialize(void)
   me = calloc(sizeof(struct ipe),1);
 
   me->maxFillLevel=80;
-  
+
   pthread_mutex_init(&me->mutex, NULL);
   pthread_cond_init(&me->cond, NULL);
 

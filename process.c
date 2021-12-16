@@ -23,10 +23,10 @@ int open2(int in, int out, char **arg, int closeFd) {
 
     dupFd(in,0);
     dupFd(out,1);
- 
+
     if(closeFd != -1)
       close(closeFd);
-    
+
     execvp(arg[0], arg);
     udpc_fatal(1, "exec %s: %s\n", arg[0], strerror(errno));
   case -1: /* fork error */
@@ -50,9 +50,9 @@ static int dupFd(int src, int target, int *savedFd) {
   if(src != target) {
     if ((*savedFd = dup (target)) < 0)
       udpc_fatal(1, "dup parent_fd %d %s", target, strerror(errno));
-    
+
     if (dup2 (src, target) < 0)
-      udpc_fatal(1, "dup2 child_fd %d %s", target, strerror(errno));    
+      udpc_fatal(1, "dup2 child_fd %d %s", target, strerror(errno));
   }
 
   return 0;
@@ -63,7 +63,7 @@ static int restoreFd(int src, int target) {
     /* Do nothing... */
     return 0;
   if (dup2 (src, target) < 0)
-    udpc_fatal(1, "restore child_fd %d %s", target, strerror(errno));  
+    udpc_fatal(1, "restore child_fd %d %s", target, strerror(errno));
   close(src);
   return 0;
 }
@@ -77,7 +77,7 @@ int open2(int in, int out, char **arg, int closeFd) {
   dupFd(out, 1, &parent_out);
 
   child = _spawnvp(P_NOWAIT, arg[0], (const char* const*)&arg[1]);
- 
+
   restoreFd(parent_in, 0);
   restoreFd(parent_out, 1);
   return child;

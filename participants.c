@@ -9,7 +9,7 @@
 
 struct  participantsDb {
     uint32_t nrParticipants;
-    
+
     struct clientDesc {
 	struct sockaddr_in addr;
 	int used;
@@ -19,8 +19,8 @@ struct  participantsDb {
 };
 
 uint32_t addParticipant(participantsDb_t,
-			struct sockaddr_in *addr, 
-			uint32_t capabilities, 
+			struct sockaddr_in *addr,
+			uint32_t capabilities,
 			unsigned int rcvbuf,
 			int pointopoint);
 
@@ -30,8 +30,8 @@ int isParticipantValid(struct participantsDb *db, uint32_t i) {
 
 int removeParticipant(struct participantsDb *db, uint32_t i) {
     if(db->clientTable[i].used) {
-	char ipBuffer[16];	
-	flprintf("Disconnecting #%d (%s)\n", i, 
+	char ipBuffer[16];
+	flprintf("Disconnecting #%d (%s)\n", i,
 		 getIpString(&db->clientTable[i].addr, ipBuffer));
 #ifdef USE_SYSLOG
 	syslog(LOG_INFO, "Disconnecting #%d (%s)\n", i,
@@ -47,7 +47,7 @@ uint32_t lookupParticipant(struct participantsDb *db,
 			   struct sockaddr_in *addr) {
     unsigned int i;
     for (i=0; i < MAX_CLIENTS; i++) {
-	if (db->clientTable[i].used && 
+	if (db->clientTable[i].used &&
 	    ipIsEqual(&db->clientTable[i].addr, addr)) {
 	    return i;
 	}
@@ -60,7 +60,7 @@ uint32_t nrParticipants(participantsDb_t db) {
 }
 
 uint32_t addParticipant(participantsDb_t db,
-			struct sockaddr_in *addr, 
+			struct sockaddr_in *addr,
 			uint32_t capabilities,
 			unsigned int rcvbuf,
 			int pointopoint) {
@@ -78,7 +78,7 @@ uint32_t addParticipant(participantsDb_t db,
 	    db->clientTable[i].rcvbuf = rcvbuf;
 	    db->nrParticipants++;
 
-	    fprintf(stderr, "New connection from %s  (#%d) %08x\n", 
+	    fprintf(stderr, "New connection from %s  (#%d) %08x\n",
 		    getIpString(addr, ipBuffer), i, capabilities);
 #ifdef USE_SYSLOG
 	    syslog(LOG_INFO, "New connection from %s  (#%d)\n",
@@ -112,7 +112,7 @@ struct sockaddr_in *getParticipantIp(participantsDb_t db,
 {
     return &db->clientTable[i].addr;
 }
-    
+
 void printNotSet(participantsDb_t db, char *d)
 {
     int first=1;
