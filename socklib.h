@@ -139,7 +139,7 @@ int doReceive(int s, void *message, size_t len,
 void printMyIp(net_if_t *net_if);
 
 
-int makeSocket(addr_type_t addr_type, net_if_t *net_if, 
+int makeSocket(addr_type_t addr_type, net_if_t *net_if,
 	       struct sockaddr_in *tmpl, int port);
 
 int setSocketToBroadcast(int sock);

@@ -27,7 +27,7 @@ sender_stats_t udpc_allocSenderStats(int fd, FILE *logfile, long bwPeriod,
 				     long statPeriod, int printUncompressedPos,
 				     int noProgress);
 void udpc_senderStatsAddBytes(sender_stats_t, long bytes);
-void udpc_senderStatsAddRetransmissions(sender_stats_t ss, 
+void udpc_senderStatsAddRetransmissions(sender_stats_t ss,
 				int retransmissions);
 void udpc_displaySenderStats(sender_stats_t,int blockSize, int sliceSize,
 			     int isFinal);

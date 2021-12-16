@@ -9,7 +9,7 @@
 /**
  * This file describes the UDPCast protocol
  */
-enum opCode {    
+enum opCode {
     /* Receiver to sender */
 
     CMD_OK,	     /* all is ok, no need to retransmit anything */

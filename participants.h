@@ -22,8 +22,8 @@ int udpc_removeParticipant(participantsDb_t, int slot);
 int udpc_lookupParticipant(participantsDb_t, struct sockaddr_in *addr);
 int udpc_nrParticipants(participantsDb_t);
 int udpc_addParticipant(participantsDb_t,
-			struct sockaddr_in *addr, 
-			int capabilities, 
+			struct sockaddr_in *addr,
+			int capabilities,
 			unsigned int rcvbuf,
 			int pointopoint);
 participantsDb_t udpc_makeParticipantsDb(void);

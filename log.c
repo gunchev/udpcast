@@ -32,7 +32,7 @@ int logprintf(FILE *logfile, const char *fmt, ...) {
 static int newlineSeen=1;
 
 static int vlogprintf(FILE *logfile, const char *fmt, va_list ap) {
-    if(logfile != NULL) {	
+    if(logfile != NULL) {
 	char buf[9];
 	struct timeval tv;
 	int r;
@@ -83,11 +83,11 @@ int fatal(int code, const char *fmt, ...) {
     if(quitting)
 	_exit(code);
     quitting=1;
-    
+
     printNewlineIfNeeded();
     vfprintf(stderr, fmt, ap);
 #if 0
-    assert(0); /* make it easyer to use a debugger to see where this came 
+    assert(0); /* make it easyer to use a debugger to see where this came
 		* from */
 #endif
     exit(code);
@@ -102,7 +102,7 @@ int printLongNum(unsigned long long x) {
 
     if(x > 1000000000000LL) {
 	minDivisor = 1048576L;
-	suffix='M';	
+	suffix='M';
     } else if(x >= 1000000000) {
 	minDivisor = 1024L;
 	suffix='K';
@@ -128,7 +128,7 @@ int printLongNum(unsigned long long x) {
 	    fprintf(stderr, format, digits);
 	else
 	    fprintf(stderr, "    ");
-	    
+
 	if(digits) {
 	    nonzero = 1;
 	}

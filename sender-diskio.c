@@ -79,7 +79,7 @@ int localReader(struct fifo *fifo, int in)
 {
     while(1) {
 	int pos = pc_getConsumerPosition(fifo->freeMemQueue);
-	int bytes = 
+	int bytes =
 	    pc_consumeContiguousMinAmount(fifo->freeMemQueue, BLOCKSIZE);
 	if(bytes > (pos + bytes) % BLOCKSIZE)
 	    bytes -= (pos + bytes) % BLOCKSIZE;

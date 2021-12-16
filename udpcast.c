@@ -8,7 +8,7 @@ int udpc_parseCommand(char *pipeName, char **arg) {
     char *ptr;
     int i;
     int haveSpace;
-    
+
     haveSpace=1;
     i=0;
     for(ptr=pipeName; *ptr; ptr++) {
@@ -47,7 +47,7 @@ static int printProcessStatus(const char *message, int status)
     }
 #else /* WIFEXITED */
     if(status != 0)
-      udpc_flprintf("%s process died with code %d\n",		    
+      udpc_flprintf("%s process died with code %d\n",
 		    message, status);
 #endif /* WIFEXITED */
     return 0;

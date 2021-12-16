@@ -32,7 +32,7 @@ int writer(struct fifo *fifo, int outFile) {
 	 * If we have more than blocksize, round down to nearest blocksize
 	 * multiple
 	 */
-	if(pos + bytes != fifoSize && 
+	if(pos + bytes != fifoSize &&
 	   bytes > (pos + bytes) % BLOCKSIZE)
 	    bytes -= (pos + bytes) % BLOCKSIZE;
 #if DEBUG
@@ -57,13 +57,13 @@ int writer(struct fifo *fifo, int outFile) {
 }
 
 
-int openPipe(int outFile, 
+int openPipe(int outFile,
 	     struct disk_config *disk_config,
 	     int *pipePid) {
     if(disk_config->pipeName != NULL) {
 	char *arg[256];
 	int filedes[2];
-	
+
 	udpc_parseCommand(disk_config->pipeName, arg);
 	if(pipe(filedes) < 0) {
 	    perror("pipe");
