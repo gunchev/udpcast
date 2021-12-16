@@ -58,7 +58,7 @@ typedef unsigned char u8;
 
 #endif
 
-// for Darwin
+/* for Darwin */
 #ifdef _SIZEOF_ADDR_IFREQ
     #define IFREQ_SIZE(a) _SIZEOF_ADDR_IFREQ(a)
 #endif
