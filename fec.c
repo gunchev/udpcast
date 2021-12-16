@@ -408,7 +408,7 @@ addmul1(gf *dst1, gf *src1, gf c, int sz)
 #endif
 
 static void addmul(gf *dst, gf *src, gf c, int sz) {
-    // fprintf(stderr, "Dst=%p Src=%p, gf=%02x sz=%d\n", dst, src, c, sz);
+    /* fprintf(stderr, "Dst=%p Src=%p, gf=%02x sz=%d\n", dst, src, c, sz); */
     if (c != 0) addmul1(dst, src, c, sz);
 }
 

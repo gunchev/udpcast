@@ -140,7 +140,7 @@ static unsigned char highbit_test[] __attribute__ ((aligned (16))) =
 static unsigned char multable[16] __attribute__ ((aligned (16)));
 */
 
-//static unsigned char test_result[16] __attribute__ ((aligned (16)));
+/* static unsigned char test_result[16] __attribute__ ((aligned (16))); */
 
 static void emms(void) {
     asm volatile("emms");
@@ -462,13 +462,13 @@ int main(int argc, char **argv) {
 	x+=block[3*SIZE+i];
     for(i=0; i<256; i+=32)
 	x+=gf_mul_table[256*0x33+i];
-    // gettimeofday(&begin,0);
+    /* gettimeofday(&begin,0); */
     lbegin = rdtsc();
     slow_addmul1(block+SIZE, block+3*SIZE, 0x33, SIZE);
     lend = rdtsc();
     diffc = (unsigned long)(lend - lbegin);
-    // gettimeofday(&end,0);
-    //printf("ref time=%ld\n", TDIFF(end, begin));
+    /* gettimeofday(&end,0); */
+    /*printf("ref time=%ld\n", TDIFF(end, begin));*/
 
 
     usleep(1);
@@ -496,10 +496,10 @@ int main(int argc, char **argv) {
      }
      for(i=0; i<(255+8)*16; i+=32)
 	 prefetchnta(&exp8[i]);
-//	 x+=exp16[i];
+/*	 x+=exp16[i]; */
 #endif
-     //block4[SIZE]=0;
-     //block4[3*SIZE]=0x1;
+     /*block4[SIZE]=0;
+     block4[3*SIZE]=0x1;*/
 
     lbegin = rdtsc();
     mmx_addmul1(block4+SIZE, block4+3*SIZE, 0x33, SIZE);
@@ -510,10 +510,10 @@ int main(int argc, char **argv) {
 
      printf("x=%d\n",x);
 
-    //x+=block3[SIZE];
+    /*x+=block3[SIZE];
 
-//    block3[3*SIZE]=55;
-    //  memcpy(block3+SIZE, block3+3*SIZE, SIZE);
+    block3[3*SIZE]=55;
+    memcpy(block3+SIZE, block3+3*SIZE, SIZE);*/
 
 
     for(i=0; i<SIZE*5; i++) {
