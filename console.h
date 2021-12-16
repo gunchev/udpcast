@@ -10,9 +10,7 @@
 #ifdef __MINGW32__
 #include <winsock2.h>
 #include <winbase.h>
-#else /* !__MINGW32__ */
-#include <sys/select.h>
-#endif /* !__MINGW32__ */
+#endif /* __MINGW32__ */
 
 #define prepareConsole udpc_prepareConsole
 #define getConsoleFd udpc_getConsoleFd
