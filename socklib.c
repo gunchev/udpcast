@@ -38,6 +38,7 @@
 #include "log.h"
 #include "socklib.h"
 #include "util.h"
+#include "strparse.h"
 
 #ifndef SOL_IP
 #define SOL_IP IPPROTO_IP
@@ -167,23 +168,20 @@ void srandomTime(int printSeed) {
 #endif
 
 /* makes a socket address */
-int makeSockAddr(char *hostname, short port, struct sockaddr_in *addr)
+int makeSockAddr(char *hostname, in_port_t port, struct sockaddr_in *addr)
 {
     struct hostent *host;
 
     memset ((char *) addr, 0, sizeof(struct sockaddr_in));
     if (hostname && *hostname) {
-	char *inaddr;
-	int len;
-
 	host = gethostbyname(hostname);
 	if (host == NULL) {
 	    udpc_fatal(1, "Unknown host %s\n", hostname);
 	}
 
-	inaddr = host->h_addr_list[0];
-	len = host->h_length;
-	memcpy((void *)&((struct sockaddr_in *)addr)->sin_addr, inaddr, len);
+	memcpy((void *)&((struct sockaddr_in *)addr)->sin_addr,
+	       host->h_addr_list[0],
+	       (size_t) host->h_length);
     }
 
     ((struct sockaddr_in *)addr)->sin_family = AF_INET;
@@ -244,7 +242,7 @@ int getMyAddress(net_if_t *net_if, struct sockaddr_in *addr) {
 
 
 int getBroadCastAddress(net_if_t *net_if, struct sockaddr_in *addr,
-			short port){
+			in_port_t port){
     int r= initSockAddress(ADDR_TYPE_BCAST, net_if, INADDR_ANY, port, addr);
     if(addr->sin_addr.s_addr == 0) {
       /* Quick hack to make it work for loopback */
@@ -267,7 +265,7 @@ static int safe_inet_aton(const char *address, struct in_addr *ip) {
 
 
 int getMcastAllAddress(struct sockaddr_in *addr, const char *address,
-		       short port){
+		       in_port_t port){
     struct in_addr ip;
     int ret;
 
@@ -281,7 +279,7 @@ int getMcastAllAddress(struct sockaddr_in *addr, const char *address,
 }
 
 
-int doSend(int s, void *message, size_t len, struct sockaddr_in *to) {
+ssize_t doSend(int s, void *message, size_t len, struct sockaddr_in *to) {
 /*    flprintf("sent: %08x %d\n", *(int*) message, len);*/
 #ifdef LOSSTEST
     loseSendPacket();
@@ -289,10 +287,10 @@ int doSend(int s, void *message, size_t len, struct sockaddr_in *to) {
     return sendto(s, message, len, 0, (struct sockaddr*) to, sizeof(*to));
 }
 
-int doReceive(int s, void *message, size_t len,
-	      struct sockaddr_in *from, int portBase) {
+ssize_t doReceive(int s, void *message, size_t len,
+		  struct sockaddr_in *from, in_port_t portBase) {
     socklen_t slen;
-    int r;
+    ssize_t r;
     unsigned short port;
     char ipBuffer[16];
 
@@ -317,8 +315,10 @@ int doReceive(int s, void *message, size_t len,
 int getSendBuf(int sock) {
     int bufsize;
     socklen_t len=sizeof(int);
-    if(getsockopt(sock, SOL_SOCKET, SO_SNDBUF, (char*)&bufsize, &len) < 0)
+    if(getsockopt(sock, SOL_SOCKET, SO_SNDBUF, (char*)&bufsize, &len) < 0) {
+	perror("Get send buffer");
 	return -1;
+    }
     return bufsize;
 }
 
@@ -331,7 +331,7 @@ unsigned int getRcvBuf(int sock) {
     unsigned int bufsize;
     socklen_t len=sizeof(int);
     if(getsockopt(sock, SOL_SOCKET, SO_RCVBUF, (char *)&bufsize, &len) < 0)
-	return -1;
+	return 0;
     return bufsize;
 }
 
@@ -487,7 +487,7 @@ static char *fmtName(MIB_IFROW *ifrow) {
  * 1 yes
  * -1 unknown
  */
-static int hasLink(int s, const char *ifname) {
+static uint32_t hasLink(int s, const char *ifname) {
 
 #ifdef ETHTOOL_GLINK
   struct ifreq ifr;
@@ -500,7 +500,10 @@ static int hasLink(int s, const char *ifname) {
 
   if(ioctl(s, SIOCETHTOOL, &ifr) == -1) {
     /* Operation not supported */
-    return -1;
+	  /* unknown link status still privileged over known
+	   * disconnected */
+
+    return 1;
   } else {
     return edata.data;
   }
@@ -555,7 +558,7 @@ net_if_t *getNetIf(const char *wanted) {
 	struct ifreq *ifrp, *ifend, *chosen;
 	struct ifconf ifc;
 	int s;
-	int wantedLen=0;
+	size_t wantedLen=0;
 #else /* __MINGW32__ */
 	int i;
 
@@ -607,7 +610,7 @@ net_if_t *getNetIf(const char *wanted) {
 	ifc.ifc_len = sizeof(struct ifreq) * 10;
 	while(1) {
 	    int len = ifc.ifc_len;
-	    ifc.ifc_buf = (caddr_t) malloc(ifc.ifc_len);
+	    ifc.ifc_buf = (caddr_t) malloc((size_t)ifc.ifc_len);
 	    if(ifc.ifc_buf == NULL) {
 		udpc_fatal(1, "Out of memory error");
 	    }
@@ -635,7 +638,7 @@ net_if_t *getNetIf(const char *wanted) {
 	     ifrp++
 #endif
 	     ) {
-	    unsigned long iaddr = getSinAddr(&ifrp->ifr_addr).s_addr;
+	    in_addr_t iaddr = getSinAddr(&ifrp->ifr_addr).s_addr;
 	    int goodness;
 
 	    if(ifrp->ifr_addr.sa_family != PF_INET)
@@ -896,7 +899,7 @@ net_if_t *getNetIf(const char *wanted) {
 int makeSocket(addr_type_t addr_type,
 	       net_if_t *net_if,
 	       struct sockaddr_in *tmpl,
-	       int port) {
+	       in_port_t port) {
     int ret, s;
     struct sockaddr_in myaddr;
     in_addr_t ip=0;
@@ -958,7 +961,7 @@ void printMyIp(net_if_t *net_if)
 }
 
 char *udpc_getIpString(struct sockaddr_in *addr, char *buffer) {
-    long iaddr = htonl(getSinAddr(addr).s_addr);
+    unsigned long iaddr = htonl(getSinAddr(addr).s_addr);
     sprintf(buffer,"%ld.%ld.%ld.%ld",
 	    (iaddr >> 24) & 0xff,
 	    (iaddr >> 16) & 0xff,
@@ -1020,9 +1023,9 @@ int isAddressEqual(struct sockaddr_in *a, struct sockaddr_in *b) {
     return !memcmp((char *) a, (char *)b, 8);
 }
 
-unsigned long parseSize(char *sizeString) {
+unsigned int parseSize(char *sizeString) {
     char *eptr;
-    unsigned long size = strtoul(sizeString, &eptr, 10);
+    unsigned int size = strtoui(sizeString, &eptr, 10);
     if(eptr && *eptr) {
 	switch(*eptr) {
 	    case 'm':

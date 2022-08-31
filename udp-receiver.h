@@ -15,7 +15,7 @@
 struct client_config {
     int socks[NR_CLIENT_SOCKS];
     struct sockaddr_in serverAddr;
-    int clientNumber;
+    uint32_t clientNumber;
     int isStarted;
     pthread_t thread;
     int sender_is_newgen;
@@ -39,7 +39,7 @@ int writer(struct fifo *fifo, int fd);
 int openPipe(int disk, 
 	     struct disk_config *disk_config,
 	     int *pipePid);
-int sendGo(struct client_config *);
+ssize_t sendGo(struct client_config *);
 void sendDisconnect(int, struct client_config *);
 int startReceiver(int doWarn,
 		  struct disk_config *disk_config,

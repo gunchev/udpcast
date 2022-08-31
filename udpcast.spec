@@ -5,7 +5,7 @@
 
 Name:           udpcast
 Summary:        UDP broadcast file distribution and installation
-Version:        20200328
+Version:        20211207
 Release:        1
 License:        GPLv2+ and BSD
 Group:          Applications/System

@@ -2547,6 +2547,10 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 ac_config_headers="$ac_config_headers config.h"
 
 
+: ${CFLAGS=-O3 -Wall -DBB_FEATURE_UDPCAST_FEC -DUSE_SYSLOG -DUSE_ASSEMBLER}
+: ${LDFLAGS=-s}
+
+
 ac_ext=c
 ac_cpp='$CPP $CPPFLAGS'
 ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
@@ -4272,7 +4276,7 @@ done
 
 for ac_header in fcntl.h limits.h sys/ioctl.h sys/time.h arpa/inet.h netdb.h \
 sys/select.h sys/sockio.h sys/socket.h sys/param.h memory.h malloc.h signal.h \
-net/if.h netinet/in.h winsock2.h sys/uio.h getopt.h dlfcn.h string.h
+net/if.h netinet/in.h winsock2.h sys/uio.h getopt.h dlfcn.h string.h stdint.h
 do :
   as_ac_Header=`$as_echo "ac_cv_header_$ac_header" | $as_tr_sh`
 ac_fn_c_check_header_mongrel "$LINENO" "$ac_header" "$as_ac_Header" "$ac_includes_default"
@@ -4325,6 +4329,21 @@ _ACEOF
 
 
 fi
+
+
+ac_fn_c_check_type "$LINENO" "in_port_t" "ac_cv_type_in_port_t" "#ifdef HAVE_NETINET_IN_H
+#include <in/netinet.h>
+#endif
+"
+if test "x$ac_cv_type_in_port_t" = xyes; then :
+
+cat >>confdefs.h <<_ACEOF
+#define HAVE_IN_PORT_T 1
+_ACEOF
+
+
+fi
+
 
 
 # Check whether --enable-largefile was given.
@@ -5125,7 +5144,7 @@ cat >>confdefs.h <<_ACEOF
 _ACEOF
 
 
-for ac_func in atexit on_exit tcsetattr lseek64 snprintf inet_pton inet_aton getopt_long dlsym
+for ac_func in atexit on_exit tcsetattr lseek64 snprintf inet_pton inet_aton getopt_long dlsym strtoull
 do :
   as_ac_var=`$as_echo "ac_cv_func_$ac_func" | $as_tr_sh`
 ac_fn_c_check_func "$LINENO" "$ac_func" "$as_ac_var"

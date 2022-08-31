@@ -78,9 +78,10 @@ int openPipe(struct disk_config *config, int in, int *pidp)
 int localReader(struct fifo *fifo, int in)
 {
     while(1) {
-	int pos = pc_getConsumerPosition(fifo->freeMemQueue);
-	int bytes = 
+	unsigned int pos = pc_getConsumerPosition(fifo->freeMemQueue);
+	unsigned int bytes = 
 	    pc_consumeContiguousMinAmount(fifo->freeMemQueue, BLOCKSIZE);
+	ssize_t rbytes;
 	if(bytes > (pos + bytes) % BLOCKSIZE)
 	    bytes -= (pos + bytes) % BLOCKSIZE;
 
@@ -88,11 +89,12 @@ int localReader(struct fifo *fifo, int in)
 		/* net writer exited? */
 		break;
 
-	bytes = read(in, fifo->dataBuffer + pos, bytes);
-	if(bytes < 0) {
+	rbytes = read(in, fifo->dataBuffer + pos, bytes);
+	if(rbytes < 0) {
 	    perror("read");
 	    exit(1);
 	}
+	bytes = (unsigned int) rbytes;
 
 	if (bytes == 0) {
 	    /* the end */

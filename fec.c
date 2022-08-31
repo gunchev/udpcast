@@ -50,7 +50,7 @@
 
 #include <assert.h>
 #include "fec.h"
-#include "socklib.h"
+#include "udpcast.h"
 
 /*
  * stuff used for testing purposes only
@@ -155,10 +155,10 @@ modnn(int x)
 	x -= GF_SIZE;
 	x = (x >> GF_BITS) + (x & GF_SIZE);
     }
-    return x;
+    return (gf) x;
 }
 
-#define SWAP(a,b,t) {t tmp; tmp=a; a=b; b=tmp;}
+#define SWAP(a,b,t) do {t tmp; tmp=a; a=b; b=tmp;} while(0)
 
 /*
  * gf_mul(x,y) multiplies two numbers. If GF_BITS<=8, it is much
@@ -172,9 +172,9 @@ modnn(int x)
  */
 static gf gf_mul_table[(GF_SIZE + 1)*(GF_SIZE + 1)] 
 #ifdef WINDOWS
-__attribute__((aligned (16)))
+ATTRIBUTE((aligned (16)))
 #else
-__attribute__((aligned (256)))
+ATTRIBUTE((aligned (256)))
 #endif
 ;
 
@@ -252,9 +252,9 @@ generate_gf(void)
     mask = 1 << (GF_BITS - 1 ) ;
     for (i = GF_BITS + 1; i < GF_SIZE; i++) {
 	if (gf_exp[i - 1] >= mask)
-	    gf_exp[i] = gf_exp[GF_BITS] ^ ((gf_exp[i - 1] ^ mask) << 1);
+		gf_exp[i] = gf_exp[GF_BITS] ^ (gf)((gf_exp[i - 1] ^ mask) << 1);
 	else
-	    gf_exp[i] = gf_exp[i - 1] << 1;
+		gf_exp[i] = (gf)(gf_exp[i - 1] << 1);
 	gf_log[gf_exp[i]] = i;
     }
     /*
@@ -298,7 +298,7 @@ generate_gf(void)
 
 #define UNROLL 16 /* 1, 4, 8, 16 */
 static void
-slow_addmul1(gf *dst1, gf *src1, gf c, int sz)
+slow_addmul1(gf *dst1, gf *src1, gf c, size_t sz)
 {
     USE_GF_MULC ;
     register gf *dst = dst1, *src = src1 ;
@@ -340,7 +340,7 @@ slow_addmul1(gf *dst1, gf *src1, gf c, int sz)
 #define LOOPSIZE 8
 
 static void
-addmul1(gf *dst1, gf *src1, gf c, int sz)
+addmul1(gf *dst1, gf *src1, gf c, size_t sz)
 {
     gf *dummy0, *dummy1;
     USE_GF_MULC ;
@@ -407,7 +407,7 @@ addmul1(gf *dst1, gf *src1, gf c, int sz)
 # define addmul1 slow_addmul1
 #endif
 
-static void addmul(gf *dst, gf *src, gf c, int sz) {
+static void addmul(gf *dst, gf *src, gf c, size_t sz) {
     // fprintf(stderr, "Dst=%p Src=%p, gf=%02x sz=%d\n", dst, src, c, sz);
     if (c != 0) addmul1(dst, src, c, sz);
 }
@@ -428,7 +428,7 @@ static void addmul(gf *dst, gf *src, gf c, int sz) {
 
 #define UNROLL 16 /* 1, 4, 8, 16 */
 static void
-slow_mul1(gf *dst1, gf *src1, gf c, int sz)
+slow_mul1(gf *dst1, gf *src1, gf c, size_t sz)
 {
     USE_GF_MULC ;
     register gf *dst = dst1, *src = src1 ;
@@ -467,7 +467,7 @@ slow_mul1(gf *dst1, gf *src1, gf c, int sz)
 
 #if defined i386 && defined USE_ASSEMBLER
 static void
-mul1(gf *dst1, gf *src1, gf c, int sz)
+mul1(gf *dst1, gf *src1, gf c, size_t sz)
 {
     gf *dummy0, *dummy1;
     USE_GF_MULC ;
@@ -533,7 +533,7 @@ mul1(gf *dst1, gf *src1, gf c, int sz)
 # define mul1 slow_mul1
 #endif
 
-static inline void mul(gf *dst, gf *src, gf c, int sz) {
+static inline void mul(gf *dst, gf *src, gf c, size_t sz) {
     /*fprintf(stderr, "%p = %02x * %p\n", dst, c, src);*/
     if (c != 0) mul1(dst, src, c, sz); else memset(dst, 0, sz);
 }
@@ -546,14 +546,14 @@ static inline void mul(gf *dst, gf *src, gf c, int sz) {
  */
 DEB( int pivloops=0; int pivswaps=0 ; /* diagnostic */)
     static int
-invert_mat(gf *src, int k)
+invert_mat(gf *src, unsigned int k)
 {
     gf c, *p ;
-    int irow, icol, row, col, i, ix ;
+    unsigned int row, col, i, ix ;
 
     int error = 1 ;
-    int indxc[k];
-    int indxr[k];
+    unsigned int indxc[k];
+    unsigned int indxr[k];
     int ipiv[k];
     gf id_row[k];
 
@@ -567,11 +567,12 @@ invert_mat(gf *src, int k)
 
     for (col = 0; col < k ; col++) {
 	gf *pivot_row ;
+	unsigned int irow, icol;
 	/*
 	 * Zeroing column 'col', look for a non-zero element.
 	 * First try on the diagonal, if it fails, look elsewhere.
 	 */
-	irow = icol = -1 ;
+
 	if (ipiv[col] != 1 && src[col*k + col] != 0) {
 	    irow = col ;
 	    icol = col ;
@@ -594,11 +595,10 @@ invert_mat(gf *src, int k)
 		}
 	    }
 	}
-	if (icol == -1) {
-	    fprintf(stderr, "XXX pivot not found!\n");
-	    goto fail ;
-	}
- found_piv:
+	fprintf(stderr, "XXX pivot not found!\n");
+	goto fail ;
+
+    found_piv:
 	++(ipiv[icol]) ;
 	/*
 	 * swap rows irow and icol, so afterwards the diagonal
@@ -648,10 +648,10 @@ invert_mat(gf *src, int k)
 	}
 	id_row[icol] = 0;
     } /* done all columns */
-    for (col = k-1 ; col >= 0 ; col-- ) {
-	if (indxr[col] <0 || indxr[col] >= k)
+    for (col = k ; col-- != 0 ; ) {
+	if (indxr[col] >= k)
 	    fprintf(stderr, "AARGH, indxr[col] %d\n", indxr[col]);
-	else if (indxc[col] <0 || indxc[col] >= k)
+	else if (indxc[col] >= k)
 	    fprintf(stderr, "AARGH, indxc[col] %d\n", indxc[col]);
 	else
 	    if (indxr[col] != indxc[col] ) {
@@ -831,7 +831,7 @@ static inline void reduce(unsigned int blockSize,
 	    unsigned char *src = data_blocks[col];
 	    int j;
 	    for(j=0; j < nr_fec_blocks; j++) {
-		int blno = fec_block_nos[j];
+		unsigned int blno = fec_block_nos[j];
 		addmul(fec_blocks[j],src,inverse[blno^col^128],blockSize);
 	    }
 	}
@@ -857,12 +857,12 @@ long long invTime =0;
  * Resolves reduced system. Constructs "mini" encoding matrix, inverts
  * it, and multiply reduced vector by it.
  */
-static inline void resolve(int blockSize,
+static inline void resolve(unsigned int blockSize,
 			   unsigned char **data_blocks,
 			   unsigned char **fec_blocks,
 			   unsigned int *fec_block_nos,
 			   unsigned int *erased_blocks,
-			   short nr_fec_blocks)
+			   unsigned short nr_fec_blocks)
 {
 #ifdef PROFILE
     long long begin;
@@ -879,10 +879,10 @@ static inline void resolve(int blockSize,
      * missing data blocks to obtain the FEC blocks we have */
     for(row = 0, ptr=0; row < nr_fec_blocks; row++) {
 	int col;
-	int irow = 128 + fec_block_nos[row];
+	unsigned int irow = 128 + fec_block_nos[row];
 	/*assert(irow < fec_blocks+128);*/
 	for(col = 0; col < nr_fec_blocks; col++, ptr++) {
-	    int icol = erased_blocks[col];
+	    unsigned int icol = erased_blocks[col];
 	    matrix[ptr] = inverse[irow ^ icol];
 	}
     }
@@ -961,7 +961,7 @@ void printDetail(void) {
 }
 #endif
 
-
+ATTRIBUTE((noreturn))
 void fec_license(void)
 {
   fprintf(stderr,

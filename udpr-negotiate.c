@@ -13,6 +13,10 @@
 #include "produconsum.h"
 #include "statistics.h"
 
+#ifdef HAVE_STDINT_H
+#include <stdint.h>
+#endif
+
 #ifndef O_BINARY
 # define O_BINARY 0
 #endif
@@ -25,9 +29,9 @@
 # define O_TRUNC 0
 #endif
 
-static int sendConnectReq(struct client_config *client_config,
-			  struct net_config *net_config,
-			  int haveServerAddress) {
+static ssize_t sendConnectReq(struct client_config *client_config,
+			      struct net_config *net_config,
+			      int haveServerAddress) {
     struct connectReq connectReq;
 
     if(net_config->flags & FLAG_PASSIVE)
@@ -43,7 +47,7 @@ static int sendConnectReq(struct client_config *client_config,
       return BCAST_CONTROL(client_config->S_UCAST, connectReq);
 }
 
-int sendGo(struct client_config *client_config) {
+ssize_t sendGo(struct client_config *client_config) {
     struct go go;
     go.opCode = htons(CMD_GO);
     go.reserved = 0;
@@ -171,7 +175,7 @@ int startReceiver(int doWarn,
     client_config.clientNumber= 0; /*default number for asynchronous transfer*/
     while(1) {
 	// int len;
-	int msglen;
+	ssize_t msglen;
 	int sock;
 
 	if (!connectReqSent) {
@@ -215,7 +219,7 @@ int startReceiver(int doWarn,
 		    copyFromMessage(&net_config->dataMcastAddr,
 				    Msg.connectReply.mcastAddr);
 		}
-		if (client_config.clientNumber == -1) {
+		if (client_config.clientNumber == UINT32_MAX) {
 		    udpc_fatal(1, "Too many clients already connected\n");
 		}
 		goto break_loop;

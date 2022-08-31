@@ -1,8 +1,21 @@
 #ifndef UDPCAST_H
 #define UDPCAST_H
 
+#ifndef UDPCAST_CONFIG_H
+# define UDPCAST_CONFIG_H
+# include "config.h"
+#endif
+
 #ifdef __GNUC__
 #define UNUSED __attribute__((unused))
+#define ATTRIBUTE(x) __attribute__(x)
+#else
+#define UNUSED /**/
+#define ATTRIBUTE(x) /**/
+#endif
+
+#ifdef HAVE_STDINT_H
+#include <stdint.h>
 #endif
 
 #include "socklib.h"
@@ -44,9 +57,9 @@ struct disk_config {
 struct net_config {
     net_if_t *net_if; /* Network interface (eth0, isdn0, etc.) on which to
 		       * multicast */
-    int portBase; /* Port base */
-    int blockSize;
-    int sliceSize;
+    in_port_t portBase; /* Port base */
+    unsigned int blockSize;
+    unsigned int sliceSize;
     struct sockaddr_in controlMcastAddr;
     struct sockaddr_in dataMcastAddr;
     const char *mcastRdv;
@@ -66,11 +79,11 @@ struct net_config {
     /* int autoRate; do queue watching using TIOCOUTQ, to avoid overruns */
 
     int flags; /* non-capability command line flags */
-    int capabilities;
+    uint32_t capabilities;
 
-    int min_slice_size;
-    int default_slice_size;
-    int max_slice_size;
+    unsigned int min_slice_size;
+    unsigned int default_slice_size;
+    unsigned int max_slice_size;
     unsigned int rcvbuf;
 
     int rexmit_hello_interval; /* retransmission interval between hello's.
@@ -78,14 +91,14 @@ struct net_config {
 				*/
     int autostart; /* autostart after that many retransmits */
 
-    int requestedBufSize; /* requested receiver buffer */
+    unsigned int requestedBufSize; /* requested receiver buffer */
 
     /* sender-specific parameters */
-    int min_receivers;
+    unsigned int min_receivers;
     int max_receivers_wait;
     int min_receivers_wait;
 
-    int retriesUntilDrop;
+    unsigned int retriesUntilDrop;
 
     /* receiver-specif parameters */
     int exitWait; /* How many milliseconds to wait on program exit */
@@ -95,9 +108,9 @@ struct net_config {
 
     /* FEC config */
 #ifdef BB_FEATURE_UDPCAST_FEC
-    int fec_redundancy; /* how much fec blocks are added per group */
-    int fec_stripesize; /* size of FEC group */
-    int fec_stripes; /* number of FEC stripes per slice */
+    unsigned int fec_redundancy; /* how much fec blocks are added per group */
+    unsigned int fec_stripesize; /* size of FEC group */
+    uint16_t fec_stripes; /* number of FEC stripes per slice */
 #endif
 
     int rehelloOffset; /* how far before end will rehello packet will
@@ -116,7 +129,8 @@ struct stat_config {
 
 void *rgInitGovernor(struct net_config *cfg, struct rateGovernor_t *gov);
 void rgParseRateGovernor(struct net_config *net_config, char *rg);
-void rgWaitAll(struct net_config *cfg, int sock, in_addr_t ip, int size);
+void rgWaitAll(struct net_config *cfg, int sock, in_addr_t ip,
+	       unsigned long size);
 void rgShutdownAll(struct net_config *cfg);
 
 /**

@@ -56,7 +56,7 @@ static void initialize(struct auto_rate_t *autoRate_l, int sock) {
 /**
  * If queue gets almost full, slow down things
  */
-static void doAutoRate(void *data, int sock, in_addr_t ip, long size)
+static void doAutoRate(void *data, int sock, in_addr_t ip, unsigned long size)
 {
     struct auto_rate_t *autoRate_l = (struct auto_rate_t*) data;
     (void) ip;
@@ -69,7 +69,7 @@ static void doAutoRate(void *data, int sock, in_addr_t ip, long size)
 	if(autoRate_l->dir)
 	    r = autoRate_l->sendbuf - r;
 
-	if(r < autoRate_l->sendbuf / 2 - size)
+	if(r < autoRate_l->sendbuf / 2 - (long) size)
 	    return;
 #if DEBUG
 	flprintf("Queue full %d/%d... Waiting\n", r, autoRate_l->sendbuf);

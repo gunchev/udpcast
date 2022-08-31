@@ -1,3 +1,9 @@
+udpcast (20211207) stable; urgency=low
+
+  * Fixed lots of compiler warnings
+  * Make sure rate limiting works with high rates
+
+ -- Alain Knaff <alain@knaff.lu>  Tue,  7 Dec 2021 23:44:51 +0100
 udpcast (20200328) stable; urgency=low
 
   * Return a non-zero exit status if timeout expires at start

@@ -37,21 +37,21 @@ typedef enum slice_state {
 #ifdef BB_FEATURE_UDPCAST_FEC
 struct fec_desc {
     unsigned char *adr; /* address of FEC block */
-    int fecBlockNo; /* number of FEC block */
-    int erasedBlockNo; /* erased data block */
+    unsigned int fecBlockNo; /* number of FEC block */
+    unsigned int erasedBlockNo; /* erased data block */
 };
 #endif
 
 typedef struct slice {
     int magic;
     volatile slice_state_t state;
-    int base; /* base offset of beginning of slice */
+    unsigned int base; /* base offset of beginning of slice */
     int sliceNo; /* current slice number */
-    int blocksTransferred; /* blocks transferred during this slice */
-    int dataBlocksTransferred; /* data blocks transferred during this slice */
-    int bytes; /* number of bytes in this slice (or 0, if unknown) */
+    unsigned int blocksTransferred; /* blocks transferred during this slice */
+    unsigned int dataBlocksTransferred; /* data blocks transferred during this slice */
+    unsigned int bytes; /* number of bytes in this slice (or 0, if unknown) */
     int bytesKnown; /* is number of bytes known yet? */
-    int freePos; /* where the next data part will be stored to */
+    unsigned int freePos; /* where the next data part will be stored to */
     struct retransmit retransmit;
 
 
@@ -59,10 +59,10 @@ typedef struct slice {
     short missing_data_blocks[MAX_FEC_INTERLEAVE]; 
 
 #ifdef BB_FEATURE_UDPCAST_FEC
-    int fec_stripes; /* number of stripes for FEC */
+    uint16_t fec_stripes; /* number of stripes for FEC */
 
     /* How many FEC blocs do we have per stripe? */
-    short fec_blocks[MAX_FEC_INTERLEAVE];
+    unsigned short fec_blocks[MAX_FEC_INTERLEAVE];
 
     struct fec_desc fec_descs[MAX_SLICE_SIZE];
 #endif
@@ -137,8 +137,10 @@ struct clientState {
 
 static void printMissedBlockMap(struct clientState *clst, slice_t slice)
 {
-    int i, first=1;
-    int blocksInSlice = (slice->bytes +  clst->net_config->blockSize - 1) / 
+    unsigned int i;
+    int first=1;
+    unsigned int blocksInSlice =
+	    (slice->bytes +  clst->net_config->blockSize - 1) / 
 	clst->net_config->blockSize;
 
     for(i=0; i< blocksInSlice ; i++) {
@@ -185,24 +187,24 @@ static void printMissedBlockMap(struct clientState *clst, slice_t slice)
 #endif
 }
 
-static int sendOk(struct client_config *client_config, unsigned int sliceNo)
+static ssize_t sendOk(struct client_config *client_config, int sliceNo)
 {
     struct ok ok;
     ok.opCode = htons(CMD_OK);
     ok.reserved = 0;
-    ok.sliceNo = htonl(sliceNo);
+    ok.sliceNo = htonl((uint32_t)sliceNo);
     return SSEND(ok);
 }
 
-static int sendRetransmit(struct clientState *clst,
-			  struct slice *slice,
-			  int rxmit) {
+static ssize_t sendRetransmit(struct clientState *clst,
+			      struct slice *slice,
+			      unsigned int rxmit) {
     struct client_config *client_config = clst->client_config;
 
     assert(slice->magic == SLICEMAGIC);
     slice->retransmit.opCode = htons(CMD_RETRANSMIT);
     slice->retransmit.reserved = 0;
-    slice->retransmit.sliceNo = htonl(slice->sliceNo);
+    slice->retransmit.sliceNo = htonl((uint32_t)slice->sliceNo);
     slice->retransmit.rxmit = htonl(rxmit);
     return SSEND(slice->retransmit);
 }
@@ -210,7 +212,7 @@ static int sendRetransmit(struct clientState *clst,
 
 static unsigned char *getBlockSpace(struct clientState *clst)
 {
-    int pos;
+    unsigned int pos;
 
     if(clst->localPos) {
 	clst->localPos--;
@@ -226,7 +228,7 @@ static unsigned char *getBlockSpace(struct clientState *clst)
 #ifdef BB_FEATURE_UDPCAST_FEC
 static void freeBlockSpace(struct clientState *clst, unsigned char *block)
 {
-    int pos = pc_getProducerPosition(clst->freeBlocks_pc);
+    unsigned int pos = pc_getProducerPosition(clst->freeBlocks_pc);
     assert(block != 0);
     clst->blockAddresses[pos] = block;
     pc_produce(clst->freeBlocks_pc, 1);
@@ -284,7 +286,7 @@ static struct slice *initSlice(struct clientState *clst,
 static struct slice *newSlice(struct clientState *clst, int sliceNo)
 {
     struct slice *slice=NULL;
-    int i;
+    unsigned int i;
 
 #if DEBUG
     flprintf("Getting new slice %d\n", 
@@ -318,7 +320,7 @@ static struct slice *findSlice(struct clientState *clst, int sliceNo);
 
 static void setSliceBytes(struct slice *slice, 
 			  struct clientState *clst,
-			  int bytes);
+			  unsigned int bytes);
 
 static void fakeSliceComplete(struct clientState *clst)
 {
@@ -343,7 +345,7 @@ static struct slice *findSlice(struct clientState *clst, int sliceNo)
     }
     if(sliceNo <= clst->currentSliceNo) {
 	struct slice *slice = clst->currentSlice;
-	int pos = slice - clst->slices;
+	ptrdiff_t pos = slice - clst->slices;
 	assert(slice == NULL || slice->magic == SLICEMAGIC);
 	while(slice->sliceNo != sliceNo) {
 	    if(slice->state == SLICE_FREE)
@@ -381,7 +383,7 @@ static struct slice *findSlice(struct clientState *clst, int sliceNo)
 
 static void setSliceBytes(struct slice *slice, 
 			  struct clientState *clst,
-			  int bytes) {
+			  unsigned int bytes) {
     assert(slice->magic == SLICEMAGIC);
     if(slice->bytesKnown) {
 	if(slice->bytes != bytes) {
@@ -433,8 +435,8 @@ static void advanceReceivedPointer(struct clientState *clst) {
 static void cleanupSlices(struct clientState *clst, unsigned int doneState)
 {
     while(1) {	
-	int pos = pc_getProducerPosition(clst->free_slices_pc);
-	int bytes;
+	unsigned int pos = pc_getProducerPosition(clst->free_slices_pc);
+	unsigned int bytes;
 	slice_t slice = &clst->slices[pos];
 #if DEBUG
 	flprintf("Attempting to clean slice %d %d %d %d at %d\n", 
@@ -474,7 +476,7 @@ static void cleanupSlices(struct clientState *clst, unsigned int doneState)
 static void checkSliceComplete(struct clientState *clst,
 			       struct slice *slice)
 {
-    int blocksInSlice;
+    unsigned int blocksInSlice;
 
     assert(slice->magic == SLICEMAGIC);
     if(slice->state != SLICE_RECEIVING) 
@@ -514,7 +516,7 @@ static void checkSliceComplete(struct clientState *clst,
 	advanceReceivedPointer(clst);
 #ifdef BB_FEATURE_UDPCAST_FEC
 	if(clst->use_fec) {
-	    int n = pc_getProducerPosition(clst->fec_data_pc);
+	    unsigned int n = pc_getProducerPosition(clst->fec_data_pc);
 	    assert(slice->state == SLICE_DONE || slice->state == SLICE_FEC);
 	    clst->fec_slices[n] = slice;
 	    pc_produce(clst->fec_data_pc, 1);
@@ -525,7 +527,8 @@ static void checkSliceComplete(struct clientState *clst,
 }
 
 #ifdef BB_FEATURE_UDPCAST_FEC
-static int getSliceBlocks(struct slice *slice, struct net_config *net_config)
+static unsigned int getSliceBlocks(struct slice *slice,
+				   struct net_config *net_config)
 {
     assert(net_config->blockSize != 0);
     return (slice->bytes + net_config->blockSize - 1) / net_config->blockSize;
@@ -533,27 +536,27 @@ static int getSliceBlocks(struct slice *slice, struct net_config *net_config)
 
 static void fec_decode_one_stripe(struct clientState *clst,
 				  struct slice *slice,
-				  int stripe,
-				  int bytes,
-				  int stripes,
-				  short nr_fec_blocks,
+				  unsigned int stripe,
+				  unsigned int bytes,
+				  unsigned int stripes,
+				  unsigned short nr_fec_blocks,
 				  struct fec_desc *fec_descs) {
     struct fifo *fifo = clst->fifo;
     struct net_config *config = clst->net_config;
     unsigned char *map = slice->retransmit.map;
 
     /*    int nrBlocks = (bytes + data->blockSize - 1) / data->blockSize; */
-    int nrBlocks = getSliceBlocks(slice, config);
-    int leftOver = bytes % config->blockSize;
-    int j;
+    unsigned int nrBlocks = getSliceBlocks(slice, config);
+    unsigned int leftOver = bytes % config->blockSize;
+    unsigned int j;
 
     unsigned char *fec_blocks[nr_fec_blocks];
     unsigned int fec_block_nos[nr_fec_blocks];
     unsigned int erased_blocks[nr_fec_blocks];
     unsigned char *data_blocks[128];
 
-    int erasedIdx = stripe;
-    int i;
+    unsigned int erasedIdx = stripe;
+    unsigned int i;
     for(i=stripe, j=0; i<nrBlocks; i+= stripes) {
 	if(!BIT_ISSET(i, map)) {
 #if DEBUG
@@ -589,7 +592,7 @@ static void fec_decode_one_stripe(struct clientState *clst,
 static THREAD_RETURN fecMain(void *args0)
 {
     struct clientState *clst = (struct clientState *) args0;
-    int pos;
+    unsigned int pos;
     struct fifo *fifo = clst->fifo;
     struct net_config *config = clst->net_config;
     
@@ -611,9 +614,9 @@ static THREAD_RETURN fecMain(void *args0)
 	     * circle ... */
 	    continue;
 	if(slice->state == SLICE_FEC) {
-	    int stripes = slice->fec_stripes;
+	    unsigned int stripes = slice->fec_stripes;
 	    struct fec_desc *fec_descs = slice->fec_descs;
-	    int stripe;
+	    unsigned int stripe;
 	    
 	    /* Record the addresses of FEC blocks */
 	    for(stripe=0; stripe<stripes; stripe++) {
@@ -628,7 +631,7 @@ static THREAD_RETURN fecMain(void *args0)
 
 	    slice->state = SLICE_FEC_DONE;
 	    for(stripe=0; stripe<stripes; stripe++) {
-		int i;
+		unsigned int i;
 		assert(slice->missing_data_blocks[stripe] >=
 		       slice->fec_blocks[stripe]);
 		for(i=0; i<slice->fec_blocks[stripe]; i++) {
@@ -655,8 +658,8 @@ static void initClstForFec(struct clientState *clst)
 
 static void initSliceForFec(struct clientState *clst, struct slice *slice)
 {
-    int i, j;
-    int blocksInSlice;
+    unsigned int i, j;
+    unsigned int blocksInSlice;
 
     assert(slice->magic == SLICEMAGIC);
 
@@ -677,7 +680,7 @@ static void initSliceForFec(struct clientState *clst, struct slice *slice)
 
     for(i=0; i< (blocksInSlice+7)/8 ; i++) {
 	if(slice->retransmit.map[i] != 0xff) {
-	    int max = i*8+8;
+	    unsigned int max = i*8+8;
 	    if(max > blocksInSlice)
 		max = blocksInSlice;
 	    for(j=i*8; j < max; j++)
@@ -690,16 +693,16 @@ static void initSliceForFec(struct clientState *clst, struct slice *slice)
 
 
 static int processFecBlock(struct clientState *clst,
-			   int stripes,
+			   uint16_t stripes,
 			   int sliceNo,
-			   int blockNo,
-			   int bytes)
+			   unsigned int blockNo,
+			   unsigned int bytes)
 {
     struct slice *slice = findSlice(clst, sliceNo);
     unsigned char *shouldAddress, *isAddress;
-    int stripe;
+    unsigned int stripe;
     struct fec_desc *desc;
-    int adr;
+    unsigned int adr;
 
 #if DEBUG
     flprintf("Handling FEC packet %d %d %d %d\n",
@@ -745,7 +748,7 @@ static int processFecBlock(struct clientState *clst,
     adr = slice->fec_blocks[stripe]*stripes+stripe;
 
     {
-	int i;
+	unsigned int i;
 	/* check for duplicates, in case of retransmission... */
 	for(i=stripe; i<adr; i+= stripes) {
 	    desc = &slice->fec_descs[i];
@@ -774,12 +777,12 @@ static int processFecBlock(struct clientState *clst,
 #endif
 
 static int processDataBlock(struct clientState *clst,
-			    int sliceNo,
-			    int blockNo,
-			    int bytes)
+			    unsigned int sliceNo,
+			    unsigned int blockNo,
+			    unsigned int bytes)
 {
     struct fifo *fifo = clst->fifo;
-    struct slice *slice = findSlice(clst, sliceNo);
+    struct slice *slice = findSlice(clst, (int) sliceNo);
     unsigned char *shouldAddress, *isAddress;
 
     assert(slice == NULL || slice->magic == SLICEMAGIC);
@@ -797,7 +800,7 @@ static int processDataBlock(struct clientState *clst,
 	return 0;
     }
 
-    if(sliceNo > clst->currentSliceNo+2)
+    if((int) sliceNo > clst->currentSliceNo+2)
 	udpc_fatal(1, "We have been dropped by sender\n");
 
     if(BIT_ISSET(blockNo, slice->retransmit.map)) {
@@ -828,12 +831,12 @@ static int processDataBlock(struct clientState *clst,
     SET_BIT(blockNo, slice->retransmit.map);
 #ifdef BB_FEATURE_UDPCAST_FEC
     if(slice->fec_stripes) {
-	int stripe = blockNo % slice->fec_stripes;
+	unsigned int stripe = blockNo % slice->fec_stripes;
 	slice->missing_data_blocks[stripe]--;
 	assert(slice->missing_data_blocks[stripe] >= 0);
 	if(slice->missing_data_blocks[stripe] <
 	   slice->fec_blocks[stripe]) {
-	    int blockIdx;
+	    unsigned int blockIdx;
 	    /* FIXME: FEC block should be enqueued in local queue here...*/
 	    slice->fec_blocks[stripe]--;
 	    blockIdx = stripe+slice->fec_blocks[stripe]*slice->fec_stripes;
@@ -854,11 +857,13 @@ static int processDataBlock(struct clientState *clst,
     return 0;
 }
 
-static int processReqAck(struct clientState *clst,
-			 int sliceNo, int bytes, int rxmit)
+static ssize_t processReqAck(struct clientState *clst,
+			     int sliceNo,
+			     unsigned int bytes,
+			     unsigned int rxmit)
 {   
     struct slice *slice = findSlice(clst, sliceNo);
-    int blocksInSlice;
+    unsigned int blocksInSlice;
     char *readySet = (char *) clst->data_hdr.msg_iov[1].iov_base;
 
 #if DEBUG
@@ -936,9 +941,9 @@ static void closeAllExcept(struct clientState *clst, int fd) {
 /* Receives a message from network, and dispatches it
  * Only called in network reception thread
  */
-static int dispatchMessage(struct clientState *clst)
+static ssize_t dispatchMessage(struct clientState *clst)
 {
-    int ret;
+    ssize_t ret;
     struct sockaddr_in lserver;
     struct fifo *fifo = clst->fifo;
     int fd = -1;
@@ -1109,7 +1114,7 @@ static int dispatchMessage(struct clientState *clst)
 	    clst->client_config->isStarted = 1;
 	    return processFecBlock(clst,
 				   ntohs(clst->Msg.fecBlock.stripes),
-				   ntohl(clst->Msg.fecBlock.sliceNo),
+				   (int)ntohl(clst->Msg.fecBlock.sliceNo),
 				   ntohs(clst->Msg.fecBlock.blockNo),
 				   ntohl(clst->Msg.fecBlock.bytes));
 #endif
@@ -1118,7 +1123,7 @@ static int dispatchMessage(struct clientState *clst)
 	    receiverStatsStartTimer(clst->stats);
 	    clst->client_config->isStarted = 1;
 	    return processReqAck(clst,
-				 ntohl(clst->Msg.reqack.sliceNo),
+				 (int)ntohl(clst->Msg.reqack.sliceNo),
 				 ntohl(clst->Msg.reqack.bytes),
 				 ntohl(clst->Msg.reqack.rxmit));
 	case CMD_HELLO_STREAMING:
@@ -1180,7 +1185,7 @@ int spawnNetReceiver(struct fifo *fifo,
 		     struct net_config *net_config,
 		     receiver_stats_t stats)
 {
-    int i;
+    unsigned int i;
     struct clientState  *clst = MALLOC(struct clientState);
     clst->fifo = fifo;
     clst->client_config = client_config;

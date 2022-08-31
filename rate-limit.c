@@ -1,3 +1,16 @@
+#ifndef UDPCAST_CONFIG_H
+# define UDPCAST_CONFIG_H
+# include "config.h"
+#endif
+
+#include <assert.h>
+#include <errno.h>
+#ifdef HAVE_LIMITS_H
+#include <limits.h>
+#endif
+#ifdef HAVE_STDINT_H
+#include <stdint.h>
+#endif
 #include <sys/types.h>
 #include <sys/time.h>
 #include <unistd.h>
@@ -8,25 +21,50 @@
 #include "rateGovernor.h"
 
 struct rate_limit {
-    long long date;
-    long long realDate;
-    int bitrate;
-    int queueSize;
+    uint64_t date;
+    uint64_t realDate;
+    uint64_t bitrate;
+    uint64_t queueSize;
 };
 
-#define LLMILLION 1000000LL
+#define MILLION 1000000U
 
-static unsigned long parseSpeed(const char *speedString) {
+static uint64_t parseSpeed(const char *speedString) {
     char *eptr;
-    unsigned long speed = strtoul(speedString, &eptr, 10);
+    uint64_t speed;
+    assert(speedString);
+    if (*speedString == '\0')
+	fatal(1, "Empty string specified for speed!\n");
+    errno = 0;
+#ifdef HAVE_STRTOULL
+    speed = strtoul(speedString, &eptr, 10);
+    if(speed > ULONG_MAX / 2)
+	 fatal(1, "Speed out of range!\n"); 
+#else
+    speed = strtoull(speedString, &eptr, 10);
+    if(speed > UINT64_MAX / 2)
+	 fatal(1, "Speed out of range!\n"); 
+#endif
+    if (errno == ERANGE)
+	 fatal(1, "Speed out of range!\n"); 
     if(eptr && *eptr) {
 	switch(*eptr) {
+	    case 'g':
+	    case 'G':
+	        if (speed > UINT64_MAX / 1000000000)
+		    fatal(1, "Speed out of range!\n");
+		speed *= 1000000000;
+		break;
 	    case 'm':
 	    case 'M':
+		if (speed > UINT64_MAX / 1000000)
+                    fatal(1, "Speed out of range!\n");  
 		speed *= 1000000;
 		break;
 	    case 'k':
 	    case 'K':
+		if (speed > UINT64_MAX / 1000)
+                    fatal(1, "Speed out of range!\n"); 
 		speed *= 1000;
 		break;
 	    case '\0':
@@ -34,17 +72,23 @@ static unsigned long parseSpeed(const char *speedString) {
 	    default:
 		udpc_fatal(1, "Unit %c unsupported\n", *eptr);
 	}
+	++eptr;
+        if (*eptr != '\0') {
+            udpc_fatal(1, "Valid speed input ends with garbage '%s'!\n", eptr);
+        }
     }
+    if (speed < 1)
+        udpc_fatal(1, "Speed limit of 0 bits per second takes forever!\n");
     return speed;
 }
 
-static long long getLongLongDate(void) {
-    long long date;
+static uint64_t getU64Date(void) {
+    uint64_t date;
     struct timeval tv;
     gettimeofday(&tv,0);
-    date = (long long) tv.tv_sec;
-    date *= LLMILLION;
-    date += (long long) tv.tv_usec;
+    date = (uint64_t) tv.tv_sec;
+    date *= MILLION;
+    date += (uint64_t) tv.tv_usec;
     return date;
 }
 
@@ -52,7 +96,7 @@ static void *allocRateLimit(void) {
     struct rate_limit *rateLimit = MALLOC(struct rate_limit);
     if(rateLimit == NULL)
 	return NULL;
-    rateLimit->date = getLongLongDate();
+    rateLimit->date = getU64Date();
     rateLimit->bitrate = 0;
     rateLimit->queueSize = 0;
     return rateLimit;
@@ -66,15 +110,15 @@ static void setProp(void *data, const char *key, const char *bitrate) {
 	rateLimit->bitrate = parseSpeed(bitrate);
 }
 
-static void doRateLimit(void *data, int fd, in_addr_t ip, long size) {
+static void doRateLimit(void *data, int fd, in_addr_t ip, unsigned long size) {
     struct rate_limit *rateLimit = (struct rate_limit *) data;
     (void) fd;
     (void) ip;
     if(rateLimit) {
-	long long now = getLongLongDate();
-	long long elapsed = now - rateLimit->date;
-	long long bits = elapsed * ((long long)rateLimit->bitrate) / LLMILLION;
-	int sleepTime;
+	uint64_t now = getU64Date();
+	uint64_t elapsed = now - rateLimit->date;
+	uint64_t bits = elapsed * ((uint64_t)rateLimit->bitrate) / MILLION;
+	uint64_t sleepTime;
 	size += 28; /* IP header size */
 
 	if(bits >= rateLimit->queueSize * 8) {
@@ -84,13 +128,13 @@ static void doRateLimit(void *data, int fd, in_addr_t ip, long size) {
 	}
 	
 	rateLimit->queueSize -= bits / 8;
-	rateLimit->date += bits * LLMILLION / rateLimit->bitrate;
+	rateLimit->date += bits * MILLION / rateLimit->bitrate;
 	rateLimit->realDate = now;
-	sleepTime = rateLimit->queueSize * 8 * LLMILLION / rateLimit->bitrate;
+	sleepTime = rateLimit->queueSize * 8 * MILLION / rateLimit->bitrate;
 	if(sleepTime > 40000 || rateLimit->queueSize >= 100000) {
 	    sleepTime -= 10000;
 	    sleepTime -= sleepTime % 10000;
-	    usleep(sleepTime);
+	    usleep((useconds_t)sleepTime);
 	}
 	rateLimit->queueSize += size;
     }

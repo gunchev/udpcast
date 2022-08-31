@@ -23,10 +23,10 @@
 #define DEBUG 0
 
 typedef struct slice {
-    int base; /* base address of slice in buffer */
-    int sliceNo;
-    int bytes; /* bytes in slice */
-    int nextBlock; /* index of next buffer to be transmitted */
+    unsigned int base; /* base address of slice in buffer */
+    unsigned int sliceNo;
+    unsigned int bytes; /* bytes in slice */
+    unsigned int nextBlock; /* index of next buffer to be transmitted */
     volatile enum { 
 	SLICE_FREE, /* free slice, and in the queue of free slices */
 	SLICE_NEW, /* newly allocated. FEC calculation and first 
@@ -41,9 +41,10 @@ typedef struct slice {
     char isXmittedMap[MAX_SLICE_SIZE / BITS_PER_CHAR]; 
    /* blocks which have already been retransmitted during this round*/
 
-    int rxmitId; /* used to distinguish among several retransmission 
-		  * requests, so that we can easily discard answers to "old"
-		  * requests */
+    unsigned int rxmitId; /* used to distinguish among several
+			   * retransmission requests, so that we can
+			   * easily discard answers to "old"
+			   * requests */
 
     /* This structure is used to keep track of clients who answered, and
      * to make the reqack message
@@ -55,11 +56,11 @@ typedef struct slice {
 
     char answeredSet[MAX_CLIENTS / BITS_PER_CHAR]; /* who answered at all? */
 
-    int nrReady; /* number of participants who are ready */
-    int nrAnswered; /* number of participants who answered; */
+    unsigned int nrReady; /* number of participants who are ready */
+    unsigned int nrAnswered; /* number of participants who answered; */
     int needRxmit; /* does this need retransmission? */
-    int lastGoodBlock; /* last good block of slice (i.e. last block having not
-			* needed retransmission */
+    unsigned int lastGoodBlock; /* last good block of slice (i.e. last block
+				   having not needed retransmission */
 
     int lastReqack; /* last req ack sent (debug) */
 #ifdef BB_FEATURE_UDPCAST_FEC
@@ -75,7 +76,7 @@ struct returnChannel {
     produconsum_t incoming; /* where to enqueue incoming messages */
     produconsum_t freeSpace; /* free space */
     struct {
-	int clNo; /* client number */
+	uint32_t clNo; /* client number */
 	union message msg; /* its message */
     } q[QUEUE_SIZE];
     struct net_config *config;
@@ -102,7 +103,8 @@ typedef struct senderState {
 } *sender_state_t;
 
 
-static int getSliceBlocks(struct slice *slice, struct net_config *net_config)
+static unsigned int getSliceBlocks(struct slice *slice,
+				   struct net_config *net_config)
 {
     return (slice->bytes + net_config->blockSize - 1) / net_config->blockSize;
 }
@@ -137,7 +139,7 @@ static int freeSlice(sender_state_t sendst, struct slice *slice) {
 #endif
     slice->state = SLICE_PRE_FREE;
     while(1) {
-	int pos = pc_getProducerPosition(sendst->free_slices_pc);
+	unsigned int pos = pc_getProducerPosition(sendst->free_slices_pc);
 	if(sendst->slices[pos].state == SLICE_PRE_FREE)
 	    sendst->slices[pos].state = SLICE_FREE;
 	else
@@ -147,10 +149,10 @@ static int freeSlice(sender_state_t sendst, struct slice *slice) {
     return 0;
 }
 
-static struct slice *makeSlice(sender_state_t sendst, int sliceNo) {
+static struct slice *makeSlice(sender_state_t sendst, unsigned int sliceNo) {
     struct net_config *config = sendst->config;
     struct fifo *fifo = sendst->fifo;
-    int i;
+    unsigned int i;
     struct slice *slice=NULL;
 
     pc_consume(sendst->free_slices_pc, 1);
@@ -190,13 +192,13 @@ static struct slice *makeSlice(sender_state_t sendst, int sliceNo) {
 
 static int sendRawData(int sock,
 		       struct net_config *config, 
-		       char *header, int headerSize, 
-		       unsigned char *data, int dataSize)
+		       char *header, unsigned int headerSize, 
+		       unsigned char *data, unsigned int dataSize)
 {
     struct iovec iov[2];
     struct msghdr hdr;
-    int packetSize;
-    int ret;
+    unsigned int packetSize;
+    ssize_t ret;
     
     iov[0].iov_base = header;
     iov[0].iov_len = headerSize;
@@ -212,6 +214,14 @@ static int sendRawData(int sock,
 
     packetSize = dataSize + headerSize;
     rgWaitAll(config, sock, config->dataMcastAddr.sin_addr.s_addr, packetSize);
+
+#ifdef DEBUG_DROP
+    if(random() % 1000 < DEBUG_DROP) {
+	fprintf(stderr, "\nDropping\n");
+	return 0;
+    }
+#endif
+
     ret = sendmsg(sock, &hdr, 0);
     if (ret < 0) {
 	char ipBuffer[16];
@@ -225,29 +235,31 @@ static int sendRawData(int sock,
 }
 
 
-static int transmitDataBlock(sender_state_t sendst, struct slice *slice, int i)
+static int transmitDataBlock(sender_state_t sendst, struct slice *slice,
+			     unsigned int i)
 {
     struct fifo *fifo = sendst->fifo;
     struct net_config *config = sendst->config;
     struct dataBlock msg;
-    int size;
+    unsigned int size;
 
     assert(i < MAX_SLICE_SIZE);
     
     msg.opCode  = htons(CMD_DATA);
     msg.sliceNo = htonl(slice->sliceNo);
-    msg.blockNo = htons(i);
+    msg.blockNo = htons((uint16_t) i);
 
     msg.reserved = 0;
     msg.reserved2 = 0;
     msg.bytes = htonl(slice->bytes);
 
-    size = slice->bytes - i * config->blockSize;
-    if(size < 0)
+    if(slice->bytes < i * config->blockSize)
 	size = 0;
+    else
+	size = slice->bytes - i * config->blockSize;
     if(size > config->blockSize)
 	size = config->blockSize;
-    
+
     sendRawData(sendst->socket, config, 
 		(char *) &msg, sizeof(msg),
 		fifo->dataBuffer + 
@@ -257,7 +269,8 @@ static int transmitDataBlock(sender_state_t sendst, struct slice *slice, int i)
 }
 
 #ifdef BB_FEATURE_UDPCAST_FEC
-static int transmitFecBlock(sender_state_t sendst, struct slice *slice, int i)
+static int transmitFecBlock(sender_state_t sendst, struct slice *slice,
+			    unsigned int i)
 {
     struct net_config *config = sendst->config;
     struct fecBlock msg;
@@ -271,7 +284,7 @@ static int transmitFecBlock(sender_state_t sendst, struct slice *slice, int i)
     msg.opCode  = htons(CMD_FEC);
     msg.stripes = htons(config->fec_stripes);
     msg.sliceNo = htonl(slice->sliceNo);
-    msg.blockNo = htons(i);
+    msg.blockNo = htons((uint16_t)i);
     msg.reserved2 = 0;
     msg.bytes = htonl(slice->bytes);    
     sendRawData(sendst->socket, sendst->config, 
@@ -286,11 +299,12 @@ static int sendSlice(sender_state_t sendst, struct slice *slice,
 {    
     struct net_config *config = sendst->config;
 
-    int nrBlocks, i, rehello;
+    unsigned int nrBlocks, i;
+    int rehello;
 #ifdef BB_FEATURE_UDPCAST_FEC
-    int fecBlocks;
+    unsigned int fecBlocks;
 #endif
-    int retransmissions=0;
+    unsigned int retransmissions=0;
 
     if(retransmitting) {
 	slice->nextBlock = 0;
@@ -320,7 +334,7 @@ static int sendSlice(sender_state_t sendst, struct slice *slice,
 #endif
 
     if((sendst->config->flags & FLAG_STREAMING)) {
-      rehello = nrBlocks - sendst->config->rehelloOffset;
+      rehello = (int) nrBlocks - sendst->config->rehelloOffset;
       if(rehello < 0)
 	rehello = 0;
     } else {
@@ -349,7 +363,7 @@ static int sendSlice(sender_state_t sendst, struct slice *slice,
 #endif
 	}
 
-	if(i == rehello) {
+	if((int)i == rehello) {
 	    sendHello(sendst->config, sendst->socket, 1);
 	}
 
@@ -442,7 +456,7 @@ static int sendReqack(struct slice *slice, struct net_config *net_config,
     }
 
     if(!(net_config->flags & FLAG_SN) && slice->rxmitId != 0) {
-	int nrBlocks;
+	unsigned int nrBlocks;
 	nrBlocks = getSliceBlocks(slice, net_config);
 #if DEBUG
 	flprintf("nrBlocks=%d lastGoodBlock=%d\n",
@@ -514,7 +528,7 @@ static int doRetransmissions(sender_state_t sendst,
 }
 
 
-static void markParticipantAnswered(slice_t slice, int clNo)
+static void markParticipantAnswered(slice_t slice, uint32_t clNo)
 {
     if(BIT_ISSET(clNo, slice->answeredSet))
 	/* client already has answered */
@@ -528,7 +542,7 @@ static void markParticipantAnswered(slice_t slice, int clNo)
  */
 static int handleOk(sender_state_t sendst,
 		    struct slice *slice,
-		    int clNo)
+		    uint32_t clNo)
 {
     if(slice == NULL)
 	return 0;
@@ -556,7 +570,8 @@ static int handleOk(sender_state_t sendst,
 
 static int handleRetransmit(sender_state_t sendst,
 			    struct slice *slice,
-			    int clNo, unsigned char *map, int rxmit)
+			    uint32_t clNo, unsigned char *map,
+			    unsigned int rxmit)
 {
     unsigned int i;
 
@@ -590,7 +605,7 @@ static int handleRetransmit(sender_state_t sendst,
     return 0;
 }
 
-static int handleDisconnect1(struct slice *slice, int clNo)
+static int handleDisconnect1(struct slice *slice, uint32_t clNo)
 {    
     if(slice != NULL) {
 	if (BIT_ISSET(clNo, slice->sl_reqack.readySet)) {
@@ -609,7 +624,7 @@ static int handleDisconnect1(struct slice *slice, int clNo)
 static int handleDisconnect(participantsDb_t db,
 			    struct slice *slice1,
 			    struct slice *slice2,
-			    int clNo)
+			    uint32_t clNo)
 {
     handleDisconnect1(slice1, clNo);
     handleDisconnect1(slice2, clNo);
@@ -619,7 +634,7 @@ static int handleDisconnect(participantsDb_t db,
 
 static struct slice *findSlice(struct slice *slice1,
 			       struct slice *slice2,
-			       int sliceNo)
+			       unsigned int sliceNo)
 {
     if(slice1 != NULL && slice1->sliceNo == sliceNo)
 	return slice1;
@@ -632,9 +647,9 @@ static int handleNextMessage(sender_state_t sendst,
 			     struct slice *xmitSlice,
 			     struct slice *rexmitSlice)
 {
-    int pos = pc_getConsumerPosition(sendst->rc.incoming);
+    unsigned int pos = pc_getConsumerPosition(sendst->rc.incoming);
     union message *msg = &sendst->rc.q[pos].msg;
-    int clNo = sendst->rc.q[pos].clNo;
+    uint32_t clNo = sendst->rc.q[pos].clNo;
 
 #if DEBUG
     flprintf("handle next message\n");
@@ -678,15 +693,15 @@ static THREAD_RETURN returnChannelMain(void *args) {
 
     while(1) {
 	struct sockaddr_in from;
-	int clNo;
-	int pos = pc_getConsumerPosition(returnChannel->freeSpace);
+	uint32_t clNo;
+	unsigned int pos = pc_getConsumerPosition(returnChannel->freeSpace);
 	pc_consumeAny(returnChannel->freeSpace);
 
 	RECV(returnChannel->rcvSock, 
 	     returnChannel->q[pos].msg, from,
 	     returnChannel->config->portBase);
 	clNo = udpc_lookupParticipant(returnChannel->participantsDb, &from);
-	if (clNo < 0) { 
+	if (clNo == UINT32_MAX) { 
 	    /* packet from unknown provenance */
 	    continue;
 	}
@@ -694,7 +709,9 @@ static THREAD_RETURN returnChannelMain(void *args) {
 	pc_consumed(returnChannel->freeSpace, 1);
 	pc_produce(returnChannel->incoming, 1);
     }
+#ifndef __clang__
     return 0;
+#endif
 }
 
 
@@ -729,11 +746,11 @@ static THREAD_RETURN netSenderMain(void	*args0)
     struct timespec ts;
     int atEnd = 0;
     int nrWaited=0;
-    unsigned long waitAverage=10000; /* Exponential average of last wait times */
+    long waitAverage=10000; /* Exponential average of last wait times */
 
     struct slice *xmitSlice=NULL; /* slice being transmitted a first time */
     struct slice *rexmitSlice=NULL; /* slice being re-transmitted */
-    int sliceNo = 0;
+    unsigned int sliceNo = 0;
 
     /* transmit the data */
     if(config->default_slice_size == 0) {
@@ -835,7 +852,7 @@ static THREAD_RETURN netSenderMain(void	*args0)
 	       rexmitSlice == NULL) {
 #ifdef BB_FEATURE_UDPCAST_FEC
 		if(sendst->config->flags & FLAG_FEC) {
-		    int i;
+		    unsigned int i;
 		    pc_consume(sendst->fec_data_pc, 1);
 		    i = pc_getConsumerPosition(sendst->fec_data_pc);
 		    xmitSlice = &sendst->slices[i];
@@ -870,7 +887,7 @@ static THREAD_RETURN netSenderMain(void	*args0)
 #endif
 	gettimeofday(&tv, 0);
 	ts.tv_sec = tv.tv_sec;
-	ts.tv_nsec = (tv.tv_usec + 1.1*waitAverage) * 1000;
+	ts.tv_nsec = (tv.tv_usec + waitAverage) * 1000 + waitAverage * 100;
 
 #ifdef WINDOWS
 	/* Windows has a granularity of 1 millisecond in its timer. Take this
@@ -897,15 +914,15 @@ static THREAD_RETURN netSenderMain(void	*args0)
 #endif
 	    {
 		struct timeval tv2;
-		unsigned long timeout;
+		long timeout;
 		gettimeofday(&tv2, 0);
 		timeout = 
 		    (tv2.tv_sec - tv.tv_sec) * 1000000+
-		    tv2.tv_usec - tv.tv_usec;
+		    (tv2.tv_usec - tv.tv_usec);
 		if(nrWaited)
 		    timeout += waitAverage;
 		waitAverage += 9; /* compensate against rounding errors */
-		waitAverage = (0.9 * waitAverage + 0.1 * timeout);
+		waitAverage = (9 * waitAverage + timeout) / 10;
 	    }
 	    nrWaited = 0;
 	    continue;
@@ -932,7 +949,7 @@ static THREAD_RETURN netSenderMain(void	*args0)
 	}
 	nrWaited++;
 	if(rexmitSlice->rxmitId > config->retriesUntilDrop) {
-	    int i;
+	    unsigned int i;
             for(i=0; i < MAX_CLIENTS; i++) {
                 if(udpc_isParticipantValid(sendst->rc.participantsDb, i) && 
 		   !BIT_ISSET(i, rexmitSlice->sl_reqack.readySet)) {
@@ -960,22 +977,22 @@ static THREAD_RETURN netSenderMain(void	*args0)
     return 0;
 }
 
+#ifdef BB_FEATURE_UDPCAST_FEC
 
 #define ADR(x, bs) (fifo->dataBuffer + \
 	(slice->base+(x)*bs) % fifo->dataBufSize)
 
-#ifdef BB_FEATURE_UDPCAST_FEC
 static void fec_encode_all_stripes(sender_state_t sendst,
 				   struct slice *slice)
 {
-    int stripe;
+    unsigned int stripe;
     struct net_config *config = sendst->config;
     struct fifo *fifo = sendst->fifo;
-    int bytes = slice->bytes;
-    int stripes = config->fec_stripes;
-    int redundancy = config->fec_redundancy;
-    int nrBlocks = (bytes + config->blockSize - 1) / config->blockSize;
-    int leftOver = bytes % config->blockSize;
+    unsigned int bytes = slice->bytes;
+    unsigned int stripes = config->fec_stripes;
+    unsigned int redundancy = config->fec_redundancy;
+    unsigned int nrBlocks = (bytes + config->blockSize - 1) / config->blockSize;
+    unsigned int leftOver = bytes % config->blockSize;
     unsigned char *fec_data = slice->fec_data;
 
     unsigned char *fec_blocks[redundancy];
@@ -987,7 +1004,7 @@ static void fec_encode_all_stripes(sender_state_t sendst,
     }
 
     for(stripe=0; stripe<stripes; stripe++) {
-	int i,j;
+	unsigned int i,j;
 	for(i=0; i<redundancy; i++)
 	    fec_blocks[i] = fec_data+config->blockSize*(stripe+i*stripes);
 	for(i=stripe, j=0; i< nrBlocks; i+=stripes, j++)
@@ -1003,7 +1020,7 @@ static THREAD_RETURN fecMain(void *args0)
     sender_state_t sendst = (sender_state_t) args0;
 
     slice_t slice;
-    int sliceNo = 0;
+    unsigned int sliceNo = 0;
 
     while(1) {
 	/* consume free slice */
@@ -1012,7 +1029,9 @@ static THREAD_RETURN fecMain(void *args0)
 	fec_encode_all_stripes(sendst,slice);
 	pc_produce(sendst->fec_data_pc, 1);
     }
+#ifndef __clang__
     return 0;
+#endif
 }
 #endif
 

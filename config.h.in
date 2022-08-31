@@ -42,6 +42,9 @@
 /* Define to 1 if the system has the type `in_addr_t'. */
 #undef HAVE_IN_ADDR_T
 
+/* Define to 1 if the system has the type `in_port_t'. */
+#undef HAVE_IN_PORT_T
+
 /* Define to 1 if you have the `kill' function. */
 #undef HAVE_KILL
 
@@ -92,6 +95,9 @@
 
 /* Define to 1 if you have the <string.h> header file. */
 #undef HAVE_STRING_H
+
+/* Define to 1 if you have the `strtoull' function. */
+#undef HAVE_STRTOULL
 
 /* Define to 1 if `imr_ifindex' is a member of `struct ip_mreqn'. */
 #undef HAVE_STRUCT_IP_MREQN_IMR_IFINDEX

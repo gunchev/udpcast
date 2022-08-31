@@ -31,6 +31,7 @@ int logprintf(FILE *logfile, const char *fmt, ...) {
 
 static int newlineSeen=1;
 
+ATTRIBUTE((__format__ (__printf__, 2, 0)))
 static int vlogprintf(FILE *logfile, const char *fmt, va_list ap) {
     if(logfile != NULL) {	
 	char buf[9];
@@ -95,8 +96,8 @@ int fatal(int code, const char *fmt, ...) {
 
 int printLongNum(unsigned long long x) {
 /*    fprintf(stderr, "%03d ", (int) ( x / 1000000000000LL   ));*/
-    long long divisor;
-    long long minDivisor;
+    unsigned long long divisor;
+    unsigned long long minDivisor;
     int nonzero;
     char suffix=' ';
 
@@ -116,16 +117,10 @@ int printLongNum(unsigned long long x) {
 
     while(divisor >= minDivisor) {
 	int digits;
-	const char *format;
 
 	digits = (int) ((x / divisor) % 1000);
-	if (nonzero) {
-	    format = "%03d";
-	} else {
-	    format = "%3d";
-	}
 	if (digits || nonzero)
-	    fprintf(stderr, format, digits);
+	    fprintf(stderr, nonzero ? "%03d" : "%3d", digits);
 	else
 	    fprintf(stderr, "    ");
 	    

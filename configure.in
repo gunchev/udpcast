@@ -3,6 +3,10 @@ AC_INIT(socklib.c)
 
 AC_CONFIG_HEADER(config.h)
 
+: ${CFLAGS=-O3 -Wall -DBB_FEATURE_UDPCAST_FEC -DUSE_SYSLOG -DUSE_ASSEMBLER}
+: ${LDFLAGS=-s}
+
+
 dnl Checks for compiler
 AC_PROG_CC
 AC_PROG_GCC_TRADITIONAL
@@ -26,7 +30,7 @@ AC_HEADER_STDC
 AC_HEADER_SYS_WAIT
 AC_CHECK_HEADERS(fcntl.h limits.h sys/ioctl.h sys/time.h arpa/inet.h netdb.h \
 sys/select.h sys/sockio.h sys/socket.h sys/param.h memory.h malloc.h signal.h \
-net/if.h netinet/in.h winsock2.h sys/uio.h getopt.h dlfcn.h string.h)
+net/if.h netinet/in.h winsock2.h sys/uio.h getopt.h dlfcn.h string.h stdint.h)
 AC_CHECK_HEADERS(termios.h sys/termios.h, [break])
 
 dnl Check for structures
@@ -38,6 +42,11 @@ dnl Check for types
 AC_CHECK_TYPES(in_addr_t,[],[],[#ifdef HAVE_ARPA_INET_H
 #include <arpa/inet.h>
 #endif])
+
+AC_CHECK_TYPES(in_port_t,[],[],[#ifdef HAVE_NETINET_IN_H
+#include <in/netinet.h>
+#endif])
+
 
 AC_SYS_LARGEFILE
 AC_TYPE_INT8_T
@@ -71,7 +80,7 @@ AC_STRUCT_TM
 
 dnl Checks for library functions.
 AC_TYPE_SIGNAL
-AC_CHECK_FUNCS(atexit on_exit tcsetattr lseek64 snprintf inet_pton inet_aton getopt_long dlsym)
+AC_CHECK_FUNCS(atexit on_exit tcsetattr lseek64 snprintf inet_pton inet_aton getopt_long dlsym strtoull)
 
 [
 host_os0=`echo $host_os | sed 's/-/_/g'`

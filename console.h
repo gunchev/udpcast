@@ -1,7 +1,10 @@
 #ifndef CONSOLE_H
 #define CONSOLE_H
 
-#include "config.h"
+#ifndef UDPCAST_CONFIG_H
+# define UDPCAST_CONFIG_H
+# include "config.h"
+#endif
 
 #if HAVE_SYS_SELECT_H
 #include <sys/select.h>

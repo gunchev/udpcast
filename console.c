@@ -44,8 +44,8 @@ console_t *prepareConsole(int fd) {
 
     if(tcgetattr(c->fd, &c->oldtio) >= 0) {
 	newtio = c->oldtio;
-	newtio.c_lflag &= ~ECHO;
-	newtio.c_lflag &= ~ICANON;
+	newtio.c_lflag &= ~(0U | ECHO);
+	newtio.c_lflag &= ~(0U | ICANON);
 	newtio.c_cc[VMIN] = 1;
 	newtio.c_cc[VTIME] = 0;
 	if(tcsetattr(c->fd, TCSAFLUSH, &newtio) < 0)

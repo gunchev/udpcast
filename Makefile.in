@@ -30,8 +30,6 @@ INSTALL_PROGRAM = @INSTALL_PROGRAM@
 
 # For additional warnings & checks, add -Wstrict-prototypes -Wshadow to the
 # following:
-CFLAGS +=-Wall -DBB_FEATURE_UDPCAST_FEC -DUSE_SYSLOG -DUSE_ASSEMBLER -O6
-LDFLAGS +=-s
 LIBS +=@LIBS@
 
 BUSYBOX=../udp-busybox/busybox
@@ -64,7 +62,7 @@ install: udp-sender udp-receiver rateGovernor.h
 	install -m 644 rateGovernor.h $(DESTDIR)$(prefix)/include/udpcast
 
 udp-sender$(EXESUFFIX): udp-sender.o socklib.o udpcast.o \
-	rateGovernor.o rate-limit.o auto-rate.o \
+	strparse.o rateGovernor.o rate-limit.o auto-rate.o \
 	sender-diskio.o senddata.o udps-negotiate.o \
 	fifo.o produconsum.o participants.o log.o statistics.o \
 	fec.o udpc_version.o console.o process.o rateGovernor.o
@@ -72,6 +70,7 @@ udp-sender$(EXESUFFIX): udp-sender.o socklib.o udpcast.o \
 
 
 udp-receiver$(EXESUFFIX): udp-receiver.o socklib.o udpcast.o \
+	strparse.o \
 	receiver-diskio.o receivedata.o udpr-negotiate.o produconsum.o \
 	fifo.o log.o statistics.o fec.o udpc_version.o console.o process.o
 	$(CC) $(LDFLAGS) $^ $(LIBS) -o $@
@@ -113,6 +112,7 @@ bbcopy: $(BBTARGET) \
 	$(BBTARGET)/console.h $(BBTARGET)/console.c \
 	$(BBTARGET)/udpc_process.h $(BBTARGET)/process.c \
 	$(BBTARGET)/threads.h \
+	$(BBTARGET)/strparse.h $(BBTARGET)/strparse.c \
 	$(BBTARGET)/Config.src $(BBTARGET)/Kbuild.src $(BBTARGET)/Makefile.flags \
 	$(BBTARGET)/config.h
 

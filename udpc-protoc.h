@@ -44,61 +44,61 @@ enum opCode {
 #define CMD_HELLO 0x0500
 
 union message {
-    unsigned short opCode;
+    uint16_t opCode;
     struct ok {
-	unsigned short opCode;
-	short reserved;
-	int sliceNo;
+	uint16_t opCode;
+	int16_t reserved;
+	uint32_t sliceNo;
     } ok;
 
     struct retransmit {
-	unsigned short opCode;
-	short reserved;
-	int sliceNo;
-	int rxmit;
-	unsigned char map[MAX_SLICE_SIZE / BITS_PER_CHAR];
+	uint16_t opCode;
+	int16_t reserved;
+	uint32_t sliceNo;
+	uint32_t rxmit;
+	uint8_t map[MAX_SLICE_SIZE / BITS_PER_CHAR];
     } retransmit;
 
     struct connectReq {
-	unsigned short opCode;
-	short reserved;
-	int capabilities;
-	unsigned int rcvbuf;
+	uint16_t opCode;
+	int16_t reserved;
+	uint32_t capabilities;
+	uint32_t rcvbuf;
     } connectReq;
 
     struct go {
-	unsigned short opCode;
-	short reserved;
+	uint16_t opCode;
+	int16_t reserved;
     } go;
 
     struct disconnect {
-	unsigned short opCode;
-	short reserved;
+	uint16_t opCode;
+	int16_t reserved;
     } disconnect;
 };
 
 
 
 struct connectReply {
-    unsigned short opCode;
-    short reserved;
-    int clNr;
-    int blockSize;
-    int capabilities;
-    unsigned char mcastAddr[16]; /* provide enough place for IPV6 */
+    uint16_t opCode;
+    int16_t reserved;
+    uint32_t clNr;
+    uint32_t blockSize;
+    uint32_t capabilities;
+    uint8_t mcastAddr[16]; /* provide enough place for IPV6 */
 };
 
 struct hello {
-    unsigned short opCode;
-    short reserved;
-    int capabilities;
-    unsigned char mcastAddr[16]; /* provide enough place for IPV6 */
-    short blockSize;
+    uint16_t opCode;
+    int16_t reserved;
+    uint32_t capabilities;
+    uint8_t mcastAddr[16]; /* provide enough place for IPV6 */
+    uint16_t blockSize;
 };
 
 union serverControlMsg {
-    unsigned short opCode;
-    short reserved;
+    uint16_t opCode;
+    int16_t reserved;
     struct hello hello;
     struct connectReply connectReply;
 
@@ -106,33 +106,33 @@ union serverControlMsg {
 
 
 struct dataBlock {
-    unsigned short opCode;
-    short reserved;
-    int sliceNo;
-    unsigned short blockNo;
-    unsigned short reserved2;
-    int bytes;
+    uint16_t opCode;
+    int16_t reserved;
+    uint32_t sliceNo;
+    uint16_t blockNo;
+    uint16_t reserved2;
+    uint32_t bytes;
 };
 
 struct fecBlock {
-    unsigned short opCode;
-    short stripes;
-    int sliceNo;
-    unsigned short blockNo;
-    unsigned short reserved2;
-    int bytes;
+    uint16_t opCode;
+    uint16_t stripes;
+    uint32_t sliceNo;
+    uint16_t blockNo;
+    uint16_t reserved2;
+    uint32_t bytes;
 };
 
 struct reqack {
-    unsigned short opCode;
-    short reserved;
-    int sliceNo;
-    int bytes;
-    int rxmit;
+    uint16_t opCode;
+    int16_t reserved;
+    uint32_t sliceNo;
+    uint32_t bytes;
+    uint32_t rxmit;
 };
 
 union serverDataMsg {
-    unsigned short opCode;
+    uint16_t opCode;
     struct reqack reqack;
     struct dataBlock dataBlock;
     struct fecBlock fecBlock;

@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -43,7 +44,7 @@ static int sendConnectionReply(participantsDb_t db,
 			       int sock,
 			       struct net_config *config,
 			       struct sockaddr_in *client, 
-			       int capabilities,
+			       unsigned int capabilities,
 			       unsigned int rcvbuf) {
     struct connectReply reply;
 
@@ -91,7 +92,8 @@ void sendHello(struct net_config *net_config, int sock,
     hello.reserved = 0;
     hello.capabilities = htonl(net_config->capabilities);
     copyToMessage(hello.mcastAddr,&net_config->dataMcastAddr);
-    hello.blockSize = htons(net_config->blockSize);
+    assert(net_config->blockSize <= UINT16_MAX);
+    hello.blockSize = htons((uint16_t)net_config->blockSize);
     rgWaitAll(net_config, sock, net_config->controlMcastAddr.sin_addr.s_addr,
 	      sizeof(hello));
     BCAST_CONTROL(sock, hello);
@@ -163,8 +165,8 @@ static int mainDispatcher(int *fd, int nr,
     struct sockaddr_in client;
     union message fromClient;
     fd_set read_set;
-    int ret;
-    int msgLength;
+    unsigned int ret;
+    ssize_t msgLength;
     int startNow=0;
     int selected;
     int keyPressed=0;
@@ -261,7 +263,7 @@ static int mainDispatcher(int *fd, int nr,
 	case CMD_CONNECT_REQ:
 	    sendConnectionReply(db, fd[0],
 				net_config,
-				&client, 
+				&client,
 				CAP_BIG_ENDIAN |
 				ntohl(fromClient.connectReq.capabilities),
 				ntohl(fromClient.connectReq.rcvbuf));
@@ -270,7 +272,7 @@ static int mainDispatcher(int *fd, int nr,
 	    return 1;
 	case CMD_DISCONNECT:
 	    ret = udpc_lookupParticipant(db, &client);
-	    if (ret >= 0)
+	    if (ret != MAX_CLIENTS)
 		udpc_removeParticipant(db, ret);
 	    return startNow;
 	default:
@@ -449,7 +451,7 @@ static int doTransfer(int sock,
 		      struct net_config *net_config,
 		      struct stat_config *stat_config)
 {
-    int i;
+    unsigned int i;
     struct fifo fifo;
     sender_stats_t stats;
     int in;

@@ -133,14 +133,14 @@ int main(int argc, char **argv) {
 
 
 /*
-static unsigned char highbit_test[] __attribute__ ((aligned (16))) =
+static unsigned char highbit_test[] ATTRIBUTE ((aligned (16))) =
 { 0x80, 0x80, 0x80, 0x80, 
   0x80, 0x80, 0x80, 0x80 };
 
-static unsigned char multable[16] __attribute__ ((aligned (16)));
+static unsigned char multable[16] ATTRIBUTE ((aligned (16)));
 */
 
-//static unsigned char test_result[16] __attribute__ ((aligned (16)));
+//static unsigned char test_result[16] ATTRIBUTE ((aligned (16)));
 
 static void emms(void) {
     asm volatile("emms");
@@ -148,7 +148,7 @@ static void emms(void) {
 
 #define BITBUFSIZE 512
 
-static unsigned char exp8[(255+8)*16] __attribute__ ((aligned (4096)));
+static unsigned char exp8[(255+8)*16] ATTRIBUTE ((aligned (4096)));
 
 static void initFastTable(void) {
     int i;
@@ -398,20 +398,20 @@ int main(int argc, char **argv) {
 
 
 
-static unsigned char dst2[SIZE] __attribute__ ((aligned (4096)));
+static unsigned char dst2[SIZE] ATTRIBUTE ((aligned (4096)));
 
 #define TDIFF(a,b) \
     (((a).tv_sec - (b).tv_sec)*1000000+(a).tv_usec-(b).tv_usec)
 
-    unsigned char block[SIZE*5] __attribute__((aligned(16)));
-    unsigned char block2[SIZE*5] __attribute__((aligned(16)));
-    unsigned char block3[SIZE*5] __attribute__((aligned(16)));
-    unsigned char block4[SIZE*5] __attribute__((aligned(16)));
+    unsigned char block[SIZE*5] ATTRIBUTE((aligned(16)));
+    unsigned char block2[SIZE*5] ATTRIBUTE((aligned(16)));
+    unsigned char block3[SIZE*5] ATTRIBUTE((aligned(16)));
+    unsigned char block4[SIZE*5] ATTRIBUTE((aligned(16)));
 
 
-    unsigned char in[16] __attribute__((aligned(16)));
-    unsigned char out1[16] __attribute__((aligned(16)));
-    unsigned char out2[16] __attribute__((aligned(16)));
+    unsigned char in[16] ATTRIBUTE((aligned(16)));
+    unsigned char out1[16] ATTRIBUTE((aligned(16)));
+    unsigned char out2[16] ATTRIBUTE((aligned(16)));
 
 
 int main(int argc, char **argv) {

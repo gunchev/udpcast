@@ -27,6 +27,7 @@
 //kbuild:lib-$(CONFIG_UDPSENDER)         += udpc_version.o
 //kbuild:lib-$(CONFIG_UDPSENDER)         += console.o
 //kbuild:lib-$(CONFIG_UDPSENDER)         += process.o
+//kbuild:lib-$(CONFIG_UDPSENDER)         += strparse.o
 
 //applet:IF_UDPSENDER(APPLET_ODDNAME(udp-sender, udp_sender, BB_DIR_USR_SBIN, BB_SUID_DROP, udp_receiver))
 
@@ -77,6 +78,8 @@
 #ifdef BB_FEATURE_UDPCAST_FEC
 #include "fec.h"
 #endif
+
+#include "strparse.h"
 
 #if defined HAVE_DLSYM && defined NO_BB
 #define DL_RATE_GOVERNOR
@@ -183,9 +186,10 @@ static struct option options[] = {
 #endif /* HAVE_GETOPT_LONG */
 
 #ifdef NO_BB
+ATTRIBUTE((noreturn))
 static void usage(char *progname) {
 #ifdef HAVE_GETOPT_LONG
-    fprintf(stderr, "%s [--file file] [--full-duplex] [--pipe pipe] [--portbase portbase] [--blocksize size] [--interface net-interface] [--mcast-data-address data-mcast-address] [--mcast-rdv-address mcast-rdv-address] [--max-bitrate bitrate] [--pointopoint] [--async] [--log file] [--no-progress] [--min-slice-size min] [--max-slice-size max] [--slice-size] [--ttl time-to-live] [--fec <stripes>x<redundancy>/<stripesize>] [--print-seed] [--rexmit-hello-interval interval] [--autostart autostart] [--broadcast] [--min-receivers receivers] [--min-wait sec] [--max-wait sec] [--start-timeout n] [--retries-until-drop n] [--nokbd] [--bw-period n] [--streaming] [--rehello-offset offs]"
+    fprintf(stderr, "%s [--file file] [--full-duplex] [--pipe pipe] [--portbase portbase] [--blocksize size] [--interface net-interface] [--mcast-data-address data-mcast-address] [--mcast-rdv-address mcast-rdv-address] [--max-bitrate bitrate] [--pointopoint|--nopointopoint] [--async] [--log file] [--no-progress] [--min-slice-size min] [--max-slice-size max] [--slice-size] [--ttl time-to-live] [--fec <stripes>x<redundancy>/<stripesize>] [--print-seed] [--rexmit-hello-interval interval] [--autostart autostart] [--broadcast] [--min-receivers receivers] [--min-wait sec] [--max-wait sec] [--start-timeout n] [--retries-until-drop n] [--nokbd] [--bw-period n] [--streaming] [--rehello-offset offs]"
 #ifdef DL_RATE_GOVERNOR
 	    " [--rate-governor module:parameters]" 
 #endif
@@ -194,7 +198,7 @@ static void usage(char *progname) {
 #endif
 	    "[--license]\n", progname); /* FIXME: copy new options to busybox */
 #else /* HAVE_GETOPT_LONG */
-    fprintf(stderr, "%s [-f file] [-d] [-p pipe] [-P portbase] [-b size] [-i net-interface] [-m data-mcast-address] [-M mcast-rdv-address] [-r bitrate] [-1] [-a] [-l logfile] [-t time-to-live] [-F <stripes>x<redundancy>/<stripesize>][-H hello-retransmit-interval] [-S autostart] [-B] [-C min-receivers] [-w min-wait-sec] [-w max-wait-sec] [-T start-timeout] [-R n] [-k] [-I n] [-x uncomprStatPrint] [-z statPeriod] [-Z] [-Y rehello-offset]"
+    fprintf(stderr, "%s [-f file] [-d] [-p pipe] [-P portbase] [-b size] [-i net-interface] [-m data-mcast-address] [-M mcast-rdv-address] [-r bitrate] [-1|-2] [-a] [-l logfile] [-t time-to-live] [-F <stripes>x<redundancy>/<stripesize>][-H hello-retransmit-interval] [-S autostart] [-B] [-C min-receivers] [-w min-wait-sec] [-w max-wait-sec] [-T start-timeout] [-R n] [-k] [-I n] [-x uncomprStatPrint] [-z statPeriod] [-Z] [-Y rehello-offset]"
 #ifdef DL_RATE_GOVERNOR
 	    " [-g rate-governor:parameters ]" 
 #endif
@@ -334,7 +338,7 @@ int main(int argc, char **argv)
 		    disk_config.pipeName=optarg;
 		    break;
 		case 'P':
-		    net_config.portBase = atoi(optarg);
+		    net_config.portBase = strtous(optarg,0,0);
 		    break;
 		case '1':
 		    net_config.flags |= FLAG_POINTOPOINT;
@@ -343,7 +347,7 @@ int main(int argc, char **argv)
 		    net_config.flags |= FLAG_NOPOINTOPOINT;
 		    break;
 		case 'b':
-		    net_config.blockSize = strtoul(optarg, 0, 0);
+		    net_config.blockSize = strtoui(optarg,0,0);
 		    net_config.blockSize -= net_config.blockSize % 4;
 		    if (net_config.blockSize <= 0) {
 			perror("block size too small");
@@ -385,15 +389,15 @@ int main(int argc, char **argv)
 #endif
 		    break;
 		case 0x0101:
-		    net_config.min_slice_size = atoi(optarg);
+		    net_config.min_slice_size = strtoui(optarg, 0, 0);
 		    if(net_config.min_slice_size > MAX_SLICE_SIZE)
 			fatal(1, "min slice size too big\n");
 		    break;
 		case 0x0102:
-		    net_config.default_slice_size = atoi(optarg);
+		    net_config.default_slice_size = strtoui(optarg, 0, 0);
 		    break;
 		case 0x0103:
-		    net_config.max_slice_size = atoi(optarg);
+		    net_config.max_slice_size = strtoui(optarg, 0, 0);
 		    if(net_config.max_slice_size > MAX_SLICE_SIZE)
 			fatal(1, "max slice size too big\n");
 		    break;
@@ -408,7 +412,7 @@ int main(int argc, char **argv)
 			ptr = strchr(optarg, 'x');
 			if(ptr) {
 			    net_config.fec_stripes = 
-				strtoul(optarg, &eptr, 10);
+				strtous(optarg, &eptr, 10);
 			    if(ptr != eptr) {
 				flprintf("%s != %s\n", ptr, eptr);
 				usage(argv[0]);
@@ -418,11 +422,11 @@ int main(int argc, char **argv)
 			    net_config.fec_stripes = 8;
 			    ptr = optarg;
 			}
-			net_config.fec_redundancy = strtoul(ptr, &eptr, 10);
+			net_config.fec_redundancy = strtoui(ptr, &eptr, 10);
 			if(*eptr == '/') {
 			    ptr = eptr+1;
 			    net_config.fec_stripesize = 
-				strtoul(ptr, &eptr, 10);
+				strtoui(ptr, &eptr, 10);
 			} else {
 			    net_config.fec_stripesize = 128;
 			}
@@ -474,7 +478,7 @@ int main(int argc, char **argv)
 		    net_config.requestedBufSize=parseSize(optarg);
 		    break;		    
 	        case 'C': /* min-clients */
-		    net_config.min_receivers = atoi(optarg);
+		    net_config.min_receivers = strtoui(optarg, 0, 0);
 		    break;
 	        case 'W': /* max-wait */
 		    net_config.max_receivers_wait = atoi(optarg);
@@ -490,7 +494,7 @@ int main(int argc, char **argv)
 		    break;
 
 	        case 'R': /* retries-until-drop */
-		    net_config.retriesUntilDrop = atoi(optarg);
+		    net_config.retriesUntilDrop = strtoui(optarg, 0, 0);
 		    break;
 
 	        case 'D': /* daemon-mode */
@@ -517,7 +521,7 @@ int main(int argc, char **argv)
 		    net_config.flags |= FLAG_STREAMING;
 		    break;
 		case 'Y':
-		    net_config.rehelloOffset = atol(optarg);
+		    net_config.rehelloOffset = strtoi(optarg,0,0);
 		    break;
 	        default:
 		case '?':

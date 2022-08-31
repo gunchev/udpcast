@@ -8,27 +8,27 @@
 #endif
 
 struct  participantsDb {
-    int nrParticipants;
+    uint32_t nrParticipants;
     
     struct clientDesc {
 	struct sockaddr_in addr;
 	int used;
-	int capabilities;
+	uint32_t capabilities;
 	unsigned int rcvbuf;
     } clientTable[MAX_CLIENTS];
 };
 
-int addParticipant(participantsDb_t,
-		   struct sockaddr_in *addr, 
-		   int capabilities, 
-		   unsigned int rcvbuf,
-		   int pointopoint);
+uint32_t addParticipant(participantsDb_t,
+			struct sockaddr_in *addr, 
+			uint32_t capabilities, 
+			unsigned int rcvbuf,
+			int pointopoint);
 
-int isParticipantValid(struct participantsDb *db, int i) {
+int isParticipantValid(struct participantsDb *db, uint32_t i) {
     return db->clientTable[i].used;
 }
 
-int removeParticipant(struct participantsDb *db, int i) {
+int removeParticipant(struct participantsDb *db, uint32_t i) {
     if(db->clientTable[i].used) {
 	char ipBuffer[16];	
 	flprintf("Disconnecting #%d (%s)\n", i, 
@@ -43,29 +43,30 @@ int removeParticipant(struct participantsDb *db, int i) {
     return 0;
 }
 
-int lookupParticipant(struct participantsDb *db, struct sockaddr_in *addr) {
-    int i;
+uint32_t lookupParticipant(struct participantsDb *db,
+			   struct sockaddr_in *addr) {
+    unsigned int i;
     for (i=0; i < MAX_CLIENTS; i++) {
 	if (db->clientTable[i].used && 
 	    ipIsEqual(&db->clientTable[i].addr, addr)) {
 	    return i;
 	}
     }
-    return -1;
+    return UINT32_MAX;
 }
 
-int nrParticipants(participantsDb_t db) {
+uint32_t nrParticipants(participantsDb_t db) {
     return db->nrParticipants;
 }
 
-int addParticipant(participantsDb_t db,
-		   struct sockaddr_in *addr, 
-		   int capabilities,
-		   unsigned int rcvbuf,
-		   int pointopoint) {
-    int i;
+uint32_t addParticipant(participantsDb_t db,
+			struct sockaddr_in *addr, 
+			uint32_t capabilities,
+			unsigned int rcvbuf,
+			int pointopoint) {
+    unsigned int i;
 
-    if((i = lookupParticipant(db, addr)) >= 0)
+    if((i = lookupParticipant(db, addr)) != UINT32_MAX)
 	return i;
 
     for (i=0; i < MAX_CLIENTS; i++) {
@@ -85,10 +86,10 @@ int addParticipant(participantsDb_t db,
 #endif
 	    return i;
 	} else if(pointopoint)
-	    return -1;
+	    return UINT32_MAX;
     }
 
-    return -1; /* no space left in participant's table */
+    return UINT32_MAX; /* no space left in participant's table */
 }
 
 participantsDb_t makeParticipantsDb(void)
@@ -96,17 +97,18 @@ participantsDb_t makeParticipantsDb(void)
     return MALLOC(struct participantsDb);
 }
 
-int getParticipantCapabilities(participantsDb_t db, int i)
+uint32_t getParticipantCapabilities(participantsDb_t db, uint32_t i)
 {
     return db->clientTable[i].capabilities;
 }
 
-unsigned int getParticipantRcvBuf(participantsDb_t db, int i)
+unsigned int getParticipantRcvBuf(participantsDb_t db, uint32_t i)
 {
     return db->clientTable[i].rcvbuf;
 }
 
-struct sockaddr_in *getParticipantIp(participantsDb_t db, int i)
+struct sockaddr_in *getParticipantIp(participantsDb_t db,
+				     uint32_t i)
 {
     return &db->clientTable[i].addr;
 }
@@ -114,7 +116,7 @@ struct sockaddr_in *getParticipantIp(participantsDb_t db, int i)
 void printNotSet(participantsDb_t db, char *d)
 {
     int first=1;
-    int i;
+    unsigned int i;
     flprintf("[");
     for (i=0; i < MAX_CLIENTS; i++) {
 	if (db->clientTable[i].used) {
@@ -133,7 +135,7 @@ void printNotSet(participantsDb_t db, char *d)
 void printSet(participantsDb_t db, char *d)
 {
     int first=1;
-    int i;
+    unsigned int i;
     flprintf("[");
     for (i=0; i < MAX_CLIENTS; i++) {
 	if (db->clientTable[i].used) {

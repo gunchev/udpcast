@@ -21,6 +21,7 @@
 //kbuild:lib-$(CONFIG_UDPRECEIVER)       += udpc_version.o
 //kbuild:lib-$(CONFIG_UDPRECEIVER)       += console.o
 //kbuild:lib-$(CONFIG_UDPRECEIVER)       += process.o
+//kbuild:lib-$(CONFIG_UDPRECEIVER)       += strparse.o
 
 //usage:#define udp_sender_trivial_usage \
 //usage:      "[--file file] [--full-duplex] [--pipe pipe] [--portbase portbase] [--blocksize size] [--interface net-interface] [--mcast-addr data-mcast-address] [--mcast-all-addr mcast-all-address] [--max-bitrate bitrate] [--pointopoint] [--async] [--log file] [--min-slice-size min] [--max-slice-size max] [--slice-size] [--ttl time-to-live] [--print-seed] [--rexmit-hello-interval interval] [--autostart autostart] [--broadcast]"
@@ -71,6 +72,8 @@
 #ifdef BB_FEATURE_UDPCAST_FEC
 #include "fec.h"
 #endif
+
+#include "strparse.h"
 
 #ifdef HAVE_GETOPT_LONG
 static struct option options[] = {
@@ -148,12 +151,14 @@ static void signalForward(void) {
 }
 #endif
 
+__attribute((noreturn))
 static void intHandler(int nr) {
     signalNumber=nr;
     udpc_fatal(1, "Signal %d: Cancelled by user\n", nr);
 }
 
 #ifdef NO_BB
+__attribute((noreturn))
 static void usage(char *progname) {
 #ifdef HAVE_GETOPT_LONG
     fprintf(stderr, "%s [--file file] [--pipe pipe] [--portbase portbase] [--interface net-interface] [--log file] [--no-progress] [--ttl time-to-live] [--mcast-rdv-address mcast-rdv-address] [--rcvbuf buf] [--nokbd] [--exit-wait milliseconds] [--nosync] [--sync] [--start-timeout sto] [--receive-timeout rct] [--license] [-x uncomprStatPrint] [-z statPeriod] [--print-uncompressed-position flag] [--stat-period millis] [--ignore-lost-data]\n", 
@@ -238,7 +243,7 @@ int main(int argc, char **argv)
 		disk_config.pipeName=optarg;
 		break;
 	    case 'P':
-		net_config.portBase = atoi(optarg);
+		    net_config.portBase = strtous(optarg,0,0);
 		break;
 	    case 'l':
 		udpc_log = fopen(optarg, "a");
@@ -287,7 +292,7 @@ int main(int argc, char **argv)
 		disk_config.flags|=FLAG_SYNC;
 		break;
 	    case 'b': /* rcvbuf */
-		net_config.requestedBufSize=parseSize(optarg);
+		    net_config.requestedBufSize=(unsigned int)parseSize(optarg);
 		break;
 	    case 'k': /* nokbd */
 		net_config.flags |= FLAG_NOKBD;

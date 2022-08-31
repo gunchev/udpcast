@@ -3,22 +3,22 @@
 
 typedef struct produconsum *produconsum_t;
 
-produconsum_t pc_makeProduconsum(int size, const char *name);
+produconsum_t pc_makeProduconsum(unsigned int size, const char *name);
 void pc_produce(produconsum_t pc, unsigned int amount);
 void pc_produceEnd(produconsum_t pc);
-int pc_consumeAny(produconsum_t pc);
-int pc_consumeAnyWithTimeout(produconsum_t pc, struct timespec *tv);
+unsigned int pc_consumeAny(produconsum_t pc);
+unsigned int pc_consumeAnyWithTimeout(produconsum_t pc, struct timespec *tv);
 
 
 /**
  * Get contiguous chunk of data
  */
-int pc_consumeAnyContiguous(produconsum_t pc);
+unsigned int pc_consumeAnyContiguous(produconsum_t pc);
 
 /**
  * Get contiguous chunk of data, of at least amount x
  */
-int pc_consumeContiguousMinAmount(produconsum_t pc, int amount);
+unsigned int pc_consumeContiguousMinAmount(produconsum_t pc, unsigned int amount);
 
 /**
  * Consume minimum amount bytes. Wait until at least amount is
@@ -27,7 +27,7 @@ int pc_consumeContiguousMinAmount(produconsum_t pc, int amount);
  * To remove bytes from the queue (i.e. move the consumer position), call
  * pc_consumed
  */
-int pc_consume(produconsum_t pc, int amount);
+unsigned int pc_consume(produconsum_t pc, unsigned int amount);
 
 /**
  * Get current position of consumer (moved by pc_consued)
@@ -55,7 +55,7 @@ unsigned int pc_getWaiting(produconsum_t pc);
 /**
  * Signal that data has been consumed
  */
-int pc_consumed(produconsum_t pc, int amount);
+unsigned int pc_consumed(produconsum_t pc, unsigned int amount);
 
 
 #endif

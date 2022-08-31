@@ -47,6 +47,14 @@
 #define WINDOWS
 #endif
 
+#ifndef HAVE_IN_ADDR_T
+typedef unsigned long in_addr_t;
+#endif
+
+#ifndef HAVE_IN_PORT_T
+typedef unsigned short in_port_t;
+#endif
+
 #define RECEIVER_PORT(x) (x)
 #define SENDER_PORT(x) ((x)+1)
 
@@ -89,7 +97,6 @@
 #define isAddressEqual udpc_isAddressEqual
 #define parseSize udpc_parseSize
 
-
 #define zeroSockArray udpc_zeroSockArray
 #define selectSock udpc_selectSock
 #define prepareForSelect udpc_prepareForSelect
@@ -125,22 +132,24 @@ typedef enum addr_type_t {
 
 void doAutoRateLimit(int sock, int dir, int qsize, int size);
 
-int makeSockAddr(char *hostname, short port, struct sockaddr_in *addr);
+int makeSockAddr(char *hostname, in_port_t port, struct sockaddr_in *addr);
 
 int getMyAddress(net_if_t *net_if, struct sockaddr_in *addr);
-int getBroadCastAddress(net_if_t *net_if, struct sockaddr_in *addr, short port);
-int getMcastAllAddress(struct sockaddr_in *addr, const char *address, short port);
+int getBroadCastAddress(net_if_t *net_if,
+			struct sockaddr_in *addr, in_port_t port);
+int getMcastAllAddress(struct sockaddr_in *addr,
+		       const char *address, in_port_t port);
 
 
-int doSend(int s, void *message, size_t len, struct sockaddr_in *to);
-int doReceive(int s, void *message, size_t len,
-	      struct sockaddr_in *from, int portBase);
+ssize_t doSend(int s, void *message, size_t len, struct sockaddr_in *to);
+ssize_t doReceive(int s, void *message, size_t len,
+		  struct sockaddr_in *from, in_port_t portBase);
 
 void printMyIp(net_if_t *net_if);
 
 
 int makeSocket(addr_type_t addr_type, net_if_t *net_if, 
-	       struct sockaddr_in *tmpl, int port);
+	       struct sockaddr_in *tmpl, in_port_t port);
 
 int setSocketToBroadcast(int sock);
 int setTtl(int sock, int ttl);
@@ -182,7 +191,7 @@ void copyFromMessage(struct sockaddr_in *dst, unsigned char *src);
 
 int isAddressEqual(struct sockaddr_in *a, struct sockaddr_in *b);
 
-unsigned long parseSize(char *sizeString);
+unsigned int parseSize(char *sizeString);
 
 void zeroSockArray(int *socks, int nr);
 int selectSock(int *socks, int nr, int startTimeout);
@@ -226,10 +235,6 @@ static inline void initMsgHdr(struct msghdr *hdr) {
 #ifndef __MINGW32__
 #undef closesocket
 #define closesocket(x) close(x)
-#endif
-
-#ifndef HAVE_IN_ADDR_T
-typedef unsigned long in_addr_t;
 #endif
 
 #endif
